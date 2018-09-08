@@ -1,8 +1,9 @@
 const Koa = require('koa');
-const Router = require('koa-router')
+//const Router = require('koa-router')
 const fs = require('fs').promises
-const koaBody = require('koa-body')
-
+//const koaBody = require('koa-body')
+const serve = require('koa-static');
+const send    = require('koa-send')
 const path = require('path')
 
 const koaService = function() {
@@ -12,13 +13,28 @@ const koaService = function() {
     self.boot = async () => {
 
         const app = new Koa();
-
         this.app = app;
 
-        const router = new Router();
-        this.router = router;
+       // const router = new Router();
+       // this.router = router;
 
-        app.use(koaBody());
+       // app.use(koaBody());
+
+        const resolvePath = (inputPath) => {
+            let resolvedPath
+            if (inputPath.startsWith('~')) {
+                const inputPathFromNodeModules = inputPath.substring(1)
+                resolvedPath = path.resolve(process.cwd(), `node_modules${path.sep}${inputPathFromNodeModules}` )
+            } else {
+                resolvedPath = path.resolve(process.cwd(), p3xrs.cfg.static)
+            }
+            return resolvedPath
+        }
+
+
+        const staticPath = resolvePath(p3xrs.cfg.static)
+        app.use(serve(staticPath));
+
 
         app.on('error', err => {
             console.error('koa server error', err)
@@ -36,17 +52,24 @@ const koaService = function() {
         }
         */
 
+        /*
         app.use(async (ctx) => {
             ctx.body = {
                 status: 'operational'
             };
         });
+        */
 
-        app.use(router.routes())
-        app.use(router.allowedMethods());
+        app.use(async (ctx) => {
+            await send(ctx, 'index.html', { root: staticPath });
+        });
 
-        const keyFilename =  path.resolve(process.cwd(), p3xrs.cfg.https2.key)
-        const certFilename =  path.resolve(process.cwd(), p3xrs.cfg.https2.cert)
+
+        // app.use(router.routes())
+       // app.use(router.allowedMethods());
+
+        const keyFilename =  resolvePath(p3xrs.cfg.https2.key)
+        const certFilename =  resolvePath(p3xrs.cfg.https2.cert)
         const certs = await  Promise.all([
             // key
             fs.readFile(keyFilename),

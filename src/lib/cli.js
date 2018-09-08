@@ -21,6 +21,10 @@ const cli = () => {
     p3xrs.cfg = require(configPath).p3xrs
 
 
+    if (!p3xrs.cfg.hasOwnProperty('static')) {
+
+    }
+
     if (!p3xrs.cfg.hasOwnProperty('connections')) {
         p3xrs.cfg.connections = {}
     }
