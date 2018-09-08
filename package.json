@@ -1,0 +1,68 @@
+{
+    "name": "p3x-redis-ui-server",
+    "version": "2018.9.8-4",
+    "description": "The p3x-redis-ui-server package motor that is will be connected to the p3x-redis-ui-material web user interface.",
+    "corifeus": {
+        "icon": "fas fa-flag-checkered",
+        "code": "Venture",
+        "opencollective": false,
+        "build": false,
+        "nodejs": "v10.10.0",
+        "reponame": "redis-ui-server",
+        "publish": true,
+        "prefix": "p3x-",
+        "type": "p3x"
+    },
+    "main": "src/indexjs",
+    "bin": {
+        "p3xrs": "./bin/p3xrs.js"
+    },
+    "scripts": {
+        "test": "grunt",
+        "start": "node ./bin/p3xrs --config ./p3xrs.json",
+        "run": "nodemon --watch src  --watch package.json --watch bin ./bin/p3xrs"
+    },
+    "watch": {
+        "run": "src/**/*.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/patrikx3/redis-ui-server.git"
+    },
+    "keywords": [
+        "redis",
+        "ui",
+        "gui",
+        "web",
+        "electron",
+        "desktop",
+        "server",
+        "angularjs",
+        "javascript",
+        "material",
+        "dark",
+        "light"
+    ],
+    "author": "Patrik Laszlo <alabard@gmail.com>",
+    "license": "MIT",
+    "devDependencies": {
+        "corifeus-builder": "^2018.9.8-0"
+    },
+    "dependencies": {
+        "chalk": "^2.4.1",
+        "commander": "^2.18.0",
+        "console-stamp": "^0.2.6",
+        "corifeus-utils": "^2018.9.5-2",
+        "ioredis": "^4.0.0",
+        "koa": "^2.5.2",
+        "koa-body": "^4.0.4",
+        "koa-router": "^7.4.0",
+        "nodemon": "^1.18.4",
+        "socket.io": "^2.1.1",
+        "spdy": "^3.4.7"
+    },
+    "engines": {
+        "node": ">=8.11.4"
+    },
+    "homepage": "https://pages.corifeus.com/redis-ui-server"
+}
