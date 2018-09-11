@@ -117,7 +117,7 @@ module.exports = async(options) => {
 
                     socket.emit(options.responseEvent, {
                         status: 'error',
-                        error: error,
+                        error: e,
                     })
                 } finally {
                     sharedIoRedis.sendStatus({
