@@ -24,29 +24,31 @@ module.exports = async(options) => {
             case 'select':
                 defaultEmit.database = parseInt(commands[0])
                 break;
-
-            case 'keys':
-
-                break;
         }
+
+        /*
         switch (generatedCommand) {
             case 'client list':
-                result = result.split(' ')
+                //result = result.split(' ')
                 break;
         }
+        */
 
-        console.warn(consolePrefix, typeof result, result)
+        //console.warn(consolePrefix, typeof result, result)
 
+        /*
         try {
             const clone = JSON.parse(JSON.stringify(result))
             console.warn(consolePrefix, typeof clone, clone)
         } catch(e) {
             console.warn(e)
         }
+        */
 
         socket.emit(options.responseEvent, Object.assign(defaultEmit, {
             status: 'ok',
             result: result,
+            generatedCommand: generatedCommand,
         }))
     } catch(e) {
         console.error(e)

@@ -6,7 +6,7 @@
   
  
 ---
-# The p3x-redis-ui-server package motor that is will be connected to the p3x-redis-ui-material web user interface. v2018.9.8-7  
+# 🏍️ The p3x-redis-ui-server package motor that is will be connected to the p3x-redis-ui-material web user interface. v2018.9.11-1  
 
 This is an open-source project. Star this repository, if you like it, or even donate! Thank you so much! :)
 
@@ -38,6 +38,11 @@ https://nodejs.org/en/download/package-manager/
                         
 [//]: #@corifeus-header:end
 
+
+Please this is for a development package, for the full-blown package, please follow:  
+https://pages.corifeus.com/redis-ui/
+  
+  
 This is part of a composable  `p3x-redis-ui` package. This is the server based on Socket.IO (no rest at all).  
 The server will be use the `p3x-redis-ui-material` package based on built with Webpack.  
 This package is name `p3x-redis-ui-server`.
@@ -56,11 +61,18 @@ p3xrs.json/p3xrs.connections['home-dir'] = undefined|home|absolute|relative
 
 The best is to keep it undefined and it will be in your home dir, but you can choose any place as well.
 
+# For development standalone
+```bash
+npm run run
+```
+
+It uses `nodemon` and when any file is changed, it will re-load it.
+
 [//]: #@corifeus-footer
 
 ---
 
-[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2018.9.8-7 
+[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2018.9.11-1 
 
 [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software) [![Donate for Corifeus / P3X](https://img.shields.io/badge/Donate-Corifeus-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) 
 

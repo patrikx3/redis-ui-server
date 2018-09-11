@@ -3,6 +3,27 @@ const Redis = require('ioredis')
 
 const sharedIoRedis = require('../shared')
 
+const generateConnectInfo = async (options) => {
+    const { socket, redis  } = options
+    const results = await Promise.all([
+        redis.config('get', 'databases'),
+        redis.info(),
+        sharedIoRedis.getStreamKeys({
+            redis: redis,
+        })
+    ])
+    const databases = results[0]
+    //console.log(databases)
+
+    socket.emit(options.responseEvent, {
+        status: 'ok',
+        databases: parseInt(databases[1]),
+        info: results[1],
+        keys: results[2]
+    })
+
+}
+
 module.exports = async(options) => {
     const { socket, payload } = options;
 
@@ -30,9 +51,12 @@ module.exports = async(options) => {
         if (socket.p3xrs.ioredis !== undefined) {
             console.info(consolePrefix, 'redis was already connected')
             socket.p3xrs.connectionId = connection.id
-            socket.emit(options.responseEvent, {
-                status: 'ok',
+            await generateConnectInfo({
+                redis: socket.p3xrs.ioredis,
+                socket: socket,
+                responseEvent: options.responseEvent
             })
+
             sharedIoRedis.sendStatus({
                 socket: socket,
             })
@@ -81,18 +105,13 @@ module.exports = async(options) => {
                     socket.p3xrs.connectionId = connection.id
                     socket.p3xrs.ioredis = redis
 
-                    const results = await Promise.all([
-                        redis.config('get', 'databases'),
-                        redis.info('keyspace')
-                    ])
-                    const databases = results[0]
-                    //console.log(databases)
 
-                    socket.emit(options.responseEvent, {
-                        status: 'ok',
-                        databases: parseInt(databases[1]),
-                        keyspace: results[1]
+                    await generateConnectInfo({
+                        redis: redis,
+                        socket: socket,
+                        responseEvent: options.responseEvent
                     })
+
 
                 } catch(e) {
 

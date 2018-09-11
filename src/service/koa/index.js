@@ -2,11 +2,9 @@ const Koa = require('koa');
 //const Router = require('koa-router')
 const fs = require('fs').promises
 //const koaBody = require('koa-body')
-const serve = require('koa-static');
-const send    = require('koa-send')
 const path = require('path')
 
-const koaService = function() {
+const koaService = function () {
 
     const self = this;
 
@@ -15,25 +13,30 @@ const koaService = function() {
         const app = new Koa();
         this.app = app;
 
-       // const router = new Router();
-       // this.router = router;
+        // const router = new Router();
+        // this.router = router;
 
-       // app.use(koaBody());
+        // app.use(koaBody());
 
         const resolvePath = (inputPath) => {
             let resolvedPath
             if (inputPath.startsWith('~')) {
                 const inputPathFromNodeModules = inputPath.substring(1)
-                resolvedPath = path.resolve(process.cwd(), `node_modules${path.sep}${inputPathFromNodeModules}` )
+                resolvedPath = path.resolve(process.cwd(), `node_modules${path.sep}${inputPathFromNodeModules}`)
             } else {
-                resolvedPath = path.resolve(process.cwd(), p3xrs.cfg.static)
+                resolvedPath = path.resolve(process.cwd(), inputPath)
             }
             return resolvedPath
         }
 
-
-        const staticPath = resolvePath(p3xrs.cfg.static)
-        app.use(serve(staticPath));
+        let hasStatic = false
+        let staticPath
+        if (typeof p3xrs.cfg.static === 'string') {
+            hasStatic = true
+            staticPath = resolvePath(p3xrs.cfg.static)
+            const serve = require('koa-static');
+            app.use(serve(staticPath));
+        }
 
 
         app.on('error', err => {
@@ -60,17 +63,26 @@ const koaService = function() {
         });
         */
 
-        app.use(async (ctx) => {
-            await send(ctx, 'index.html', { root: staticPath });
-        });
+        if (hasStatic) {
+            const send = require('koa-send')
+            app.use(async (ctx) => {
+                await send(ctx, 'index.html', {root: staticPath});
+            });
+        } else {
+            app.use(async (ctx) => {
+                ctx.response.body = {
+                    status: 'operational'
+                }
+            });
+        }
 
 
         // app.use(router.routes())
-       // app.use(router.allowedMethods());
+        // app.use(router.allowedMethods());
 
-        const keyFilename =  resolvePath(p3xrs.cfg.https2.key)
-        const certFilename =  resolvePath(p3xrs.cfg.https2.cert)
-        const certs = await  Promise.all([
+        const keyFilename = resolvePath(p3xrs.cfg.https2.key)
+        const certFilename = resolvePath(p3xrs.cfg.https2.cert)
+        const certs = await Promise.all([
             // key
             fs.readFile(keyFilename),
             // cert

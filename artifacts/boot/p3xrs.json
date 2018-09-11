@@ -1,6 +1,7 @@
 {
   "p3xrs": {
     "https2": {
+      "paths-info": "This is the best configuration, if it starts with ~, then it is in resolve the path in the node_modules, otherwise it resolves to the current process current working directory.",
       "cert": "./artifacts/certs/cert.pem",
       "key": "./artifacts/certs/key.nopass.pem",
       "port-info": "this is ommitted, it will be default 7843",
@@ -11,6 +12,6 @@
       "home-dir": "home"
     },
     "static-info": "This is the best configuration, if it starts with ~, then it is in resolve the path in the node_modules, otherwise it resolves to the current process current working directory.",
-    "static": "~p3x-redis-ui-material/dist"
+    "static-disabled": "~p3x-redis-ui-material/dist"
   }
 }

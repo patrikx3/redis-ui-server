@@ -1,4 +1,4 @@
-module.exports.triggerDisconnect = (options) => {
+const triggerDisconnect = (options) => {
     const { connectionId, code, socket } = options
     if (p3xrs.redisConnections.hasOwnProperty(connectionId)) {
         delete p3xrs.redisConnections[connectionId]
@@ -7,14 +7,14 @@ module.exports.triggerDisconnect = (options) => {
             status: 'code',
             code: code
         })
-        module.exports.sendStatus({
+        sendStatus({
             socket: socket
         })
     }
 
 }
 
-module.exports.sendStatus = (options) => {
+const sendStatus = (options) => {
     const { socket } = options
 
     const redisConnections = {}
@@ -25,7 +25,6 @@ module.exports.sendStatus = (options) => {
         })
     })
 
-
     socket.p3xrs.io.emit('redis-status', {
         redisConnections: redisConnections,
     })
@@ -33,7 +32,7 @@ module.exports.sendStatus = (options) => {
 
 
 const consolePrefixDisconnectRedis = 'socket.io shared disconnect redis'
-module.exports.disconnectRedis = (options) => {
+const disconnectRedis = (options) => {
     const { socket } = options
     //console.info(consolePrefixDisconnectRedis, `${socket.p3xrs.connectionId} !== ${connection.id}`)
     if (p3xrs.redisConnections.hasOwnProperty(socket.p3xrs.connectionId)) {
@@ -58,7 +57,7 @@ module.exports.disconnectRedis = (options) => {
     socket.p3xrs.connectionId = undefined
 }
 
-module.exports.sendConnections = (options) => {
+const sendConnections = (options) => {
     const { socket } = options
     socket.p3xrs.io.emit('connections', {
         status: 'ok',
@@ -67,7 +66,8 @@ module.exports.sendConnections = (options) => {
 
 }
 
-module.exports.disconnectRedisIo = (options) => {
+
+const disconnectRedisIo = (options) => {
     const { socket } = options
 
     if (socket.p3xrs.ioredis !== undefined) {
@@ -75,3 +75,33 @@ module.exports.disconnectRedisIo = (options) => {
         socket.p3xrs.ioredis = undefined
     }
 }
+
+const getStreamKeys = (options) => {
+    const { redis } = options
+
+    return new Promise((resolve, reject) => {
+        const stream = redis.scanStream({
+            match: options.match
+        });
+        let keys = [];
+        stream.on('data', (resultKeys) => {
+            keys = keys.concat(resultKeys);
+        });
+
+        stream.on('end', async () => {
+            try {
+                resolve(keys);
+            } catch (e) {
+                console.error(e);
+                reject(e)
+            }
+        });
+    })
+}
+
+module.exports.triggerDisconnect = triggerDisconnect
+module.exports.getStreamKeys = getStreamKeys
+module.exports.disconnectRedisIo =  disconnectRedisIo
+module.exports.sendConnections = sendConnections
+module.exports.sendStatus = sendStatus
+module.exports.disconnectRedis = disconnectRedis
