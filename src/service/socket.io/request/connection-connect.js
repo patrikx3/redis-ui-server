@@ -5,21 +5,23 @@ const sharedIoRedis = require('../shared')
 
 const generateConnectInfo = async (options) => {
     const { socket, redis  } = options
+
+    const databases = await redis.config('get', 'databases')
+
     const results = await Promise.all([
-        redis.config('get', 'databases'),
         redis.info(),
         sharedIoRedis.getStreamKeys({
             redis: redis,
         })
     ])
-    const databases = results[0]
+
     //console.log(databases)
 
     socket.emit(options.responseEvent, {
         status: 'ok',
         databases: parseInt(databases[1]),
-        info: results[1],
-        keys: results[2]
+        info: results[0],
+        keys: results[1]
     })
 
 }
@@ -61,14 +63,15 @@ module.exports = async(options) => {
                 socket: socket,
             })
         } else {
-            const redisConfig = Object.assign({}, options.payload.connection);
+            const actualConnection = p3xrs.connections.list.find(con => options.payload.connection.id === con.id)
+            const redisConfig = Object.assign({}, actualConnection);
             delete redisConfig.name
             delete redisConfig.id
 
             let redis = new Redis(redisConfig)
             let didConnected = false
 
-            const redisErrorFun = function(error) {
+            const redisErrorFun = async function(error) {
                 console.info(consolePrefix, connection.id, connection.name, 'error' )
                 console.error(error)
                 if (!didConnected) {
@@ -84,7 +87,11 @@ module.exports = async(options) => {
                 }
                 socket.p3xrs.io.emit('redis-disconnected', disconnectedData)
 
-                redis.disconnect()
+                try {
+                    await redis.disconnect()
+                } catch(e) {
+                    console.error(e)
+                }
                 delete p3xrs.redisConnections[socket.connectionId]
                 socket.p3xrs.connectionId = undefined
                 socket.p3xrs.ioredis = undefined
@@ -105,16 +112,13 @@ module.exports = async(options) => {
                     socket.p3xrs.connectionId = connection.id
                     socket.p3xrs.ioredis = redis
 
-
                     await generateConnectInfo({
                         redis: redis,
                         socket: socket,
                         responseEvent: options.responseEvent
                     })
 
-
                 } catch(e) {
-
                     socket.emit(options.responseEvent, {
                         status: 'error',
                         error: e,

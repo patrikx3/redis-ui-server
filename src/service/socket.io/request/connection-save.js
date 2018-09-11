@@ -21,6 +21,11 @@ module.exports = async(options) => {
         }
         p3xrs.connections.update = new Date()
         if (connectionIndexExisting !== undefined) {
+
+            if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.password) {
+                connectionSave.password = p3xrs.connections.list[connectionIndexExisting].password;
+            }
+
             p3xrs.connections.list[connectionIndexExisting] = connectionSave
         } else {
             p3xrs.connections.list.push(connectionSave)

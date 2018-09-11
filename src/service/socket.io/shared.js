@@ -21,6 +21,7 @@ const sendStatus = (options) => {
     Object.keys(p3xrs.redisConnections).forEach((redisConnectionKey) => {
         redisConnections[redisConnectionKey] = {}
         Object.keys(p3xrs.redisConnections[redisConnectionKey]).forEach(redisConnectionKey2 => {
+
             redisConnections[redisConnectionKey][redisConnectionKey2] = p3xrs.redisConnections[redisConnectionKey][redisConnectionKey2]
         })
     })
@@ -57,11 +58,20 @@ const disconnectRedis = (options) => {
     socket.p3xrs.connectionId = undefined
 }
 
+const cloneDeep = require('lodash/cloneDeep')
 const sendConnections = (options) => {
     const { socket } = options
+
+    const connections = cloneDeep(p3xrs.connections);
+    let connectionsList = connections.list.map(connection => {
+        delete connection.password
+        return connection
+    })
+    connections.list = connectionsList
+
     socket.p3xrs.io.emit('connections', {
         status: 'ok',
-        connections: p3xrs.connections
+        connections: connections
     })
 
 }

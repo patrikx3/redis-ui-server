@@ -46,6 +46,10 @@ module.exports = (io) => {
         })
 
 
+        socket.emit('configuration', {
+            readonlyConnections: p3xrs.cfg.readonlyConnections === true
+        })
+
         socketIoShared.sendStatus({
             socket: socket,
         })
