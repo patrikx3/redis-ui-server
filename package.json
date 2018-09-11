@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2018.9.11-1",
+    "version": "2018.9.11-4",
     "description": "🏍️ The p3x-redis-ui-server package motor that is will be connected to the p3x-redis-ui-material web user interface.",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
@@ -20,7 +20,8 @@
     "scripts": {
         "test": "grunt",
         "start": "node ./bin/p3xrs --config ./p3xrs.json",
-        "run": "nodemon --watch src  --watch package.json --watch bin ./bin/p3xrs"
+        "run": "nodemon --watch src  --watch package.json --watch bin ./bin/p3xrs",
+        "run-readonly-connections": "nodemon --watch src  --watch package.json --watch bin ./bin/p3xrs --readonly-connections"
     },
     "watch": {
         "run": "src/**/*.js"

@@ -99,6 +99,15 @@ const getStreamKeys = (options) => {
     })
 }
 
+const ensureReadonlyConnections = () => {
+    if (p3xrs.cfg.readonlyConnections === true) {
+        const errorCode = new Error('Connections add/save/delete are readonly only')
+        errorCode.code = 'readonly-connections'
+        throw errorCode;
+    }
+}
+
+module.exports.ensureReadonlyConnections = ensureReadonlyConnections
 module.exports.triggerDisconnect = triggerDisconnect
 module.exports.getStreamKeys = getStreamKeys
 module.exports.disconnectRedisIo =  disconnectRedisIo

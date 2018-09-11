@@ -1,24 +1,14 @@
-const sharedIoRedis = require('../shared')
-
-//const consolePrefix = 'socket.io refresh redis'
-
 module.exports = async(options) => {
     const {socket } = options;
 
     const redis = socket.p3xrs.ioredis
 
     try {
-       const results = await Promise.all([
-           redis.info(),
-           sharedIoRedis.getStreamKeys({
-               redis: redis,
-           })
-       ])
+        await redis.save()
 
         socket.emit(options.responseEvent, {
             status: 'ok',
-            info: results[0],
-            keys: results[1]
+            info: await redis.info(),
         })
     } catch(e) {
         console.error(e)
