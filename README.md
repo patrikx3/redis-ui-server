@@ -1,9 +1,9 @@
 # This is a development package
 
-For the full-blown package, please follow:    
-https://github.com/patrikx3/redis-ui 
-https://www.npmjs.com/package/p3x-redis-ui  
-https://pages.corifeus.com/redis-ui  
+For the full-blown package, please follow:     
+https://github.com/patrikx3/redis-ui  
+https://www.npmjs.com/package/p3x-redis-ui   
+https://pages.corifeus.com/redis-ui   
 
 [//]: #@corifeus-header
 
