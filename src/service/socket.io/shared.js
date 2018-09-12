@@ -109,12 +109,54 @@ const getStreamKeys = (options) => {
     })
 }
 
+const getKeysType = async (options) => {
+    const { redis, keys } = options;
+
+    const promises = [];
+    for(let key of keys) {
+        promises.push(redis.type(key))
+    }
+    const keysType = await Promise.all(promises);
+
+    const result = {}
+    for (let keysIndex in keys) {
+        result[keys[keysIndex]] = keysType[keysIndex]
+    }
+
+    return result;
+}
+
 const ensureReadonlyConnections = () => {
     if (p3xrs.cfg.readonlyConnections === true) {
         const errorCode = new Error('Connections add/save/delete are readonly only')
         errorCode.code = 'readonly-connections'
         throw errorCode;
     }
+}
+
+const getFullInfo = async (options) => {
+    const { redis } = options;
+
+    const results = await Promise.all([
+        redis.info(),
+        getStreamKeys({
+            redis: redis,
+        }),
+    ])
+
+    const keys = results[1]
+
+    const keysType = await getKeysType({
+        redis: redis,
+        keys: keys,
+    })
+
+    return {
+        info: results[0],
+        keys: keys,
+        keysType: keysType
+    }
+
 }
 
 module.exports.ensureReadonlyConnections = ensureReadonlyConnections
@@ -124,3 +166,5 @@ module.exports.disconnectRedisIo =  disconnectRedisIo
 module.exports.sendConnections = sendConnections
 module.exports.sendStatus = sendStatus
 module.exports.disconnectRedis = disconnectRedis
+module.exports.getKeysType = getKeysType
+module.exports.getFullInfo = getFullInfo

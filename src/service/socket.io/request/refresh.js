@@ -8,17 +8,15 @@ module.exports = async(options) => {
     const redis = socket.p3xrs.ioredis
 
     try {
-       const results = await Promise.all([
-           redis.info(),
-           sharedIoRedis.getStreamKeys({
-               redis: redis,
-           })
-       ])
+        const result = await sharedIoRedis.getFullInfo({
+            redis: redis,
+        })
 
         socket.emit(options.responseEvent, {
             status: 'ok',
-            info: results[0],
-            keys: results[1]
+            info: result.info,
+            keys: result.keys,
+            keysType: result.keysType
         })
     } catch(e) {
         console.error(e)
