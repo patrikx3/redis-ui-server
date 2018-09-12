@@ -1,3 +1,10 @@
+# This is a development package
+
+For the full-blown package, please follow:    
+https://github.com/patrikx3/redis-ui
+https://www.npmjs.com/package/p3x-redis-ui  
+https://pages.corifeus.com/redis-ui  
+
 [//]: #@corifeus-header
 
  [![Build Status](https://travis-ci.org/patrikx3/redis-ui-server.svg?branch=master)](https://travis-ci.org/patrikx3/redis-ui-server) 
@@ -39,10 +46,6 @@ https://nodejs.org/en/download/package-manager/
 [//]: #@corifeus-header:end
 
 
-Please this is for a development package, for the full-blown package, please follow:  
-https://pages.corifeus.com/redis-ui/
-  
-  
 This is part of a composable  `p3x-redis-ui` package. This is the server based on Socket.IO (no rest at all).  
 The server will be use the `p3x-redis-ui-material` package based on built with Webpack.  
 This package is name `p3x-redis-ui-server`.
