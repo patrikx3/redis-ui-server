@@ -109,6 +109,46 @@ const getStreamKeys = (options) => {
     })
 }
 
+
+/*
+const getStreamTypedKeys = (options) => {
+    const { redis, key, match } = options
+
+    let { scan } = options
+
+    if (scan === undefined) {
+        scan = 'scanStream'
+    }
+
+    return new Promise((resolve, reject) => {
+        let stream;
+
+        if (scan === 'scanStream') {
+            stream = redis[scan]({
+                match: match
+            });
+        } else {
+            stream = redis[scan](key, {
+                match: match
+            });
+        }
+        let keys = [];
+        stream.on('data', (resultKeys) => {
+            keys = keys.concat(resultKeys);
+        });
+
+        stream.on('end', async () => {
+            try {
+                resolve(keys);
+            } catch (e) {
+                console.error(e);
+                reject(e)
+            }
+        });
+    })
+}
+*/
+
 const getKeysInfo = async (options) => {
     const { redis, keys } = options;
 

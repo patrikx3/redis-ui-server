@@ -25,7 +25,7 @@ const generateConnectInfo = async (options) => {
 module.exports = async(options) => {
     const { socket, payload } = options;
 
-    const { connection } = payload
+    const { connection, db } = payload
 
     try {
         if (socket.p3xrs.connectionId !== connection.id) {
@@ -63,6 +63,10 @@ module.exports = async(options) => {
             const redisConfig = Object.assign({}, actualConnection);
             delete redisConfig.name
             delete redisConfig.id
+
+            if (db !== undefined) {
+                redisConfig.db = db
+            }
 
             let redis = new Redis(redisConfig)
             let didConnected = false
