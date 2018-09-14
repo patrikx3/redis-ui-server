@@ -16,7 +16,7 @@ module.exports = async(options) => {
             status: 'ok',
             info: result.info,
             keys: result.keys,
-            keysType: result.keysType
+            keysInfo: result.keysInfo
         })
     } catch(e) {
         console.error(e)

@@ -17,7 +17,7 @@ const generateConnectInfo = async (options) => {
         databases: parseInt(databases[1]),
         info: result.info,
         keys: result.keys,
-        keysType: result.keysType
+        keysInfo: result.keysInfo
     })
 
 }

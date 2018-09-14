@@ -109,18 +109,55 @@ const getStreamKeys = (options) => {
     })
 }
 
-const getKeysType = async (options) => {
+const getKeysInfo = async (options) => {
     const { redis, keys } = options;
 
-    const promises = [];
+    const keyTypePipeline = redis.pipeline()
+//    const promises = [];
     for(let key of keys) {
-        promises.push(redis.type(key))
+        keyTypePipeline.type(key)
+//        promises.push(redis.type(key))
     }
-    const keysType = await Promise.all(promises);
-
+//    const keysType = await Promise.all(promises);
+    const keysType = await keyTypePipeline.exec();
     const result = {}
+    const complexLengthPipeline = redis.pipeline()
     for (let keysIndex in keys) {
-        result[keys[keysIndex]] = keysType[keysIndex]
+        const keyType = keysType[keysIndex]
+        const key = keys[keysIndex]
+        const obj = {
+            type: keyType[1 ]
+        }
+        switch(obj.type) {
+            case 'hash':
+                complexLengthPipeline.hlen(key)
+                break;
+
+            case 'list':
+                complexLengthPipeline.llen(key)
+                break;
+
+            case 'set':
+                complexLengthPipeline.scard(key)
+                break;
+
+            case 'zset':
+                complexLengthPipeline.zcard(key)
+                break;
+        }
+        result[key] = obj
+    }
+
+    const lengthsPipeline = await complexLengthPipeline.exec()
+    for (let keysIndex in keys) {
+        const key = keys[keysIndex]
+        const obj = result[key]
+        if (obj.type === 'string') {
+
+            continue
+        }
+        const lengthPipelineElement = lengthsPipeline.shift()
+        obj.length = lengthPipelineElement[1]
     }
 
     return result;
@@ -146,7 +183,7 @@ const getFullInfo = async (options) => {
 
     const keys = results[1]
 
-    const keysType = await getKeysType({
+    const keysInfo = await getKeysInfo({
         redis: redis,
         keys: keys,
     })
@@ -154,7 +191,7 @@ const getFullInfo = async (options) => {
     return {
         info: results[0],
         keys: keys,
-        keysType: keysType
+        keysInfo: keysInfo
     }
 
 }
@@ -166,5 +203,5 @@ module.exports.disconnectRedisIo =  disconnectRedisIo
 module.exports.sendConnections = sendConnections
 module.exports.sendStatus = sendStatus
 module.exports.disconnectRedis = disconnectRedis
-module.exports.getKeysType = getKeysType
+module.exports.getKeysInfo = getKeysInfo
 module.exports.getFullInfo = getFullInfo
