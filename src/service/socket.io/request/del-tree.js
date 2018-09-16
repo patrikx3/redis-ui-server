@@ -15,16 +15,22 @@ module.exports = async(options) => {
             redis: redis,
             match: deleteTree
         })
+        const pipelineDeleteTree = redis.pipeline()
         for(let key of keys) {
             console.info(consolePrefix, 'delete key ', key)
-            await redis.del(key)
+            pipelineDeleteTree.del(key)
         }
+        await pipelineDeleteTree.exec();
+
+        const result = await sharedIoRedis.getFullInfo({
+            redis: redis,
+        })
 
         socket.emit(options.responseEvent, {
             status: 'ok',
-            keys: await sharedIoRedis.getStreamKeys({
-                redis: socket.p3xrs.ioredis
-            })
+            info: result.info,
+            keys: result.keys,
+            keysInfo: result.keysInfo
         })
     } catch(e) {
         console.error(e)
