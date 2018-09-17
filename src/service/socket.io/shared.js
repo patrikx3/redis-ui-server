@@ -213,11 +213,16 @@ const ensureReadonlyConnections = () => {
 
 const getFullInfo = async (options) => {
     const { redis } = options;
+    let { payload } = options
+    if (payload === undefined) {
+        payload = {}
+    }
 
     const results = await Promise.all([
         redis.info(),
         getStreamKeys({
             redis: redis,
+            match: payload.match,
         }),
     ])
 
