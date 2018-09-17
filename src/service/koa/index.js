@@ -1,6 +1,6 @@
 const Koa = require('koa');
 //const Router = require('koa-router')
-const fs = require('fs').promises
+const fs = require('fs')
 //const koaBody = require('koa-body')
 const path = require('path')
 
@@ -82,12 +82,12 @@ const koaService = function () {
 
         const keyFilename = resolvePath(p3xrs.cfg.https2.key)
         const certFilename = resolvePath(p3xrs.cfg.https2.cert)
-        const certs = await Promise.all([
+        const certs = [
             // key
-            fs.readFile(keyFilename),
+            fs.readFileSync(keyFilename),
             // cert
-            fs.readFile(certFilename),
-        ])
+            fs.readFileSync(certFilename),
+        ]
 
 
         const options = {
