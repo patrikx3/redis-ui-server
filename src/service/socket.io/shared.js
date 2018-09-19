@@ -35,7 +35,7 @@ const sendStatus = (options) => {
 const consolePrefixDisconnectRedis = 'socket.io shared disconnect redis'
 const disconnectRedis = (options) => {
     const { socket } = options
-    //console.info(consolePrefixDisconnectRedis, `${socket.p3xrs.connectionId} !== ${connection.id}`)
+    //console.warn(consolePrefixDisconnectRedis, `${socket.p3xrs.connectionId} !== ${connection.id}`)
     if (p3xrs.redisConnections.hasOwnProperty(socket.p3xrs.connectionId)) {
         console.warn(consolePrefixDisconnectRedis, `includes ${p3xrs.redisConnections[socket.p3xrs.connectionId].clients.includes(socket.id)} length === 1 ${p3xrs.redisConnections[socket.p3xrs.connectionId].clients.length}`)
         if (p3xrs.redisConnections[socket.p3xrs.connectionId].clients.includes(socket.id) && p3xrs.redisConnections[socket.p3xrs.connectionId].clients.length === 1) {
@@ -80,7 +80,9 @@ const sendConnections = (options) => {
 const disconnectRedisIo = (options) => {
     const { socket } = options
 
+    console.warn('shared disconnectRedisIo',  'try')
     if (socket.p3xrs.ioredis !== undefined) {
+        console.warn('shared disconnectRedisIo',  'executed')
         socket.p3xrs.ioredis.disconnect()
         socket.p3xrs.ioredis = undefined
     }

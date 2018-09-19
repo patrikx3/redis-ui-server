@@ -63,17 +63,25 @@ module.exports = async(options) => {
             const redisConfig = Object.assign({}, actualConnection);
             delete redisConfig.name
             delete redisConfig.id
+            redisConfig.retryStrategy = () => {
+                return false
+            }
+
 
             if (db !== undefined) {
                 redisConfig.db = db
             }
 
             let redis = new Redis(redisConfig)
+            socket.p3xrs.connectionId = connection.id
+            socket.p3xrs.ioredis = redis
             let didConnected = false
 
             const redisErrorFun = async function(error) {
-                console.info(consolePrefix, connection.id, connection.name, 'error' )
+                const consolePrefix = 'socket.io connection-connect redis error fun'
+                console.warn(consolePrefix, connection.id, connection.name, 'error' )
                 console.error(error)
+                console.warn(consolePrefix, 'didConnected', didConnected )
                 if (!didConnected) {
                     socket.emit(options.responseEvent, {
                         status: 'error',
@@ -81,15 +89,19 @@ module.exports = async(options) => {
                     })
                 }
                 const disconnectedData = {
-                    connectionId: socket.connectionId,
+                    connectionId: socket.p3xrs.connectionId,
                     error: error,
                     status: 'error',
                 }
+                console.warn(consolePrefix, 'disconnectedData',     disconnectedData)
                 socket.p3xrs.io.emit('redis-disconnected', disconnectedData)
 
                 try {
-                    await redis.disconnect()
+                    await sharedIoRedis.disconnectRedis({
+                        socket: socket,
+                    })
                 } catch(e) {
+                    console.warn(consolePrefix, 'disconnectRedis')
                     console.error(e)
                 }
                 delete p3xrs.redisConnections[socket.connectionId]
@@ -109,8 +121,7 @@ module.exports = async(options) => {
                     console.info(consolePrefix, options.payload.connection.id, options.payload.connection.name, 'connected' )
                     didConnected = true
 
-                    socket.p3xrs.connectionId = connection.id
-                    socket.p3xrs.ioredis = redis
+
 
                     await generateConnectInfo({
                         redis: redis,
