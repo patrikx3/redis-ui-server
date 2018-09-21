@@ -1,6 +1,6 @@
-const consolePrefix = 'socket.io get key full'
+const consolePrefix = 'socket.io key get full'
 
-const sharedIoRedis = require('../shared')
+
 
 module.exports = async(options) => {
     const { socket, payload } = options;

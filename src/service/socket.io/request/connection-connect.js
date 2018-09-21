@@ -8,18 +8,14 @@ const generateConnectInfo = async (options) => {
 
     const databases = await redis.config('get', 'databases')
 
-    const result = await sharedIoRedis.getFullInfo({
+    await sharedIoRedis.getFullInfoAndSendSocket({
         redis: redis,
+        responseEvent: options.responseEvent,
+        socket: socket,
+        extend: {
+            databases: parseInt(databases[1]),
+        }
     })
-
-    socket.emit(options.responseEvent, {
-        status: 'ok',
-        databases: parseInt(databases[1]),
-        info: result.info,
-        keys: result.keys,
-        keysInfo: result.keysInfo
-    })
-
 }
 
 module.exports = async(options) => {

@@ -243,6 +243,26 @@ const getFullInfo = async (options) => {
 
 }
 
+const getFullInfoAndSendSocket = async (options) => {
+    const { redis, socket, payload} = options
+    const result = await getFullInfo({
+        redis: redis,
+        payload: payload,
+    })
+
+    let { extend } = options
+    if (extend === undefined) {
+        extend = {}
+    }
+
+    socket.emit(options.responseEvent, Object.assign(extend, {
+        status: 'ok',
+        info: result.info,
+        keys: result.keys,
+        keysInfo: result.keysInfo
+    }))
+}
+
 module.exports.ensureReadonlyConnections = ensureReadonlyConnections
 module.exports.triggerDisconnect = triggerDisconnect
 module.exports.getStreamKeys = getStreamKeys
@@ -252,3 +272,4 @@ module.exports.sendStatus = sendStatus
 module.exports.disconnectRedis = disconnectRedis
 module.exports.getKeysInfo = getKeysInfo
 module.exports.getFullInfo = getFullInfo
+module.exports.getFullInfoAndSendSocket = getFullInfoAndSendSocket

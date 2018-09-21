@@ -1,4 +1,4 @@
-const consolePrefix = 'socket.io del tree'
+const consolePrefix = 'socket.io key del tree'
 
 const sharedIoRedis = require('../shared')
 
@@ -22,16 +22,12 @@ module.exports = async(options) => {
         }
         await pipelineDeleteTree.exec();
 
-        const result = await sharedIoRedis.getFullInfo({
+        await sharedIoRedis.getFullInfoAndSendSocket({
             redis: redis,
+            responseEvent: options.responseEvent,
+            socket: socket,
         })
 
-        socket.emit(options.responseEvent, {
-            status: 'ok',
-            info: result.info,
-            keys: result.keys,
-            keysInfo: result.keysInfo
-        })
     } catch(e) {
         console.error(e)
         socket.emit(options.responseEvent, {
