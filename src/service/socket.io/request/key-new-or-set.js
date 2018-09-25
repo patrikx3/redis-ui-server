@@ -18,7 +18,22 @@ console.warn(consolePrefix, model)
                 break;
 
             case 'list':
-
+                if (model.index === undefined) {
+                    await redis.rpush(model.key, model.value)
+                } else {
+                    if (model.index === -1) {
+                        await redis.lpush(model.key, model.value)
+                    } else {
+                        const size = await redis.llen(model.key);
+                        if (model.index > -1 && model.index < size) {
+                            await redis.lset(model.key, model.index, model.value)
+                        } else {
+                            const listOutOBoundsError = new Error('list-out-of-bounds')
+                            listOutOBoundsError.code = 'list-out-of-bounds'
+                            throw listOutOBoundsError
+                        }
+                    }
+                }
                 break;
 
             case 'hash':
