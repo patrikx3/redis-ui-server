@@ -44,6 +44,10 @@ console.warn(consolePrefix, payload)
                 break;
 
             case 'set':
+                if (payload.hasOwnProperty('originalValue')) {
+                    await redis.srem(model.key, payload.originalValue)
+                }
+                redis.sadd(model.key,  model.value)
                 break;
 
             case 'zset':

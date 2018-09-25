@@ -1,4 +1,4 @@
-const consolePrefix = 'socket.io key hash delete key'
+const consolePrefix = 'socket.io key list delete index'
 
 const utils = require('corifeus-utils')
 
@@ -8,9 +8,9 @@ module.exports = async(options) => {
     const redis = socket.p3xrs.ioredis
 
     try {
-        const  { hashKey, key } = payload;
+        const  { key, value } = payload;
 
-        await redis.hdel(key, hashKey)
+        await redis.srem(key, value)
 
         socket.emit(options.responseEvent, {
             status: 'ok',
