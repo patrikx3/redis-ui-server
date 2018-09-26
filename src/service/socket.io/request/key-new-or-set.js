@@ -11,7 +11,7 @@ module.exports = async(options) => {
         model.score = model.score === null ? undefined : model.score
         model.index = model.index === null ? undefined : model.index
         model.hashKey = model.hashKey === null ? undefined : model.hashKey
-console.warn(consolePrefix, payload)
+//console.warn(consolePrefix, payload)
         switch(model.type) {
             case 'string':
                 await redis.set(model.key, model.value)
@@ -40,17 +40,21 @@ console.warn(consolePrefix, payload)
                 if (payload.hasOwnProperty('originalHashKey')) {
                     await redis.hdel(model.key, payload.originalHashKey)
                 }
-                redis.hset(model.key, model.hashKey, model.value)
+                await redis.hset(model.key, model.hashKey, model.value)
                 break;
 
             case 'set':
                 if (payload.hasOwnProperty('originalValue')) {
                     await redis.srem(model.key, payload.originalValue)
                 }
-                redis.sadd(model.key,  model.value)
+                await redis.sadd(model.key,  model.value)
                 break;
 
             case 'zset':
+                if (payload.hasOwnProperty('originalValue')) {
+                    await redis.zrem(model.key, payload.originalValue)
+                }
+                await redis.zadd(model.key,  model.score, model.value)
                 break;
 
 

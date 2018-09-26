@@ -32,8 +32,7 @@ module.exports = async(options) => {
                 break;
 
             case 'zset':
-                viewPipeline.zrange(key, 0, -1)
-                //viewPipeline.zrangebyscore(key, 0, -1)
+                viewPipeline.zrange(key, 0, -1, 'WITHSCORES')
                 break;
         }
         viewPipeline.ttl(key)
@@ -46,42 +45,10 @@ module.exports = async(options) => {
         const ttl = viewPipelineResult[1][1]
         const encoding = viewPipelineResult[2][1]
 
-        let score
-        switch(type) {
-            case 'zset':
-                const sortedSetScorePipeline = redis.pipeline()
-                for(let sortedSetValue of value) {
-                    sortedSetScorePipeline.zscore(key, sortedSetValue)
-                }
-                const sortedSetScorePipelineResult = await sortedSetScorePipeline.exec();
-
-                score = {}
-                for(let sortedSetValueIndex in value) {
-                    const sortedSetValue = value[sortedSetValueIndex]
-                    score[parseFloat(sortedSetScorePipelineResult[sortedSetValueIndex][1])] = sortedSetValue
-                }
-                break;
-
-                /*
-            case 'string':
-                break;
-
-            case 'list':
-                break;
-
-            case 'hash':
-                break;
-
-            case 'set':
-                break;
-                */
-        }
-
         const socketResult = {
             status: 'ok',
             value: value,
             ttl: ttl,
-            score: score,
             encoding: encoding,
         };
        // console.warn('socketResult', socketResult)
