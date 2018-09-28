@@ -38,7 +38,6 @@ const koaService = function () {
             app.use(serve(staticPath));
         }
 
-
         app.on('error', err => {
             console.error('koa server error', err)
         });
@@ -88,7 +87,6 @@ const koaService = function () {
             // cert
             fs.readFileSync(certFilename),
         ]
-
 
         const options = {
             key: certs[0].toString(),
