@@ -13,7 +13,7 @@ https://pages.corifeus.com/redis-ui
   
  
 ---
-# 🏍️ The p3x-redis-ui-server package motor that is will be connected to the p3x-redis-ui-material web user interface. v2018.11.8-0  
+# 🏍️ The p3x-redis-ui-server package motor that is will be connected to the p3x-redis-ui-material web user interface. v2018.11.17-3  
 
 This is an open-source project. Star this repository, if you like it, or even donate! Thank you so much! :)
 
@@ -25,12 +25,12 @@ All my domains (patrikx3.com and corifeus.com) could have errors, since I am dev
 
 ### Node Version Requirement 
 ``` 
->=8.11.4 
+>=10.13.0 
 ```  
    
 ### Built on Node 
 ``` 
-v11.0.0
+v10.13.0
 ```   
    
 The ```async``` and ```await``` keywords are required.
@@ -75,7 +75,7 @@ It uses `nodemon` and when any file is changed, it will re-load it.
 
 ---
 
-[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2018.11.8-0 
+[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2018.11.17-3 
 
 [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software) [![Donate for Corifeus / P3X](https://img.shields.io/badge/Donate-Corifeus-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) 
 
