@@ -95,13 +95,14 @@ const koaService = function () {
 
         //console.warn('keyFilename', keyFilename, options.key)
         //console.warn('certFilename', certFilename, options.cert)
-        const spdy = require('spdy');
-        const server = spdy.createServer(options, app.callback())
+        //const spdy = require('spdy');
+        //const server = spdy.createServer(options, app.callback())
 
         // not working with websocket-s native node http2
         //const http2 = require('http2');
         //const server = http2.createSecureServer(options, app.callback());
-
+        const https = require('https')
+        const server = https.createServer(options, app.callback())
 
         this.server = server;
 
