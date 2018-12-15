@@ -79,6 +79,7 @@ const koaService = function () {
         // app.use(router.routes())
         // app.use(router.allowedMethods());
 
+        /*
         const keyFilename = resolvePath(p3xrs.cfg.https2.key)
         const certFilename = resolvePath(p3xrs.cfg.https2.cert)
         const certs = [
@@ -92,6 +93,7 @@ const koaService = function () {
             key: certs[0].toString(),
             cert: certs[1].toString(),
         };
+        */
 
         //console.warn('keyFilename', keyFilename, options.key)
         //console.warn('certFilename', certFilename, options.cert)
@@ -101,12 +103,12 @@ const koaService = function () {
         // not working with websocket-s native node http2
         //const http2 = require('http2');
         //const server = http2.createSecureServer(options, app.callback());
-        const https = require('https')
-        const server = https.createServer(options, app.callback())
+        const http = require('http')
+        const server = http.createServer(app.callback())
 
         this.server = server;
 
-        server.listen(p3xrs.cfg.https2.port || 7843);
+        server.listen(p3xrs.cfg.http.port || 7843);
 
     }
 

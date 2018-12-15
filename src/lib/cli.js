@@ -36,10 +36,7 @@ const cli = () => {
 
     } else {
         p3xrs.cfg = {
-            "https2": {
-                "certs-info": "If you want to use your own certificates, you can use a relative or absolute cert and key.",
-                "cert": "~p3x-redis-ui-server/artifacts/certs/cert.pem",
-                "key": "~p3x-redis-ui-server/artifacts/certs/key.nopass.pem",
+            "http": {
                 "port-info": "this is ommitted, it will be default 7843",
                 "port": 7843
             },
