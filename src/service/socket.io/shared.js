@@ -93,7 +93,8 @@ const getStreamKeys = (options) => {
 
     return new Promise((resolve, reject) => {
         const stream = redis.scanStream({
-            match: options.match
+            match: options.match,
+            count: 1000
         });
         let keys = [];
         stream.on('data', (resultKeys) => {
@@ -152,6 +153,7 @@ const getStreamTypedKeys = (options) => {
 */
 
 const getKeysInfo = async (options) => {
+
     const { redis, keys } = options;
 
     const keyTypePipeline = redis.pipeline()
@@ -201,7 +203,6 @@ const getKeysInfo = async (options) => {
         const lengthPipelineElement = lengthsPipeline.shift()
         obj.length = lengthPipelineElement[1]
     }
-
     return result;
 }
 
@@ -230,11 +231,13 @@ const getFullInfo = async (options) => {
 
     const keys = results[1]
 
+
     const keysInfo = await getKeysInfo({
         redis: redis,
         keys: keys,
     })
 
+//    const keysInfo = []
     return {
         info: results[0],
         keys: keys,
