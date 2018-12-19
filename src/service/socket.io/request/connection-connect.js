@@ -6,7 +6,12 @@ const sharedIoRedis = require('../shared')
 const generateConnectInfo = async (options) => {
     const { socket, redis  } = options
 
-    const databases = await redis.config('get', 'databases')
+    const results = await Promise.all([
+        redis.config('get', 'databases'),
+        redis.command(),
+    ])
+    const databases = results[0]
+    const commands = results[1]
 
     await sharedIoRedis.getFullInfoAndSendSocket({
         redis: redis,
@@ -14,6 +19,7 @@ const generateConnectInfo = async (options) => {
         socket: socket,
         extend: {
             databases: parseInt(databases[1]),
+            commands: commands
         }
     })
 }
