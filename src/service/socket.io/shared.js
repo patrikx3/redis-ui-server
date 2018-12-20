@@ -94,11 +94,12 @@ const getStreamKeys = (options) => {
     return new Promise((resolve, reject) => {
         const stream = redis.scanStream({
             match: options.match,
-            count: 1000
+            count: 10000
         });
         let keys = [];
         stream.on('data', (resultKeys) => {
             keys = keys.concat(resultKeys);
+           //   console.log('loading keys', keys.length)
         });
 
         stream.on('end', async () => {
@@ -232,10 +233,14 @@ const getFullInfo = async (options) => {
     const keys = results[1]
 
 
-    const keysInfo = await getKeysInfo({
-        redis: redis,
-        keys: keys,
-    })
+    let keysInfo = {}
+
+    if (keys.length < 110000) {
+        keysInfo = await getKeysInfo({
+            redis: redis,
+            keys: keys,
+        })
+    }
 
 //    const keysInfo = []
     return {

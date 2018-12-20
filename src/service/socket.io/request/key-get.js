@@ -9,7 +9,10 @@ module.exports = async(options) => {
         let redis = socket.p3xrs.ioredis
 
         const key = payload.key;
-        const type = payload.type;
+
+        //const type = payload.type;
+
+        const type = await redis.type(key)
 
         //console.info(consolePrefix, payload, type, key)
 
@@ -38,15 +41,42 @@ module.exports = async(options) => {
         viewPipeline.ttl(key)
         viewPipeline.object('encoding', key)
 
+        switch(type) {
+            case 'hash':
+                viewPipeline.hlen(key)
+                break;
+
+            case 'list':
+                viewPipeline.llen(key)
+                break;
+
+            case 'set':
+                viewPipeline.scard(key)
+                break;
+
+            case 'zset':
+                viewPipeline.zcard(key)
+                break;
+        }
+
+
         const viewPipelineResult = await viewPipeline.exec()
        // console.log(viewPipelineResult)
 
         const value = viewPipelineResult[0][1]
         const ttl = viewPipelineResult[1][1]
         const encoding = viewPipelineResult[2][1]
+        let length
+
+        if (type !== 'string') {
+            length = viewPipelineResult[3][1]
+        }
 
         const socketResult = {
+            length: length,
+            key: key,
             status: 'ok',
+            type: type,
             value: value,
             ttl: ttl,
             encoding: encoding,
