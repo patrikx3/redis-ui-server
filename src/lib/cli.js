@@ -77,6 +77,19 @@ const cli = () => {
     //console.log(p3xrs.cfg.connections.home, p3xrs.connections)
     //console.log(p3xrs.connections)
 
+    /*
+    p3xrs.redis = {}
+    let keyStreamPaging = 10000
+    Object.defineProperty(p3xrs.redis, 'key-stream-paging', {
+        get: () => {
+            return keyStreamPaging
+        },
+        set: (value) => {
+            keyStreamPaging = value
+        }
+    })
+    */
+
     return true;
 }
 

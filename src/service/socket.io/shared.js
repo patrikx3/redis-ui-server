@@ -91,25 +91,41 @@ const disconnectRedisIo = (options) => {
 const getStreamKeys = (options) => {
     const { redis } = options
 
-    return new Promise((resolve, reject) => {
-        const stream = redis.scanStream({
-            match: options.match,
-            count: 10000
-        });
-        let keys = [];
-        stream.on('data', (resultKeys) => {
-            keys = keys.concat(resultKeys);
-           //   console.log('loading keys', keys.length)
-        });
+    return new Promise(async (resolve, reject) => {
 
-        stream.on('end', async () => {
-            try {
-                resolve(keys);
-            } catch (e) {
-                console.error(e);
-                reject(e)
+        try {
+            const dbsize =  await redis.dbsize()
+
+            let count = 100
+            if (dbsize > 110000) {
+                count = 10000
+            } else if (dbsize > 11000) {
+                count = 1000
             }
-        });
+console.warn('socket.io getStreamKeys count', count)
+
+            const stream = redis.scanStream({
+                match: options.match,
+                count: count
+            });
+            let keys = [];
+            stream.on('data', (resultKeys) => {
+                keys = keys.concat(resultKeys);
+                //   console.log('loading keys', keys.length)
+            });
+
+            stream.on('end', async () => {
+                try {
+                    resolve(keys);
+                } catch (e) {
+                    console.error(e);
+                    reject(e)
+                }
+            });
+        } catch (e) {
+            reject(e)
+        }
+
     })
 }
 
