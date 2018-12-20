@@ -102,7 +102,7 @@ const getStreamKeys = (options) => {
             } else if (dbsize > 11000) {
                 count = 1000
             }
-console.warn('socket.io getStreamKeys count', count)
+console.warn('socket.io getStreamKeys dbsize', dbsize , 'count', count)
 
             const stream = redis.scanStream({
                 match: options.match,
