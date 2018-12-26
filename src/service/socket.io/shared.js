@@ -90,11 +90,13 @@ const disconnectRedisIo = (options) => {
 
 const getStreamKeys = (options) => {
     const { redis } = options
-
+    let { dbsize } = options
     return new Promise(async (resolve, reject) => {
 
         try {
-            const dbsize =  await redis.dbsize()
+            if (dbsize === undefined) {
+                dbsize =  await redis.dbsize()
+            }
 
             let count = 100
             if (dbsize > 110000) {
@@ -238,9 +240,12 @@ const getFullInfo = async (options) => {
         payload = {}
     }
 
+    const dbsize = await redis.dbsize()
+
     const results = await Promise.all([
         redis.info(),
         getStreamKeys({
+            dbsize: dbsize,
             redis: redis,
             match: payload.match,
         }),
@@ -262,7 +267,8 @@ const getFullInfo = async (options) => {
     return {
         info: results[0],
         keys: keys,
-        keysInfo: keysInfo
+        keysInfo: keysInfo,
+        dbsize: dbsize,
     }
 
 }
@@ -283,7 +289,8 @@ const getFullInfoAndSendSocket = async (options) => {
         status: 'ok',
         info: result.info,
         keys: result.keys,
-        keysInfo: result.keysInfo
+        keysInfo: result.keysInfo,
+        dbsize: result.dbsize,
     }))
 }
 
