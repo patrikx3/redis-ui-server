@@ -1,7 +1,7 @@
 
-@license p3x-redis-ui-server v2018.12.28-3
+@license p3x-redis-ui-server v2018.12.30-2
   
-🏍️ The p3x-redis-ui-server package motor that is will be connected to the p3x-redis-ui-material web user interface.
+🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface.
 
 https://pages.corifeus.com/redis-ui-server
 
