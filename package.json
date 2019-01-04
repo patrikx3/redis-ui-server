@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2019.1.2-0",
+    "version": "2019.1.4-3",
     "description": "🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface.",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
@@ -47,7 +47,7 @@
     "author": "Patrik Laszlo <alabard@gmail.com>",
     "license": "MIT",
     "devDependencies": {
-        "corifeus-builder": "^2019.1.1-1",
+        "corifeus-builder": "^2019.1.4-8",
         "nodemon": "^1.18.9"
     },
     "dependencies-saved": {
@@ -58,7 +58,7 @@
         "chalk": "^2.4.1",
         "commander": "^2.19.0",
         "console-stamp": "^0.2.7",
-        "corifeus-utils": "^2019.1.1-1",
+        "corifeus-utils": "^2019.1.4-4",
         "ioredis": "^4.3.0",
         "koa": "^2.6.2",
         "koa-send": "^5.0.0",
