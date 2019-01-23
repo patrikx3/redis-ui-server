@@ -15,14 +15,14 @@ https://pages.corifeus.com/redis-ui
   
  
 ---
-# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface. v2019.1.22-0  
+# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface. v2019.1.23-2  
 
   
 🙏 This is an open-source project. Star this repository, if you like it, or even donate to maintain the servers and the development. Thank you so much!
 
 I run my own server with dynamic IP address, so, it may happen, that the server can not be reachable for about max 15 minutes, due to nature of the dynamic DNS. The server may also be unreachable, when I backup the SSD with Clonzilla (very rarely) or an electrical issue (but this should not happen again). When the server is down, please hang on for 15-30 minutes and the server will be back up.
 
-All my domains (patrikx3.com and corifeus.com) could have errors, since I am developing in my free time. However, it is usually stable.
+All my domains ([patrikx3.com](https://patrikx3.com) and [corifeus.com](https://corifeus.com)) could have errors, since I am developing in my free time. However, it is usually stable.
 
 **Bugs are evident™ - MATRIX️**  
     
@@ -87,7 +87,7 @@ http://localhost:7843
 
 ---
 
-[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2019.1.22-0 
+[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2019.1.23-2 
 
 [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software) [![Donate for Corifeus / P3X](https://img.shields.io/badge/Donate-Corifeus-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) 
 
