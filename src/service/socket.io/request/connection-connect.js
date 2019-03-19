@@ -6,19 +6,33 @@ const sharedIoRedis = require('../shared')
 const generateConnectInfo = async (options) => {
     const { socket, redis  } = options
 
-    const results = await Promise.all([
-        redis.config('get', 'databases'),
-        redis.command(),
-    ])
-    const databases = results[0]
-    const commands = results[1]
+   // console.warn('generateConnectInfo', options.payload)
+
+
+    let databases
+    let results
+    let commands
+    if (options.payload.connection.awsElastiCache === true) {
+        databases = 0
+        commands = await redis.command()
+    } else {
+        results = await Promise.all([
+            redis.config('get', 'databases'),
+            redis.command(),
+        ])
+        databases = parseInt(results[0][1])
+        commands = results[1]
+    }
+
+
+    //console.log('databases', databases)
 
     await sharedIoRedis.getFullInfoAndSendSocket({
         redis: redis,
         responseEvent: options.responseEvent,
         socket: socket,
         extend: {
-            databases: parseInt(databases[1]),
+            databases: databases,
             commands: commands
         }
     })
@@ -37,7 +51,6 @@ module.exports = async(options) => {
         }
 
         if (!p3xrs.redisConnections.hasOwnProperty(connection.id)) {
-            console.info(consolePrefix, 'creating new connection')
             p3xrs.redisConnections[connection.id] = {
                 connection: connection,
                 clients: []
@@ -54,7 +67,8 @@ module.exports = async(options) => {
             await generateConnectInfo({
                 redis: socket.p3xrs.ioredis,
                 socket: socket,
-                responseEvent: options.responseEvent
+                responseEvent: options.responseEvent,
+                payload: payload
             })
 
             sharedIoRedis.sendStatus({
@@ -128,7 +142,8 @@ module.exports = async(options) => {
                     await generateConnectInfo({
                         redis: redis,
                         socket: socket,
-                        responseEvent: options.responseEvent
+                        responseEvent: options.responseEvent,
+                        payload: options.payload,
                     })
 
                 } catch(e) {
