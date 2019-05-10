@@ -23,7 +23,7 @@ const generateConnectInfo = async (options) => {
         databases = parseInt(results[0][1])
         commands = results[1]
     }
-
+    socket.p3xrs.commands = commands.map(e => e[0].toLowerCase())
 
     //console.log('databases', databases)
 
