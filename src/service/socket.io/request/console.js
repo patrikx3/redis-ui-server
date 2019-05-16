@@ -11,10 +11,12 @@ module.exports = async(options) => {
         let mainCommand = commands.shift()
         mainCommand = mainCommand.toLowerCase();
 
-        console.warn(consolePrefix, mainCommand, commands)
+        console.info(consolePrefix, mainCommand, commands)
+        /*
         if (!socket.p3xrs.commands.includes(mainCommand)) {
-            throw new Error(`UNKNOWN COMMAND: ${mainCommand}`)
+            throw new Error(`ERR Unknown command '${mainCommand}'.`)
         }
+         */
         let result = await redis.call(mainCommand, commands)
 
         const defaultEmit = {

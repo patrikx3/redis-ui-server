@@ -120,7 +120,6 @@ console.warn('socket.io getStreamKeys dbsize', dbsize , 'count', count)
                 try {
                     resolve(keys);
                 } catch (e) {
-                    console.error(e);
                     reject(e)
                 }
             });

@@ -10,7 +10,7 @@ module.exports = (io) => {
             connectionId: undefined,
             io: io,
             ioredis: undefined,
-            commands: undefined,
+           // commands: undefined,
         }
 
         console.info('socket.io connected %s', socket.id);
