@@ -29,6 +29,7 @@ const boot = async () => {
 
 
     p3xrs.redisConnections = {}
+    p3xrs.redisConnectionsSubscriber = {}
 
 }
 

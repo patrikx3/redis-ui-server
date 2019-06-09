@@ -10,6 +10,7 @@ module.exports = (io) => {
             connectionId: undefined,
             io: io,
             ioredis: undefined,
+            ioredisSubscriber: undefined,
            // commands: undefined,
         }
 
@@ -26,6 +27,7 @@ module.exports = (io) => {
                     }
                     if (p3xrs.redisConnections[connectionId].clients.length === 0) {
                         delete p3xrs.redisConnections[connectionId]
+
                     }
                     socketIoShared.disconnectRedisIo({
                         socket: socket,
@@ -57,6 +59,8 @@ module.exports = (io) => {
         socketIoShared.sendConnections({
             socket: socket,
         })
+
+
 
     });
 

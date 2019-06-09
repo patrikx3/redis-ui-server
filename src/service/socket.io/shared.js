@@ -42,6 +42,7 @@ const disconnectRedis = (options) => {
             //console.warn(consolePrefixDisconnectRedis, p3xrs.redisConnections[socket.p3xrs.connectionId])
             //p3xrs.redisConnections[socket.p3xrs.connectionId].ioredis.disconnect()
             delete p3xrs.redisConnections[socket.p3xrs.connectionId]
+
         } else {
             let connectionIndexExisting = p3xrs.redisConnections[socket.p3xrs.connectionId].clients.indexOf(socket.id);
             console.warn(consolePrefixDisconnectRedis, socket.p3xrs.connectionId, p3xrs.redisConnections[socket.p3xrs.connectionId].clients, socket.id, connectionIndexExisting)
@@ -52,6 +53,7 @@ const disconnectRedis = (options) => {
     }
     if (p3xrs.redisConnections.hasOwnProperty(socket.p3xrs.connectionId) && p3xrs.redisConnections[socket.p3xrs.connectionId].hasOwnProperty('clients') && p3xrs.redisConnections[socket.p3xrs.connectionId].clients.length === 0) {
         delete p3xrs.redisConnections[socket.p3xrs.connectionId]
+
     }
     module.exports.disconnectRedisIo(options)
 
@@ -84,7 +86,9 @@ const disconnectRedisIo = (options) => {
     if (socket.p3xrs.ioredis !== undefined) {
         console.warn('shared disconnectRedisIo',  'executed')
         socket.p3xrs.ioredis.disconnect()
+        socket.p3xrs.ioredisSubscriber.disconnect()
         socket.p3xrs.ioredis = undefined
+        socket.p3xrs.ioredisSubscriber = undefined
     }
 }
 
@@ -248,6 +252,7 @@ const getFullInfo = async (options) => {
             redis: redis,
             match: payload.match,
         }),
+        redis.pubsub('channels', '*')
     ])
 
     const keys = results[1]
@@ -263,12 +268,16 @@ const getFullInfo = async (options) => {
     }
 
 //    const keysInfo = []
-    return {
+
+    const result = {
         info: results[0],
         keys: keys,
         keysInfo: keysInfo,
         dbsize: dbsize,
+        channels: results[2]
     }
+    //console.log('get full info', result)
+    return result
 
 }
 

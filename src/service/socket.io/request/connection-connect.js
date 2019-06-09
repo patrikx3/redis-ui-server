@@ -89,8 +89,10 @@ module.exports = async(options) => {
             }
 
             let redis = new Redis(redisConfig)
+            let redisSubscriber = new Redis(redisConfig)
             socket.p3xrs.connectionId = connection.id
             socket.p3xrs.ioredis = redis
+            socket.p3xrs.ioredisSubscriber = redisSubscriber
             let didConnected = false
 
             const redisErrorFun = async function(error) {
@@ -121,8 +123,10 @@ module.exports = async(options) => {
                     console.error(e)
                 }
                 delete p3xrs.redisConnections[socket.connectionId]
+
                 socket.p3xrs.connectionId = undefined
                 socket.p3xrs.ioredis = undefined
+                socket.p3xrs.ioredisSubscriber = undefined
 
                 sharedIoRedis.sendStatus({
                     socket: socket,
@@ -130,13 +134,30 @@ module.exports = async(options) => {
             }
 
             redis.on('error', redisErrorFun)
+            redisSubscriber.on('error', redisErrorFun)
+
+            //console.warn('create psubscribe', actualConnection.id)
+            redisSubscriber.psubscribe('*', function(error, count){
+                if (error) {
+                    console.error(error)
+                }
+            })
+
+            //console.warn('create pmessage', actualConnection.id)
+            redisSubscriber.on('pmessage', function (channel, pattern, message) {
+                console.log(`receive pmessage channel: ${channel} - pattern: ${pattern}, message: ${message}`);
+                //console.log('list clients', actualConnection.id, JSON.stringify(p3xrs.redisConnections[actualConnection.id].clients, null, 4))
+                socket.emit('pubsub-message', {
+                    channel: pattern,
+                    message: message,
+                })
+            });
 
             redis.on('connect', async function() {
 
                 try {
                     console.info(consolePrefix, options.payload.connection.id, options.payload.connection.name, 'connected' )
                     didConnected = true
-
 
 
                     await generateConnectInfo({
