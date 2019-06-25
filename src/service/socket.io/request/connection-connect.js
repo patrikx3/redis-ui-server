@@ -1,5 +1,6 @@
 const consolePrefix = 'socket.io connection-connect';
-const Redis = require('ioredis')
+// const Redis = require('ioredis')
+const Redis = require('../../../ioredis-cluster')
 
 const sharedIoRedis = require('../shared')
 
