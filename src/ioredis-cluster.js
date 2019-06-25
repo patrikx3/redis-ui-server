@@ -88,7 +88,7 @@ async function createRedis(server, defaultConfig = {}){
 class Cluster extends IORedis.Cluster{
   static create = createRedis
   originalRename(...args){
-    return parent.rename(...args)
+    return super.rename(...args)
   }
   async rename(key, keyNew, callback){
     let res = null
@@ -121,10 +121,45 @@ class Cluster extends IORedis.Cluster{
 
   }
   originalPipeline(...args){
-    return parent.pipeline(...args)
+    return super.pipeline(...args)
   }
-  pipeline(...args){
-    return this.multi(...args)
+  pipeline(...pipelineArgs){
+    const calls = []
+    async function exec(calls){
+      const results = []
+      for(let c of calls){
+        const result = await c()
+        results.push(result)
+      }
+      console.log({results})
+      return results
+    }
+    const proxy = new Proxy(calls, {
+      get: (calls, method)=>{
+        return (...callArgs)=>{
+          switch(method){
+            case 'exec':
+              return exec(calls)
+              break
+          }
+          const callback = async () => {
+            let err = null
+            let result = null
+            try{
+              result = await this[method](...callArgs)
+            }
+            catch(e){
+              err = e
+            }
+            return [err, result]
+          }
+          calls.push(callback)
+          return proxy
+        }
+      }
+    })
+    return proxy
+
   }
   scanStream(...args){
     const stream = new EventEmitter()
@@ -146,7 +181,7 @@ class Cluster extends IORedis.Cluster{
       await new Promise((resolve, reject)=>{
         const nodeStream = node[method](...params)
         nodeStream.on('data', (resultKeys) => {
-          console.log({resultKeys})
+          // console.log({resultKeys})
           stream.emit('data', resultKeys)
         })
         nodeStream.on('end', async () => {
