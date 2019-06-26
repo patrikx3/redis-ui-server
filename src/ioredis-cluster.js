@@ -131,7 +131,7 @@ class Cluster extends IORedis.Cluster{
         const result = await c()
         results.push(result)
       }
-      console.log({results})
+      // console.log({results})
       return results
     }
     const proxy = new Proxy(calls, {
@@ -198,51 +198,7 @@ class Cluster extends IORedis.Cluster{
   }
 }
 
-function getServersFromEnv(prefix='', redisConfig = {}){
-
-  const REDIS_SERVERS = process.env[prefix+'REDIS_SERVERS']
-  const REDIS_PASS = process.env[prefix+'REDIS_PASS']
-  const REDIS_PORT = process.env[prefix+'REDIS_PORT'] || '6379'
-
-  const redisServersIpList = REDIS_SERVERS.split(',')
-
-  const redisConfigDefault = {
-    port: REDIS_PORT,
-    password: REDIS_PASS,
-    retryStrategy: function(){
-      return false
-    },
-  }
-
-  redisConfig = {
-    ...redisConfigDefault,
-    ...redisConfig,
-  }
-
-  const redisServers = redisServersIpList.map( server =>{
-    const [host, port] = server.split(':')
-    return {
-      ...redisConfig,
-      host,
-      port,
-    }
-  })
-
-  return redisServers
-}
-
 function Redis(server, options){
-  if(!Array.isArray(server)){
-    const {host = ''} = server
-    if(host.slice(0,4).toUpperCase()==='!ENV'){
-      let ENV_KEY_PREFIX = ''
-      if(host.slice(4,5)==='='){
-        ENV_KEY_PREFIX = host.slice(5)
-      }
-      server = getServersFromEnv(ENV_KEY_PREFIX)
-    }
-  }
-
   if(Array.isArray(server)){
     return new Cluster(server, options)
   }
