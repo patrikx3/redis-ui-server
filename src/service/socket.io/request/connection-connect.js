@@ -1,5 +1,4 @@
 const consolePrefix = 'socket.io connection-connect';
-// const Redis = require('ioredis')
 const Redis = require('../../../ioredis-cluster')
 
 const sharedIoRedis = require('../shared')
@@ -77,7 +76,7 @@ module.exports = async(options) => {
             })
         } else {
             const actualConnection = p3xrs.connections.list.find(con => options.payload.connection.id === con.id)
-            const redisConfig = Object.assign({}, actualConnection);
+            let redisConfig = Object.assign({}, actualConnection);
             delete redisConfig.name
             delete redisConfig.id
             redisConfig.retryStrategy = () => {
@@ -87,6 +86,10 @@ module.exports = async(options) => {
 
             if (db !== undefined) {
                 redisConfig.db = db
+            }
+
+            if (redisConfig.cluster === true) {
+                redisConfig = [ redisConfig ].concat(actualConnection.nodes)
             }
 
             let redis = new Redis(redisConfig)
