@@ -63,30 +63,30 @@ async function getClusterNodes(server, force = false){
     redisNodesCache.set(server, nodes)
     return nodes
 }
-async function createRedis(server, defaultConfig = {}){
-    if(Array.isArray(server)){
-        return new Redis.Cluster(server)
-    }
-
-    const clusterEnabled = await isClusterEnabled(server)
-    if(!clusterEnabled){
-        return new Redis(server)
-    }
-
-    const nodes = await getClusterNodes(server)
-
-    // console.log({nodes})
-
-    const servers = nodes.map(node =>{
-        return {...defaultConfig, ...node}
-    })
-
-    // console.log({servers})
-    return new RedisCluster(servers)
-}
 
 class Cluster extends IORedis.Cluster{
-    static create = createRedis
+    static async create(server, defaultConfig = {}){
+        if(Array.isArray(server)){
+            return new Redis.Cluster(server)
+        }
+
+        const clusterEnabled = await isClusterEnabled(server)
+        if(!clusterEnabled){
+            return new Redis(server)
+        }
+
+        const nodes = await getClusterNodes(server)
+
+        // console.log({nodes})
+
+        const servers = nodes.map(node =>{
+            return {...defaultConfig, ...node}
+        })
+
+        // console.log({servers})
+        return new RedisCluster(servers)
+    }
+
     originalRename(...args){
         return super.rename(...args)
     }
