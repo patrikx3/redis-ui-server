@@ -233,7 +233,7 @@ function getServersFromEnv(prefix='', redisConfig = {}){
 
 function Redis(server, options){
   if(!Array.isArray(server)){
-    const {host} = server
+    const {host = ''} = server
     if(host.slice(0,4).toUpperCase()==='!ENV'){
       let ENV_KEY_PREFIX = ''
       if(host.slice(4,5)==='='){
