@@ -14,7 +14,7 @@ docker run -e "IP=0.0.0.0" -p 7000:7000 -p 7001:7001 -p 7002:7002 -p 7003:7003 -
 
 ---
 
-[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2019.4.118 
+[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2019.4.119 
 
 [![Donate for Corifeus / P3X](https://img.shields.io/badge/Donate-Corifeus-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software) 
 
