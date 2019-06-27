@@ -17,6 +17,10 @@ module.exports = async(options) => {
     delete redisConfig.id
 
     if (redisConfig.cluster === true) {
+        const nodes = nodes.map((node) => {
+            delete node.id
+            return node
+        })
         redisConfig = [ redisConfig ].concat(actualConnection.nodes)
     }
 

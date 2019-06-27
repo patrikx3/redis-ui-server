@@ -69,17 +69,17 @@ const sendConnections = (options) => {
         delete connection.password
 
         //TODO fix secured nodes password
-        /*
         if (Array.isArray(connection.nodes)) {
             connection.nodes = connection.nodes.map(node => {
                 delete node.password
                 return node
             })
         }
-         */
+
         return connection
     })
     connections.list = connectionsList
+
 
     socket.p3xrs.io.emit('connections', {
         status: 'ok',

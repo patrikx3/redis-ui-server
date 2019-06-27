@@ -27,19 +27,16 @@ module.exports = async(options) => {
             }
 
             //TODO fix secured nodes password
-            /*
-            for(let node of connectionSave.nodes) {
-                if (node.password === p3xrs.connections.list[connectionIndexExisting].id) {
-                    const findNode = p3xrs.connections.list[connectionIndexExisting].password.nodes.find((findNode) => {
-                        return findNode.host === node.host && findNode.port === node.port
+            if (Array.isArray(connectionSave.nodes)) {
+                for(let node of connectionSave.nodes) {
+                    const findNode = p3xrs.connections.list[connectionIndexExisting].nodes.find((findNode) => {
+                        return findNode.id === node.id && node.password === findNode.id
                     })
-                    if (findNode === undefined) {
-                        throw new Error('password-not-found')
+                    if (findNode !== undefined) {
+                        node.password = findNode.password
                     }
-                    node.password = findNode.password
                 }
             }
-             */
 
             p3xrs.connections.list[connectionIndexExisting] = connectionSave
         } else {
