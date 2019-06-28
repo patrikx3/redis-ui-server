@@ -24,7 +24,8 @@ module.exports = async(options) => {
         redisConfig = [ redisConfig ].concat(actualConnection.nodes)
     }
 
-    let redis = new Redis(redisConfig)
+    // let redis = new Redis(redisConfig)
+    let redis = await Redis.create(redisConfig)
     redis.on('error', function(error) {
         console.error(error)
         socket.emit(options.responseEvent, {

@@ -92,8 +92,10 @@ module.exports = async(options) => {
                 redisConfig = [ redisConfig ].concat(actualConnection.nodes)
             }
 
-            let redis = new Redis(redisConfig)
-            let redisSubscriber = new Redis(redisConfig)
+            // let redis = new Redis(redisConfig)
+            // let redisSubscriber = new Redis(redisConfig)
+            let redis = await Redis.create(redisConfig)
+            let redisSubscriber = await Redis.create(redisConfig)
             socket.p3xrs.connectionId = connection.id
             socket.p3xrs.ioredis = redis
             socket.p3xrs.ioredisSubscriber = redisSubscriber

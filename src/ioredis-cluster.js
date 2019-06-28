@@ -20,13 +20,13 @@ async function isClusterEnabled(server){
 }
 async function getClusterNodes(server, force = false){
     if(redisNodesCache.has(server) && !force){
-        return redisNode.get(server)
+        return redisNodesCache.get(server)
     }
     const redis = new Redis(server)
 
     const rawNodes = await new Promise((resolve, reject)=>{
         redis.sendCommand(
-            new Redis.Command(
+            new IORedis.Command(
                 'CLUSTER',
                 ['NODES'],
                 'utf-8',
@@ -61,32 +61,11 @@ async function getClusterNodes(server, force = false){
         return arr
     }, [])
     redisNodesCache.set(server, nodes)
+    // console.log({nodes})
     return nodes
 }
 
 class Cluster extends IORedis.Cluster{
-    static async create(server, defaultConfig = {}){
-        if(Array.isArray(server)){
-            return new Redis.Cluster(server)
-        }
-
-        const clusterEnabled = await isClusterEnabled(server)
-        if(!clusterEnabled){
-            return new Redis(server)
-        }
-
-        const nodes = await getClusterNodes(server)
-
-        // console.log({nodes})
-
-        const servers = nodes.map(node =>{
-            return {...defaultConfig, ...node}
-        })
-
-        // console.log({servers})
-        return new RedisCluster(servers)
-    }
-
     originalRename(...args){
         return super.rename(...args)
     }
@@ -205,9 +184,34 @@ function Redis(server, options){
     else{
         return new IORedis(server, options)
     }
-    return
 }
 Redis.Cluster = Cluster
 
+async function createRedis(server, defaultConfig = {}){
+    if(Array.isArray(server)){
+        return new Redis.Cluster(server)
+    }
+
+    const clusterEnabled = await isClusterEnabled(server)
+    if(!clusterEnabled){
+        return new Redis(server)
+    }
+
+    const nodes = await getClusterNodes(server)
+
+    // console.log({nodes})
+
+    defaultConfig = {
+      password: server.password,
+      ...defaultConfig
+    }
+    const servers = nodes.map(node =>{
+        return {...defaultConfig, ...node}
+    })
+
+    // console.log({servers})
+    return new Cluster(servers)
+}
+Redis.create = createRedis
 
 module.exports = Redis
