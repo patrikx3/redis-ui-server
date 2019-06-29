@@ -13,8 +13,10 @@ module.exports = async function getClusterNodes(servers, options={}){
       servers = [servers]
     }
 
+    const errors = []
+
+    let nodes
     for(const server of servers){
-      let nodes
       try{
 
         const id = cache ? hash(server) : null
@@ -64,15 +66,19 @@ module.exports = async function getClusterNodes(servers, options={}){
         }
         return nodes
     }
-    catch(e){
-      console.error(e)
+    catch(error){
+      errors.push(error)
     }
     finally{
       redis.disconnect()
     }
     if(nodes){
-      return nodes
+      break
     }
   }
-  return false
+  if(nodes){
+    return nodes
+  }
+  const errorsMsg = errors.map(e => e.toString()).join('\n')
+  throw new Error('Unable to connect: '+errorsMsg)
 }
