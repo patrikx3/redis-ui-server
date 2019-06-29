@@ -5,7 +5,7 @@ const hash = require('object-hash')
 const redisInfoCache = {}
 module.exports = async function getInfo(server, options={}){
     const {
-      cache = true,
+      cache = false,
       force = false,
     } = options
     const id = cache ? hash(server) : null

@@ -4,6 +4,11 @@ const hash = require('object-hash')
 const redisNodesCache = {}
 module.exports = async function getClusterNodes(servers, options={}){
 
+    const {
+      cache = false,
+      force = false,
+    } = options
+    
     if(!Array.isArray(servers)){
       servers = [servers]
     }
@@ -11,10 +16,6 @@ module.exports = async function getClusterNodes(servers, options={}){
     for(const server of servers){
       try{
 
-        const {
-          cache = true,
-          force = false,
-        } = options
         const id = cache ? hash(server) : null
         if(cache && !force && redisNodesCache[id]){
           return redisNodesCache[id]
