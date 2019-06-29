@@ -11,7 +11,7 @@ module.exports = async function createWithClusterAutoDetect(server, options = {}
         isCluster = true
     }
     else{
-        isCluster = await isClusterEnabled(server)
+        isCluster = await isClusterEnabled(server, true)
     }
     if(!isCluster){
         return new Redis(server)
