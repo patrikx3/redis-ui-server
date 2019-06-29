@@ -17,7 +17,7 @@ module.exports = async(options) => {
     delete redisConfig.id
 
     if (redisConfig.cluster === true) {
-        const nodes = nodes.map((node) => {
+        const nodes = redisConfig.nodes.map((node) => {
             delete node.id
             return node
         })
@@ -25,7 +25,7 @@ module.exports = async(options) => {
     }
 
     // let redis = new Redis(redisConfig)
-    let redis = await Redis.create(redisConfig)
+    let redis = await new Redis(redisConfig, {autoDetectCluster: true})
     redis.on('error', function(error) {
         console.error(error)
         socket.emit(options.responseEvent, {
