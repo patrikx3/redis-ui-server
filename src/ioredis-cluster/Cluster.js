@@ -9,6 +9,9 @@ module.exports = class Cluster extends Redis.Cluster{
       options = setDefaultPasswordOptionFromServer(options, server)
       super(server, options)
     }
+    async originalDbsize(...args){
+      return super.dbsize(...args)
+    }
     async dbsize(){
         const nodeCounts = await Promise.all( this.nodes('master').reduce((promises, node) => {
           promises.push(node.dbsize())
