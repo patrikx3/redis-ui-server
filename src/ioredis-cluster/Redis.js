@@ -7,10 +7,6 @@ const getClusterNodes = require('./getClusterNodes')
 const isClusterEnabled = require('./isClusterEnabled')
 
 class Redis extends IORedis{
-    static Cluster = Cluster
-    static isClusterEnabled = isClusterEnabled
-    static getClusterNodes = getClusterNodes
-    static getInfo = getInfo
     constructor(server, {autoDetectCluster, ...options} = {}){
       if(autoDetectCluster && !Array.isArray(server)){
         return createWithClusterAutoDetect(server, options)
@@ -21,5 +17,10 @@ class Redis extends IORedis{
       super(server)
     }
 }
+
+Redis.Cluster = Cluster
+Redis.isClusterEnabled = isClusterEnabled
+Redis.getClusterNodes = getClusterNodes
+Redis.getInfo = getInfo
 
 module.exports = Redis
