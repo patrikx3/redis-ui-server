@@ -24,8 +24,8 @@ module.exports = async(options) => {
         redisConfig = [ redisConfig ].concat(actualConnection.nodes)
     }
 
-    // let redis = new Redis(redisConfig)
-    let redis = await new Redis(redisConfig, {autoDetectCluster: true})
+    let redis = new Redis(redisConfig)
+    // let redis = await new Redis(redisConfig, {autoDetectCluster: true})
     redis.on('error', function(error) {
         console.error(error)
         socket.emit(options.responseEvent, {
