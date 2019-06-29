@@ -1,92 +1,25 @@
-const IORedis = require('ioredis')
-const redisInfo = require('redis-info')
+const Redis = require('ioredis')
 const {EventEmitter} = require('events')
 
-const redisInfoCache = new Map()
-const redisNodesCache = new Map()
-async function getInfo(server){
-    if(redisInfoCache.has(server)){
-        return redisInfoCache.get(server)
+const setDefaultPasswordOptionFromServer = require('./setDefaultPasswordOptionFromServer')
+
+module.exports = class Cluster extends Redis.Cluster{
+    constructor(server, options={}){
+      server = Array.isArray(server) ? server : [server]
+      options = setDefaultPasswordOptionFromServer(options, server)
+      super(server, options)
     }
-    const redis = new Redis(server)
-    const rawInfo = await redis.info()
-    const info = redisInfo.parse(rawInfo)
-    redisInfoCache.set(server, info)
-    return info
-}
-async function isClusterEnabled(server){
-    const {cluster_enabled} = await getInfo(server)
-    return Boolean(parseInt(cluster_enabled))
-}
-async function getClusterNodes(server, force = false){
-    if(redisNodesCache.has(server) && !force){
-        return redisNode.get(server)
+    async originalDbsize(...args){
+      return super.dbsize(...args)
     }
-    const redis = new Redis(server)
-
-    const rawNodes = await new Promise((resolve, reject)=>{
-        redis.sendCommand(
-            new Redis.Command(
-                'CLUSTER',
-                ['NODES'],
-                'utf-8',
-                function(err,value) {
-                    if (err)
-                        reject(err)
-                    else
-                        resolve(value.toString())
-                }
-            )
-        )
-    })
-
-    const lines = rawNodes.trim().split("\n")
-    const nodes = lines.reduce((arr, line)=>{
-        if(!line){
-            return arr
-        }
-        const row = line.split(' ')
-        const [
-            node_id,
-            server,
-            flags,
-        ] = row
-        const [ target, slots ] = server.split('@')
-        const [ host, port ] = target.split(':')
-        const node = {
-            host,
-            port,
-        }
-        arr.push(node)
-        return arr
-    }, [])
-    redisNodesCache.set(server, nodes)
-    return nodes
-}
-
-class Cluster extends IORedis.Cluster{
-    static async create(server, defaultConfig = {}){
-        if(Array.isArray(server)){
-            return new Redis.Cluster(server)
-        }
-
-        const clusterEnabled = await isClusterEnabled(server)
-        if(!clusterEnabled){
-            return new Redis(server)
-        }
-
-        const nodes = await getClusterNodes(server)
-
-        // console.log({nodes})
-
-        const servers = nodes.map(node =>{
-            return {...defaultConfig, ...node}
-        })
-
-        // console.log({servers})
-        return new RedisCluster(servers)
+    async dbsize(){
+        const nodeCounts = await Promise.all( this.nodes('master').reduce((promises, node) => {
+          promises.push(node.dbsize())
+          return promises
+        }, []))
+        const count = nodeCounts.reduce((tt, c) => tt+c ,0)
+        return count
     }
-
     originalRename(...args){
         return super.rename(...args)
     }
@@ -163,14 +96,14 @@ class Cluster extends IORedis.Cluster{
     }
     scanStream(...args){
         const stream = new EventEmitter()
-        this.streamNodes({
+        this._streamNodes({
             stream,
             method: 'scanStream',
             params: args,
         })
         return stream
     }
-    async streamNodes(options={}){
+    async _streamNodes(options={}){
         let {
             nodes = this.nodes('master'),
             stream = new EventEmitter(),
@@ -197,17 +130,3 @@ class Cluster extends IORedis.Cluster{
         stream.emit('end')
     }
 }
-
-function Redis(server, options){
-    if(Array.isArray(server)){
-        return new Cluster(server, options)
-    }
-    else{
-        return new IORedis(server, options)
-    }
-    return
-}
-Redis.Cluster = Cluster
-
-
-module.exports = Redis

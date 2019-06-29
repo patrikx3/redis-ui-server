@@ -94,6 +94,8 @@ module.exports = async(options) => {
 
             let redis = new Redis(redisConfig)
             let redisSubscriber = new Redis(redisConfig)
+            // let redis = await new Redis(redisConfig, {autoDetectCluster: true})
+            // let redisSubscriber = await new Redis(redisConfig, {autoDetectCluster: true})
             socket.p3xrs.connectionId = connection.id
             socket.p3xrs.ioredis = redis
             socket.p3xrs.ioredisSubscriber = redisSubscriber
