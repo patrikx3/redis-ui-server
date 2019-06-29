@@ -14,6 +14,7 @@ module.exports = async function getInfo(server, options={}){
     }
     const redis = new Redis(server)
     const rawInfo = await redis.info()
+    redis.disconnect()
     const info = redisInfo.parse(rawInfo)
     if(cache){
       redisInfoCache[id] = info

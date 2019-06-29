@@ -8,12 +8,13 @@ module.exports = async function getClusterNodes(servers, options={}){
       cache = false,
       force = false,
     } = options
-    
+
     if(!Array.isArray(servers)){
       servers = [servers]
     }
 
     for(const server of servers){
+      let nodes
       try{
 
         const id = cache ? hash(server) : null
@@ -39,7 +40,7 @@ module.exports = async function getClusterNodes(servers, options={}){
         })
 
         const lines = rawNodes.trim().split("\n")
-        const nodes = lines.reduce((arr, line)=>{
+        nodes = lines.reduce((arr, line)=>{
           if(!line){
             return arr
           }
@@ -65,6 +66,12 @@ module.exports = async function getClusterNodes(servers, options={}){
     }
     catch(e){
       console.error(e)
+    }
+    finally{
+      redis.disconnect()
+    }
+    if(nodes){
+      return nodes
     }
   }
   return false
