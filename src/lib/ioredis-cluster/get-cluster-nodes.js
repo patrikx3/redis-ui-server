@@ -78,6 +78,6 @@ module.exports = async function getClusterNodes(servers, options = {}) {
     if (nodes) {
         return nodes
     }
-    const errorsMsg = errors.map(e => e.toString()).join(',')
+    const errorsMsg = errors.map(e => e.toString()).join(', ')
     throw new Error('getClusterNodes errors: ' + errorsMsg)
 }
