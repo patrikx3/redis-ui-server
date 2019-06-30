@@ -2,8 +2,8 @@ const consolePrefix = 'socket.io rename key'
 
 const sharedIoRedis = require('../shared')
 
-module.exports = async(options) => {
-    const { socket, payload } = options;
+module.exports = async (options) => {
+    const {socket, payload} = options;
 
     try {
         let redis = socket.p3xrs.ioredis
@@ -18,7 +18,7 @@ module.exports = async(options) => {
             socket: socket,
         })
 
-    } catch(e) {
+    } catch (e) {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',

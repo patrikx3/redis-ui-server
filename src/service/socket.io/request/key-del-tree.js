@@ -2,8 +2,8 @@ const consolePrefix = 'socket.io key del tree'
 
 const sharedIoRedis = require('../shared')
 
-module.exports = async(options) => {
-    const { socket, payload } = options;
+module.exports = async (options) => {
+    const {socket, payload} = options;
 
     try {
         let redis = socket.p3xrs.ioredis
@@ -16,7 +16,7 @@ module.exports = async(options) => {
             match: deleteTree
         })
         const pipelineDeleteTree = redis.pipeline()
-        for(let key of keys) {
+        for (let key of keys) {
             console.info(consolePrefix, 'delete key ', key)
             pipelineDeleteTree.del(key)
         }
@@ -28,7 +28,7 @@ module.exports = async(options) => {
             socket: socket,
         })
 
-    } catch(e) {
+    } catch (e) {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',

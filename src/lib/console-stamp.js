@@ -10,9 +10,9 @@ const consoleStamp = () => {
         },
         colors: {
             stamp: "yellow",
-            label: function() {
+            label: function () {
                 let color;
-                switch(arguments[0]) {
+                switch (arguments[0]) {
                     case '[ERROR]':
                         color = chalk.bold.red
                         break;

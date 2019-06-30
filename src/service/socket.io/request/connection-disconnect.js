@@ -2,9 +2,9 @@ const sharedIoRedis = require('../shared')
 
 const consolePrefix = 'socket.io connection disconnect'
 
-module.exports = async(options) => {
+module.exports = async (options) => {
     const {socket, payload} = options;
-    const { connectionId } = payload;
+    const {connectionId} = payload;
 
     console.warn(consolePrefix, 'connectionId', connectionId, 'socket.p3xrs.connectionId', socket.p3xrs.connectionId)
     try {
@@ -18,7 +18,7 @@ module.exports = async(options) => {
         socket.emit(options.responseEvent, {
             status: 'ok',
         })
-    } catch(e) {
+    } catch (e) {
         socket.emit(options.responseEvent, {
             status: 'error',
             error: error

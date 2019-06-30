@@ -1,5 +1,5 @@
 const triggerDisconnect = (options) => {
-    const { connectionId, code, socket } = options
+    const {connectionId, code, socket} = options
     if (p3xrs.redisConnections.hasOwnProperty(connectionId)) {
         delete p3xrs.redisConnections[connectionId]
         socket.p3xrs.io.emit('redis-disconnected', {
@@ -15,7 +15,7 @@ const triggerDisconnect = (options) => {
 }
 
 const sendStatus = (options) => {
-    const { socket } = options
+    const {socket} = options
 
     const redisConnections = {}
     Object.keys(p3xrs.redisConnections).forEach((redisConnectionKey) => {
@@ -34,7 +34,7 @@ const sendStatus = (options) => {
 
 const consolePrefixDisconnectRedis = 'socket.io shared disconnect redis'
 const disconnectRedis = (options) => {
-    const { socket } = options
+    const {socket} = options
     //console.warn(consolePrefixDisconnectRedis, `${socket.p3xrs.connectionId} !== ${connection.id}`)
     if (p3xrs.redisConnections.hasOwnProperty(socket.p3xrs.connectionId)) {
         console.warn(consolePrefixDisconnectRedis, `includes ${p3xrs.redisConnections[socket.p3xrs.connectionId].clients.includes(socket.id)} length === 1 ${p3xrs.redisConnections[socket.p3xrs.connectionId].clients.length}`)
@@ -62,7 +62,7 @@ const disconnectRedis = (options) => {
 
 const cloneDeep = require('lodash/cloneDeep')
 const sendConnections = (options) => {
-    const { socket } = options
+    const {socket} = options
 
     const connections = cloneDeep(p3xrs.connections);
     let connectionsList = connections.list.map(connection => {
@@ -90,11 +90,11 @@ const sendConnections = (options) => {
 
 
 const disconnectRedisIo = (options) => {
-    const { socket } = options
+    const {socket} = options
 
-    console.warn('shared disconnectRedisIo',  'try')
+    console.warn('shared disconnectRedisIo', 'try')
     if (socket.p3xrs.ioredis !== undefined) {
-        console.warn('shared disconnectRedisIo',  'executed')
+        console.warn('shared disconnectRedisIo', 'executed')
         socket.p3xrs.ioredis.disconnect()
         socket.p3xrs.ioredisSubscriber.disconnect()
         socket.p3xrs.ioredis = undefined
@@ -103,13 +103,13 @@ const disconnectRedisIo = (options) => {
 }
 
 const getStreamKeys = (options) => {
-    const { redis } = options
-    let { dbsize } = options
+    const {redis} = options
+    let {dbsize} = options
     return new Promise(async (resolve, reject) => {
 
         try {
             if (dbsize === undefined) {
-                dbsize =  await redis.dbsize()
+                dbsize = await redis.dbsize()
             }
 
             let count = 100
@@ -118,7 +118,7 @@ const getStreamKeys = (options) => {
             } else if (dbsize > 11000) {
                 count = 1000
             }
-console.warn('socket.io getStreamKeys dbsize', dbsize , 'count', count)
+            console.warn('socket.io getStreamKeys dbsize', dbsize, 'count', count)
 
             const stream = redis.scanStream({
                 match: options.match,
@@ -186,11 +186,11 @@ const getStreamTypedKeys = (options) => {
 
 const getKeysInfo = async (options) => {
 
-    const { redis, keys } = options;
+    const {redis, keys} = options;
 
     const keyTypePipeline = redis.pipeline()
 //    const promises = [];
-    for(let key of keys) {
+    for (let key of keys) {
         keyTypePipeline.type(key)
 //        promises.push(redis.type(key))
     }
@@ -202,9 +202,9 @@ const getKeysInfo = async (options) => {
         const keyType = keysType[keysIndex]
         const key = keys[keysIndex]
         const obj = {
-            type: keyType[1 ]
+            type: keyType[1]
         }
-        switch(obj.type) {
+        switch (obj.type) {
             case 'hash':
                 complexLengthPipeline.hlen(key)
                 break;
@@ -247,8 +247,8 @@ const ensureReadonlyConnections = () => {
 }
 
 const getFullInfo = async (options) => {
-    const { redis } = options;
-    let { payload } = options
+    const {redis} = options;
+    let {payload} = options
     if (payload === undefined) {
         payload = {}
     }
@@ -262,8 +262,7 @@ const getFullInfo = async (options) => {
             redis: redis,
             match: payload.match,
         }),
-        redis.pubsub('channels', '*'),
-        redis.infoObject(),
+        redis.pubsub('channels', '*')
     ])
 
     const keys = results[1]
@@ -282,7 +281,6 @@ const getFullInfo = async (options) => {
 
     const result = {
         info: results[0],
-        infoObject: results[3],
         keys: keys,
         keysInfo: keysInfo,
         dbsize: dbsize,
@@ -294,13 +292,13 @@ const getFullInfo = async (options) => {
 }
 
 const getFullInfoAndSendSocket = async (options) => {
-    const { redis, socket, payload} = options
+    const {redis, socket, payload} = options
     const result = await getFullInfo({
         redis: redis,
         payload: payload,
     })
 
-    let { extend } = options
+    let {extend} = options
     if (extend === undefined) {
         extend = {}
     }
@@ -308,7 +306,6 @@ const getFullInfoAndSendSocket = async (options) => {
     socket.emit(options.responseEvent, Object.assign(extend, {
         status: 'ok',
         info: result.info,
-        infoObject: result.infoObject,
         keys: result.keys,
         keysInfo: result.keysInfo,
         dbsize: result.dbsize,
@@ -318,7 +315,7 @@ const getFullInfoAndSendSocket = async (options) => {
 module.exports.ensureReadonlyConnections = ensureReadonlyConnections
 module.exports.triggerDisconnect = triggerDisconnect
 module.exports.getStreamKeys = getStreamKeys
-module.exports.disconnectRedisIo =  disconnectRedisIo
+module.exports.disconnectRedisIo = disconnectRedisIo
 module.exports.sendConnections = sendConnections
 module.exports.sendStatus = sendStatus
 module.exports.disconnectRedis = disconnectRedis

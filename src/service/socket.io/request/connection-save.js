@@ -1,7 +1,7 @@
 const sharedIoRedis = require('../shared')
 
-module.exports = async(options) => {
-    const { socket } = options;
+module.exports = async (options) => {
+    const {socket} = options;
 
     const connectionSave = options.payload.model;
 
@@ -12,7 +12,7 @@ module.exports = async(options) => {
         disableReadonlyConnections = false
 
         let connectionIndexExisting;
-        for(let connectionIndex in p3xrs.connections.list) {
+        for (let connectionIndex in p3xrs.connections.list) {
             const connection = p3xrs.connections.list[connectionIndex]
             if (connection.id === connectionSave.id) {
                 connectionIndexExisting = connectionIndex
@@ -28,7 +28,7 @@ module.exports = async(options) => {
 
             //TODO fix secured nodes password
             if (Array.isArray(connectionSave.nodes)) {
-                for(let node of connectionSave.nodes) {
+                for (let node of connectionSave.nodes) {
                     const findNode = p3xrs.connections.list[connectionIndexExisting].nodes.find((findNode) => {
                         return findNode.id === node.id && node.password === findNode.id
                     })

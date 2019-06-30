@@ -2,8 +2,8 @@ const sharedIoRedis = require('../shared')
 
 const consolePrefix = 'socket.io trigger redis disconnect'
 
-module.exports = async(options) => {
-    const {socket } = options;
+module.exports = async (options) => {
+    const {socket} = options;
 
 
     try {
@@ -15,7 +15,7 @@ module.exports = async(options) => {
         socket.emit(options.responseEvent, {
             status: 'ok',
         })
-    } catch(e) {
+    } catch (e) {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',

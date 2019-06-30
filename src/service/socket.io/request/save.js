@@ -1,5 +1,5 @@
-module.exports = async(options) => {
-    const {socket } = options;
+module.exports = async (options) => {
+    const {socket} = options;
 
     const redis = socket.p3xrs.ioredis
 
@@ -10,7 +10,7 @@ module.exports = async(options) => {
             status: 'ok',
             info: await redis.info(),
         })
-    } catch(e) {
+    } catch (e) {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',

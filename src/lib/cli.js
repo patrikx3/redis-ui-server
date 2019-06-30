@@ -28,7 +28,6 @@ const cli = () => {
         p3xrs.cfg = require(configPath).p3xrs
 
 
-
         if (program.readonlyConnections) {
             // console.warn(program.readonlyConnections)
             p3xrs.cfg.readonlyConnections = true

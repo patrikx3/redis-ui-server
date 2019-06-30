@@ -1,8 +1,8 @@
 const consolePrefix = 'socket.io console call'
-module.exports = async(options) => {
-    const { socket, payload } = options;
+module.exports = async (options) => {
+    const {socket, payload} = options;
 
-    const { command } = payload
+    const {command} = payload
 
     try {
         let redis = socket.p3xrs.ioredis
@@ -19,15 +19,13 @@ module.exports = async(options) => {
          */
         let result = await redis.call(mainCommand, commands)
 
-        const defaultEmit = {
-
-        }
+        const defaultEmit = {}
 
         let generatedCommand = mainCommand
         if (commands.length > 0) {
             generatedCommand += ' ' + commands.join(' ')
         }
-        switch(mainCommand) {
+        switch (mainCommand) {
             case 'select':
                 defaultEmit.database = parseInt(commands[0])
                 break;
@@ -57,7 +55,7 @@ module.exports = async(options) => {
             result: result,
             generatedCommand: generatedCommand,
         }))
-    } catch(e) {
+    } catch (e) {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',

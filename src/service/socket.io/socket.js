@@ -11,7 +11,7 @@ module.exports = (io) => {
             io: io,
             ioredis: undefined,
             ioredisSubscriber: undefined,
-           // commands: undefined,
+            // commands: undefined,
         }
 
         console.info('socket.io connected %s', socket.id);
@@ -60,7 +60,6 @@ module.exports = (io) => {
         socketIoShared.sendConnections({
             socket: socket,
         })
-
 
 
     });

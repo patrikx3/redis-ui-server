@@ -1,7 +1,7 @@
 const Redis = require('../../../ioredis-cluster')
 
-module.exports = async(options) => {
-    const { socket } = options;
+module.exports = async (options) => {
+    const {socket} = options;
 
     try {
         let redisConfig = options.payload.model;
@@ -25,11 +25,11 @@ module.exports = async(options) => {
                 }
                 return node
             })
-            redisConfig = [ redisConfig ].concat(redisConfig.nodes)
+            redisConfig = [redisConfig].concat(redisConfig.nodes)
         }
 
         let redis = new Redis(redisConfig)
-        redis.on('error', function(error) {
+        redis.on('error', function (error) {
             console.error(error)
             socket.emit(options.responseEvent, {
                 status: 'error',
@@ -37,14 +37,14 @@ module.exports = async(options) => {
             })
             redis.disconnect()
         })
-        redis.on('connect', async function() {
+        redis.on('connect', async function () {
             try {
                 await redis.call('client', 'list')
 
                 socket.emit(options.responseEvent, {
                     status: 'ok',
                 })
-            } catch(error) {
+            } catch (error) {
                 socket.emit(options.responseEvent, {
                     status: 'error',
                     error: error
@@ -55,7 +55,7 @@ module.exports = async(options) => {
             }
         })
 
-    } catch(e) {
+    } catch (e) {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',

@@ -1,9 +1,8 @@
 const consolePrefix = 'socket.io key get full'
 
 
-
-module.exports = async(options) => {
-    const { socket, payload } = options;
+module.exports = async (options) => {
+    const {socket, payload} = options;
 
     try {
         let redis = socket.p3xrs.ioredis
@@ -17,7 +16,7 @@ module.exports = async(options) => {
         //console.info(consolePrefix, payload, type, key)
 
         const viewPipeline = redis.pipeline()
-        switch(type) {
+        switch (type) {
             case 'string':
                 viewPipeline.get(key)
                 break;
@@ -41,7 +40,7 @@ module.exports = async(options) => {
         viewPipeline.ttl(key)
         viewPipeline.object('encoding', key)
 
-        switch(type) {
+        switch (type) {
             case 'hash':
                 viewPipeline.hlen(key)
                 break;
@@ -61,7 +60,7 @@ module.exports = async(options) => {
 
 
         const viewPipelineResult = await viewPipeline.exec()
-       // console.log(viewPipelineResult)
+        // console.log(viewPipelineResult)
 
         const value = viewPipelineResult[0][1]
         const ttl = viewPipelineResult[1][1]
@@ -81,9 +80,9 @@ module.exports = async(options) => {
             ttl: ttl,
             encoding: encoding,
         };
-       // console.warn('socketResult', socketResult)
+        // console.warn('socketResult', socketResult)
         socket.emit(options.responseEvent, socketResult)
-    } catch(e) {
+    } catch (e) {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',
