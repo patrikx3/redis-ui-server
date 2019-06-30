@@ -1,5 +1,5 @@
 const IORedis = require('ioredis')
-const redisInfo = require('redis-info')
+const redisInfo = require('./redis-info')
 const Cluster = require('./cluster')
 const createWithClusterAutoDetect = require('./create-with-cluster-auto-detect')
 

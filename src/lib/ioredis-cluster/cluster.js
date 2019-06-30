@@ -1,6 +1,6 @@
 const Redis = require('ioredis')
 const {EventEmitter} = require('events')
-const redisInfo = require('redis-info')
+const redisInfo = require('./redis-info')
 
 const setDefaultPasswordOptionFromServer = require('./set-default-password-option-from-server')
 
@@ -31,19 +31,24 @@ module.exports = class Cluster extends Redis.Cluster {
       }) )
       let keys = 0
       let expires = 0
+      let avg_ttl = 0
       for(const nodeKeyspace of keyspaceList){
             const parsed = redisInfo.parse(nodeKeyspace)
             const db0 = parsed.databases[0]
             const {
               keys:nodeKeys = 0,
               expires:nodeExpires = 0,
+              avg_ttl:nodeAvgTtl = 0,
             } = db0
             keys += nodeKeys
             expires += nodeExpires
+            console.log({db0})
+            avg_ttl += nodeAvgTtl
+
       }
-      const avg_ttl = keyspaceList.reduce((tt, {avg_ttl:nodeAvgTtl = 0})=>{
-        return tt + nodeAvgTtl
-      },0)/keyspaceList.length
+      console.log({avg_ttl})
+      avg_ttl = Math.round(avg_ttl/expires)
+      console.log({avg_ttl})
       const clusterKeyspace = {
         keys,
         expires,
