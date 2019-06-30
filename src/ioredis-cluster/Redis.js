@@ -6,15 +6,15 @@ const getInfo = require('./getInfo')
 const getClusterNodes = require('./getClusterNodes')
 const isClusterEnabled = require('./isClusterEnabled')
 
-class Redis extends IORedis{
-    constructor(server, {autoDetectCluster, ...options} = {}){
-      if(autoDetectCluster && !Array.isArray(server)){
-        return createWithClusterAutoDetect(server, options)
-      }
-      if(Array.isArray(server)){
-        return new Cluster(server, options)
-      }
-      super(server)
+class Redis extends IORedis {
+    constructor(server, {autoDetectCluster, ...options} = {}) {
+        if (autoDetectCluster && !Array.isArray(server)) {
+            return createWithClusterAutoDetect(server, options)
+        }
+        if (Array.isArray(server)) {
+            return new Cluster(server, options)
+        }
+        super(server)
     }
 }
 
