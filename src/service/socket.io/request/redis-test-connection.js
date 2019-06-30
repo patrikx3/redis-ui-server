@@ -1,4 +1,4 @@
-const Redis = require('../../../ioredis-cluster')
+const Redis = require('../../../lib/ioredis-cluster')
 
 module.exports = async (options) => {
     const {socket} = options;
