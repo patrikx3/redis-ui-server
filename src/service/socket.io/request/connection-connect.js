@@ -174,6 +174,7 @@ module.exports = async (options) => {
                     })
 
                 } catch (e) {
+                    console.error(e)
                     socket.emit(options.responseEvent, {
                         status: 'error',
                         error: e,

@@ -45,6 +45,7 @@ module.exports = async (options) => {
                     status: 'ok',
                 })
             } catch (error) {
+                console.error(error)
                 socket.emit(options.responseEvent, {
                     status: 'error',
                     error: error
