@@ -4,17 +4,21 @@ const hash = require('object-hash')
 const redisNodesCache = {}
 module.exports = async function getClusterNodes(servers, options={}){
 
+    const {
+      cache = false,
+      force = false,
+    } = options
+
     if(!Array.isArray(servers)){
       servers = [servers]
     }
 
+    const errors = []
+
+    let nodes
     for(const server of servers){
       try{
 
-        const {
-          cache = true,
-          force = false,
-        } = options
         const id = cache ? hash(server) : null
         if(cache && !force && redisNodesCache[id]){
           return redisNodesCache[id]
@@ -38,7 +42,7 @@ module.exports = async function getClusterNodes(servers, options={}){
         })
 
         const lines = rawNodes.trim().split("\n")
-        const nodes = lines.reduce((arr, line)=>{
+        nodes = lines.reduce((arr, line)=>{
           if(!line){
             return arr
           }
@@ -62,9 +66,19 @@ module.exports = async function getClusterNodes(servers, options={}){
         }
         return nodes
     }
-    catch(e){
-      console.error(e)
+    catch(error){
+      errors.push(error)
+    }
+    finally{
+      redis.disconnect()
+    }
+    if(nodes){
+      break
     }
   }
-  return false
+  if(nodes){
+    return nodes
+  }
+  const errorsMsg = errors.map(e => e.toString()).join('\n')
+  throw new Error('Unable to connect: '+errorsMsg)
 }
