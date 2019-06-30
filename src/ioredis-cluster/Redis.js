@@ -1,4 +1,6 @@
 const IORedis = require('ioredis')
+const redisInfo = require('redis-info')
+
 const Cluster = require('./Cluster')
 const createWithClusterAutoDetect = require('./createWithClusterAutoDetect')
 
@@ -15,6 +17,10 @@ class Redis extends IORedis {
             return new Cluster(server, options)
         }
         super(server)
+    }
+    infoObject(...args){
+      const info = this.info(...args)
+      return redisInfo.parse(info)
     }
 }
 
