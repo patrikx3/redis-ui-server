@@ -5,15 +5,14 @@ const getClusterNodes = require('./getClusterNodes')
 const Cluster = require('./Cluster')
 const setDefaultPasswordOptionFromServer = require('./setDefaultPasswordOptionFromServer')
 
-module.exports = async function createWithClusterAutoDetect(server, options = {}){
+module.exports = async function createWithClusterAutoDetect(server, options = {}) {
     let isCluster
-    if(Array.isArray(server)){
+    if (Array.isArray(server)) {
         isCluster = true
-    }
-    else{
+    } else {
         isCluster = await isClusterEnabled(server, true)
     }
-    if(!isCluster){
+    if (!isCluster) {
         return new Redis(server)
     }
 
