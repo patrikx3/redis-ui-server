@@ -1,7 +1,7 @@
 const Redis = require('ioredis')
 const {EventEmitter} = require('events')
 
-const setDefaultPasswordOptionFromServer = require('./setDefaultPasswordOptionFromServer')
+const setDefaultPasswordOptionFromServer = require('./set-default-password-option-from-server')
 
 module.exports = class Cluster extends Redis.Cluster {
     constructor(server, options = {}) {

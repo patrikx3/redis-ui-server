@@ -73,7 +73,11 @@ The best is to keep it undefined and it will be in your home dir, but you can ch
 
 # For development standalone
 
+For file names do not use camelCase, but use kebab-case. Folder should be named as kebab-case as well. As you can see, all code filenames are using it like that, please do not change that.
+Please apply the `.editorconfig` settings in your IDE.
+  
 Copy from `./artifacts/boot/p3xrs.json` to the root folder (`./p3xrs.json`).
+
 
 ```bash
 npm install

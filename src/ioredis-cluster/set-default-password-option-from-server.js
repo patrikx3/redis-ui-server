@@ -1,4 +1,4 @@
-const getDefaultPasswordFromServer = require('./getDefaultPasswordFromServer')
+const getDefaultPasswordFromServer = require('./get-default-password-from-server')
 module.exports = function setDefaultPasswordOptionFromServer(options, server) {
     const defaultPassword = getDefaultPasswordFromServer(server)
     let {redisOptions} = options

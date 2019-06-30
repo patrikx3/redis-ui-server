@@ -1,2 +1,2 @@
-const Redis = require('./Redis')
+const Redis = require('./redis')
 module.exports = Redis

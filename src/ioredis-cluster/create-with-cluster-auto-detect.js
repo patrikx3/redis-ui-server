@@ -1,9 +1,9 @@
 const Redis = require('ioredis')
 
-const isClusterEnabled = require('./isClusterEnabled')
-const getClusterNodes = require('./getClusterNodes')
-const Cluster = require('./Cluster')
-const setDefaultPasswordOptionFromServer = require('./setDefaultPasswordOptionFromServer')
+const isClusterEnabled = require('./is-cluster-enabled')
+const getClusterNodes = require('./get-cluster-nodes')
+const Cluster = require('./cluster')
+const setDefaultPasswordOptionFromServer = require('./set-default-password-option-from-server')
 
 module.exports = async function createWithClusterAutoDetect(server, options = {}) {
     let isCluster

@@ -1,10 +1,10 @@
 const IORedis = require('ioredis')
-const Cluster = require('./Cluster')
-const createWithClusterAutoDetect = require('./createWithClusterAutoDetect')
+const Cluster = require('./cluster')
+const createWithClusterAutoDetect = require('./create-with-cluster-auto-detect')
 
-const getInfo = require('./getInfo')
-const getClusterNodes = require('./getClusterNodes')
-const isClusterEnabled = require('./isClusterEnabled')
+const getInfo = require('./get-info')
+const getClusterNodes = require('./get-cluster-nodes')
+const isClusterEnabled = require('./is-cluster-enabled')
 
 class Redis extends IORedis {
     constructor(server, {autoDetectCluster, ...options} = {}) {
