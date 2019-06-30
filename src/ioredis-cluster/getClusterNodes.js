@@ -79,6 +79,6 @@ module.exports = async function getClusterNodes(servers, options={}){
   if(nodes){
     return nodes
   }
-  const errorsMsg = errors.map(e => e.toString()).join('\n')
-  throw new Error('Unable to connect: '+errorsMsg)
+  const errorsMsg = errors.map(e => e.toString()).join(',')
+  throw new Error('getClusterNodes errors: '+errorsMsg)
 }
