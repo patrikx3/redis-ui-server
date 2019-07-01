@@ -1,8 +1,10 @@
 /* from npm's redis-info, adding missing avg_ttl */
 
-const fromPairs = require('lodash.frompairs')
-const find = require('lodash.find')
-const has = require('lodash.has')
+const {
+    fromPairs,
+    find,
+    has,
+} = require('lodash')
 
 module.exports = {
     parse: function (info) {
