@@ -63,7 +63,7 @@ function parseDatabases(info) {
               var dbName = args[0]
               var value = args[1]
               var values = orEmptyStr(value).split(',')
-              console.log({values})
+              // console.log({values})
 
               function extract(param) {
                   return parseInt(orEmptyStr(find(values, startWith(param))).split('=')[1] || 0, 10)
