@@ -33,6 +33,9 @@ module.exports = class Cluster extends Redis.Cluster {
       let expires = 0
       let avg_ttl = 0
       for(const nodeKeyspace of keyspaceList){
+            if(!nodeKeyspace){
+                continue
+            }
             const parsed = redisInfo.parse(nodeKeyspace)
             const db0 = parsed.databases[0]
             const {
@@ -42,13 +45,10 @@ module.exports = class Cluster extends Redis.Cluster {
             } = db0
             keys += nodeKeys
             expires += nodeExpires
-            console.log({db0})
             avg_ttl += nodeAvgTtl
 
       }
-      console.log({avg_ttl})
       avg_ttl = Math.round(avg_ttl/expires)
-      console.log({avg_ttl})
       const clusterKeyspace = {
         keys,
         expires,
