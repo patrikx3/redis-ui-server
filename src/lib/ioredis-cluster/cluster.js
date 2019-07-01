@@ -11,54 +11,55 @@ module.exports = class Cluster extends Redis.Cluster {
         super(server, options)
     }
 
-    async infoObject(...args){
-      const [key] = args
-      if(key==='keyspace'){
-        return {
-          databases: [await this._getClusterInfoKeyspace()]
+    async infoObject(...args) {
+        const [key] = args
+        if (key === 'keyspace') {
+            return {
+                databases: [await this._getClusterInfoKeyspace()]
+            }
         }
-      }
-      const info = await this.info(...args)
-      const infoObject = redisInfo.parse(info)
-      if(!key){
-        infoObject.databases[0] = await this._getClusterInfoKeyspace()
-      }
-      return infoObject
+        const info = await this.info(...args)
+        const infoObject = redisInfo.parse(info)
+        if (!key) {
+            infoObject.databases[0] = await this._getClusterInfoKeyspace()
+        }
+        return infoObject
     }
-    async _getClusterInfoKeyspace(info){
-      const keyspaceList = await Promise.all( this.nodes('master').map(node => {
-          return node.info('keyspace')
-      }) )
-      let keys = 0
-      let expires = 0
-      let avg_ttl = 0
-      for(const nodeKeyspace of keyspaceList){
-            if(!nodeKeyspace){
+
+    async _getClusterInfoKeyspace(info) {
+        const keyspaceList = await Promise.all(this.nodes('master').map(node => {
+            return node.info('keyspace')
+        }))
+        let keys = 0
+        let expires = 0
+        let avg_ttl = 0
+        for (const nodeKeyspace of keyspaceList) {
+            if (!nodeKeyspace) {
                 continue
             }
             const parsed = redisInfo.parse(nodeKeyspace)
             const db0 = parsed.databases[0]
-            if(!db0){
+            if (!db0) {
                 continue
             }
             const {
-              keys:nodeKeys = 0,
-              expires:nodeExpires = 0,
-              avg_ttl:nodeAvgTtl = 0,
+                keys: nodeKeys = 0,
+                expires: nodeExpires = 0,
+                avg_ttl: nodeAvgTtl = 0,
             } = db0
             keys += nodeKeys
             expires += nodeExpires
             avg_ttl += nodeAvgTtl
 
-      }
-      avg_ttl = avg_ttl ? Math.round(avg_ttl/expires) : 0
-      const clusterKeyspace = {
-        keys,
-        expires,
-        avg_ttl,
-      }
-      // console.log({clusterKeyspace})
-      return clusterKeyspace
+        }
+        avg_ttl = avg_ttl ? Math.round(avg_ttl / expires) : 0
+        const clusterKeyspace = {
+            keys,
+            expires,
+            avg_ttl,
+        }
+        // console.log({clusterKeyspace})
+        return clusterKeyspace
     }
 
     async originalDbsize(...args) {
@@ -66,9 +67,9 @@ module.exports = class Cluster extends Redis.Cluster {
     }
 
     async dbsize() {
-        const nodeCounts = await Promise.all( this.nodes('master').map(node => {
-          return node.dbsize()
-        }) )
+        const nodeCounts = await Promise.all(this.nodes('master').map(node => {
+            return node.dbsize()
+        }))
         const count = nodeCounts.reduce((tt, c) => tt + c, 0)
         return count
     }

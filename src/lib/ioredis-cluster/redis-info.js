@@ -47,42 +47,43 @@ function takeFirst(func) {
  * @return {Array}     Array of [key, value]
  */
 function splitStr(str) {
-  return str.split('\n')
+    return str.split('\n')
         .filter(function (line) {
-          return line.length > 0 && line.indexOf('#') !== 0
+            return line.length > 0 && line.indexOf('#') !== 0
         })
         .map(function (line) {
-          return line.trim().split(':')
+            return line.trim().split(':')
         })
 }
 
 function parseDatabases(info) {
-  return info
+    return info
         .filter(takeFirst(startWith('db')))
         .map(function _parseDatabaseInfo(args) {
-              var dbName = args[0]
-              var value = args[1]
-              var values = orEmptyStr(value).split(',')
-              // console.log({values})
+            var dbName = args[0]
+            var value = args[1]
+            var values = orEmptyStr(value).split(',')
 
-              function extract(param) {
-                  return parseInt(orEmptyStr(find(values, startWith(param))).split('=')[1] || 0, 10)
-              }
+            // console.log({values})
 
-              return {
-                    index: parseInt(dbName.substr(2), 10),
-                    keys: extract('keys'),
-                    expires: extract('expires'),
-                    avg_ttl: extract('avg_ttl'),
-              }
+            function extract(param) {
+                return parseInt(orEmptyStr(find(values, startWith(param))).split('=')[1] || 0, 10)
+            }
+
+            return {
+                index: parseInt(dbName.substr(2), 10),
+                keys: extract('keys'),
+                expires: extract('expires'),
+                avg_ttl: extract('avg_ttl'),
+            }
         })
         .reduce(function (m, v) {
-              m[v.index] = {
+            m[v.index] = {
                 keys: v.keys,
                 expires: v.expires,
                 avg_ttl: v.avg_ttl,
-              }
-              return m
+            }
+            return m
         }, {})
 }
 
@@ -90,34 +91,34 @@ function parseCommands(info) {
     return fromPairs(info.filter(function (a) {
         return orEmptyStr(a[0]).indexOf('cmdstat_') === 0
     })
-    .map(function _parseCommands(args) {
-          var v = args[0]
-          var a = args[1]
-          var val = fromPairs(orEmptyStr(a).split(',').map(split('=')))
-          if (has(val, 'calls')) {
-              val.calls = parseInt(val.calls, 10)
-          }
-          if (has(val, 'usec')) {
-              val.usec = parseInt(val.usec, 10)
-          }
-          if (has(val, 'usec_per_call')) {
-              val.usec_per_call = parseFloat(val.usec_per_call, 10)
-          }
-          return [orEmptyStr(v).split('_')[1], val]
-    }))
+        .map(function _parseCommands(args) {
+            var v = args[0]
+            var a = args[1]
+            var val = fromPairs(orEmptyStr(a).split(',').map(split('=')))
+            if (has(val, 'calls')) {
+                val.calls = parseInt(val.calls, 10)
+            }
+            if (has(val, 'usec')) {
+                val.usec = parseInt(val.usec, 10)
+            }
+            if (has(val, 'usec_per_call')) {
+                val.usec_per_call = parseFloat(val.usec_per_call, 10)
+            }
+            return [orEmptyStr(v).split('_')[1], val]
+        }))
 }
 
 function parseFields(info) {
-  var fields = info.reduce(function (m, v) {
-        if (!v[0].trim() || v[0].indexOf('db') === 0 ||  v[0].indexOf('cmdstat_') === 0) {
+    var fields = info.reduce(function (m, v) {
+        if (!v[0].trim() || v[0].indexOf('db') === 0 || v[0].indexOf('cmdstat_') === 0) {
             return m
         }
         m[v[0]] = v[1]
         return m
-      }, {
-          databases: parseDatabases(info),
-          commands: parseCommands(info)
-      })
+    }, {
+        databases: parseDatabases(info),
+        commands: parseCommands(info)
+    })
 
     return fields
 }

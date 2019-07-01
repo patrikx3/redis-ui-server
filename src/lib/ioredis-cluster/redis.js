@@ -17,9 +17,10 @@ class Redis extends IORedis {
         }
         super(server)
     }
-    async infoObject(...args){
-      const info = await this.info(...args)
-      return redisInfo.parse(info)
+
+    async infoObject(...args) {
+        const info = await this.info(...args)
+        return redisInfo.parse(info)
     }
 }
 
