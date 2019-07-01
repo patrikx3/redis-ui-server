@@ -1,5 +1,5 @@
 const Redis = require('ioredis')
-const redisInfo = require('redis-info')
+const redisInfo = require('./redis-info')
 const hash = require('object-hash')
 
 const redisInfoCache = {}
