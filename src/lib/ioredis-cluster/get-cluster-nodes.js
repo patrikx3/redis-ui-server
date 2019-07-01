@@ -1,13 +1,6 @@
 const Redis = require('ioredis')
-const hash = require('object-hash')
 
-const redisNodesCache = {}
 module.exports = async function getClusterNodes(servers, options = {}) {
-
-    const {
-        cache = false,
-        force = false,
-    } = options
 
     if (!Array.isArray(servers)) {
         servers = [servers]
@@ -19,10 +12,6 @@ module.exports = async function getClusterNodes(servers, options = {}) {
     for (const server of servers) {
         try {
 
-            const id = cache ? hash(server) : null
-            if (cache && !force && redisNodesCache[id]) {
-                return redisNodesCache[id]
-            }
             const redis = new Redis({...server, retryStrategy: () => false})
 
             const rawNodes = await new Promise((resolve, reject) => {
@@ -61,9 +50,7 @@ module.exports = async function getClusterNodes(servers, options = {}) {
                 arr.push(node)
                 return arr
             }, [])
-            if (cache) {
-                redisNodesCache[id] = nodes
-            }
+
             return nodes
         } catch (error) {
             console.error(error)
