@@ -38,6 +38,9 @@ module.exports = class Cluster extends Redis.Cluster {
             }
             const parsed = redisInfo.parse(nodeKeyspace)
             const db0 = parsed.databases[0]
+            if(!db0){
+                continue
+            }
             const {
               keys:nodeKeys = 0,
               expires:nodeExpires = 0,
