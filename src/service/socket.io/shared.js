@@ -263,7 +263,7 @@ const getFullInfo = async (options) => {
             match: payload.match,
         }),
         redis.pubsub('channels', '*'),
-       // redis.infoObject(),
+        // redis.infoObject(),
     ])
 
     const keys = results[1]
@@ -282,7 +282,7 @@ const getFullInfo = async (options) => {
 
     const result = {
         info: results[0],
-       // infoObject: results[3],
+        // infoObject: results[3],
         keys: keys,
         keysInfo: keysInfo,
         dbsize: dbsize,
@@ -308,7 +308,7 @@ const getFullInfoAndSendSocket = async (options) => {
     socket.emit(options.responseEvent, Object.assign(extend, {
         status: 'ok',
         info: result.info,
-      //  infoObject: result.infoObject,
+        //  infoObject: result.infoObject,
         keys: result.keys,
         keysInfo: result.keysInfo,
         dbsize: result.dbsize,
