@@ -11,6 +11,7 @@ module.exports = class Cluster extends Redis.Cluster {
         super(server, options)
     }
 
+    /*
     async infoObject(...args) {
         const [key] = args
         if (key === 'keyspace') {
@@ -25,6 +26,7 @@ module.exports = class Cluster extends Redis.Cluster {
         }
         return infoObject
     }
+     */
 
     async _getClusterInfoKeyspace(info) {
         const keyspaceList = await Promise.all(this.nodes('master').map(node => {
