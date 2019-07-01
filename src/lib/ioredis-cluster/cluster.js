@@ -51,7 +51,7 @@ module.exports = class Cluster extends Redis.Cluster {
             avg_ttl += nodeAvgTtl
 
       }
-      avg_ttl = Math.round(avg_ttl/expires)
+      avg_ttl = avg_ttl ? Math.round(avg_ttl/expires) : 0
       const clusterKeyspace = {
         keys,
         expires,
