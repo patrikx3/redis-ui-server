@@ -2,32 +2,28 @@ const chalk = require('chalk');
 const consoleStamp = () => {
 // overriding the console should be after this!!!
     require('console-stamp')(console, {
-        pattern: 'yyyy/mm/dd HH:MM:ss.l',
-        datePrefix: '[P3XRS] ',
-        dateSuffix: '',
-        metadata: function () {
-            return `[PID: ${(String(process.pid).padStart(6, 0))}]`;
-        },
-        colors: {
-            stamp: "yellow",
-            label: function () {
-                let color;
-                switch (arguments[0]) {
-                    case '[ERROR]':
-                        color = chalk.bold.red
+        format: ':date(yyyy/mm/dd HH:MM:ss.l).cyan :p3x.yellow :myLabel',
+        tokens:{
+            p3x: () => {
+                return chalk`{black.grey [P3XRS]}` + ` [PID: ${(String(process.pid).padStart(6, 0))}] `;
+            },
+            myLabel: ( arg ) => {
+                const { method, defaultTokens } = arg;
+                let label = defaultTokens.label( arg );
+                switch(method) {
+                    case 'error':
+                        label = chalk`{bold.red ${label}}`;
                         break;
 
-                    case '[WARN]':
-                        color = chalk.bold.blue
+                    case 'warn':
+                        label = chalk`{bold.blue ${label}}`;
                         break;
 
                     default:
-                        color = chalk.green;
+                        label = chalk`{green ${label}}`;
                 }
-
-                return color(arguments[0])
-            },
-            metadata: chalk.black.bgGreenBright,
+                return label;
+            }
         },
     });
 }
