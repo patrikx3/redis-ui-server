@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2019.10.140",
+    "version": "2019.10.141",
     "description": "🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
@@ -55,7 +55,7 @@
         "koa-router": "^7.4.0"
     },
     "dependencies": {
-        "commander": "^2.20.0",
+        "commander": "^3.0.0",
         "chalk": "^2.4.2",
         "console-stamp": "^3.0.0-rc2.0",
         "corifeus-utils": "^2019.10.144",
