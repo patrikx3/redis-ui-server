@@ -5,7 +5,7 @@ const fs = require('fs')
 const cli = () => {
     const pkg = require('../../package')
 
-    if (!process.versions.hasOwnProperty('electron')) {
+    if (!process.versions.hasOwnProperty('electron') && !process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
         const program = require('commander')
         program
             .version(pkg.version)
@@ -39,7 +39,7 @@ const cli = () => {
         p3xrs.cfg = {
             "http": {
                 "port-info": "this is ommitted, it will be default 7843",
-                "port": 7844
+                "port": process.env.hasOwnProperty('P3XRS_DOCKER_HOME') ? 7843 : 7844
             },
             "connections": {
                 "home-dir-info": "if the dir config is empty or home, the connections are saved in the home folder, otherwise it will resolve the directory set as it is, either relative ./ or absolute starting with /. NodeJs will resolve this directory in p3xrs.connections.dir",
@@ -66,9 +66,15 @@ const cli = () => {
     if (p3xrs.cfg.connections['home-dir'] === 'home') {
         p3xrs.cfg.connections['home-dir'] = require('os').homedir();
     }
+    if (process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
+        p3xrs.cfg.connections['home-dir'] = process.env.P3XRS_DOCKER_HOME
+    }
     p3xrs.cfg.connections['home'] = path.resolve(p3xrs.cfg.connections['home-dir'], '.p3xrs-conns.json')
 
+    console.info('using home config is', p3xrs.cfg.connections['home'])
+
     if (!fs.existsSync(p3xrs.cfg.connections.home)) {
+
         fs.writeFileSync(p3xrs.cfg.connections.home, JSON.stringify({
             update: new Date(),
             list: [],

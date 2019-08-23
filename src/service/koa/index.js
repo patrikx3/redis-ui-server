@@ -108,7 +108,7 @@ const koaService = function () {
 
         this.server = server;
 
-        server.listen(p3xrs.cfg.http.port || 7843);
+        server.listen(p3xrs.cfg.http.port || 7843, '0.0.0.0');
 
     }
 
