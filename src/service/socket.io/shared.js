@@ -228,7 +228,7 @@ const getKeysInfo = async (options) => {
     for (let keysIndex in keys) {
         const key = keys[keysIndex]
         const obj = result[key]
-        if (obj.type === 'string') {
+        if (obj.type === 'string' || obj.type === 'none') {
 
             continue
         }
