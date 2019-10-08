@@ -229,7 +229,6 @@ const getKeysInfo = async (options) => {
         const key = keys[keysIndex]
         const obj = result[key]
         if (obj.type === 'string' || obj.type === 'none') {
-
             continue
         }
         const lengthPipelineElement = lengthsPipeline.shift()
