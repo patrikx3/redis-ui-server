@@ -11,6 +11,7 @@ const cli = () => {
             .version(pkg.version)
             .option('-c, --config [config]', 'Set the p3xr.json p3x-redis-ui-server configuration, see more help in https://github.com/patrikx3/redis-ui-server')
             .option('-r, --readonly-connections', 'Set the connections to be readonly, no adding, saving or delete a connection')
+            .option('-n, --connections-file-name [filename]', 'Set the connections file name, overrides default .p3xrs-conns.json')
             .parse(process.argv);
 
         if (!program.config) {
@@ -18,8 +19,8 @@ const cli = () => {
 
             program.config = path.resolve(path.dirname(require.main.filename) + path.sep + '..', `.${path.sep}p3xrs.json`)
 
-//        program.outputHelp()
-//        return false
+            //        program.outputHelp()
+            //        return false
         }
 
         const configPath = path.resolve(process.cwd(), program.config)
@@ -33,7 +34,15 @@ const cli = () => {
             p3xrs.cfg.readonlyConnections = true
             //console.warn(p3xrs.cfg.readonlyConnections === true)
         }
-
+        
+        if (typeof program.connectionsFileName !== 'undefined' && program.connectionsFileName) {
+            // console.warn(program.connectionsFileName)
+            p3xrs.cfg.connectionsFileName = program.connectionsFileName
+            //console.warn(p3xrs.cfg.readonlyConnections === true)
+        }
+        else {
+            p3xrs.cfg.connectionsFileName = '.p3xrs-conns.json'
+        }
 
     } else {
         p3xrs.cfg = {
@@ -69,7 +78,7 @@ const cli = () => {
     if (process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
         p3xrs.cfg.connections['home-dir'] = process.env.P3XRS_DOCKER_HOME
     }
-    p3xrs.cfg.connections['home'] = path.resolve(p3xrs.cfg.connections['home-dir'], '.p3xrs-conns.json')
+    p3xrs.cfg.connections['home'] = path.resolve(p3xrs.cfg.connections['home-dir'], p3xrs.cfg.connectionsFileName)
 
     console.info('using home config is', p3xrs.cfg.connections['home'])
 
