@@ -34,7 +34,7 @@ const cli = () => {
             p3xrs.cfg.readonlyConnections = true
             //console.warn(p3xrs.cfg.readonlyConnections === true)
         }
-        
+
         if (typeof program.connectionsFileName !== 'undefined' && program.connectionsFileName) {
             // console.warn(program.connectionsFileName)
             p3xrs.cfg.connectionsFileName = program.connectionsFileName
