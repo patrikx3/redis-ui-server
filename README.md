@@ -15,7 +15,7 @@ https://pages.corifeus.com/redis-ui
   
  
 ---
-# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface v2019.10.174  
+# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface v2019.10.173  
 
   
 
@@ -64,6 +64,12 @@ p3xrs.json/p3xrs.connections['home-dir'] = undefined|home|absolute|relative
 
 The best is to keep it undefined and it will be in your home dir, but you can choose any place as well.
 
+You may also set connections file name which overrides default .p3xrs-conns.json
+```text
+p3xrs --connections-file-name .p3xrs-conns.json
+```
+
+
 # For development standalone
 
 For file names do not use camelCase, but use kebab-case. Folder should be named as kebab-case as well. As you can see, all code filenames are using it like that, please do not change that.
@@ -97,7 +103,7 @@ All my domains ([patrikx3.com](https://patrikx3.com) and [corifeus.com](https://
 
 ---
   
-[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2019.10.174 
+[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2019.10.173 
 
 [![Donate for Corifeus / P3X](https://img.shields.io/badge/Donate-Corifeus-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software) 
 
