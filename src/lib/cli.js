@@ -40,9 +40,7 @@ const cli = () => {
             p3xrs.cfg.connectionsFileName = program.connectionsFileName
             //console.warn(p3xrs.cfg.readonlyConnections === true)
         }
-        else {
-            p3xrs.cfg.connectionsFileName = '.p3xrs-conns.json'
-        }
+
 
     } else {
         p3xrs.cfg = {
@@ -60,6 +58,9 @@ const cli = () => {
         p3xrs.cfg.readonlyConnections = false
     }
 
+    if (p3xrs.cfg.connectionsFileName === undefined) {
+        p3xrs.cfg.connectionsFileName = '.p3xrs-conns.json'
+    }
 
     if (!p3xrs.cfg.hasOwnProperty('static')) {
 
