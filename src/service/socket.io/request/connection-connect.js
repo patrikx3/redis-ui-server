@@ -12,7 +12,7 @@ const generateConnectInfo = async (options) => {
     let databases
     let results
     let commands
-    if (options.payload.connection.awsElastiCache === true) {
+    if (options.payload.connection.awsElastiCache === true || options.payload.connection.azure === true) {
         databases = 0
         commands = await redis.command()
     } else {
