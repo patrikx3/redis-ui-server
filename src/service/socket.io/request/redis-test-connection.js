@@ -39,7 +39,7 @@ module.exports = async (options) => {
         })
         redis.on('connect', async function () {
             try {
-                await redis.call('client', 'list')
+                //await redis.call('client', 'list')
 
                 socket.emit(options.responseEvent, {
                     status: 'ok',
