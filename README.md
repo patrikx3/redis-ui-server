@@ -15,7 +15,7 @@ https://pages.corifeus.com/redis-ui
 
 
 ---
-# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface v2020.4.146
+# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface v2020.4.149
 
 
 
@@ -29,7 +29,7 @@ https://pages.corifeus.com/redis-ui
 
 ### Built on Node
 ```
-v12.16.1
+v12.16.2
 ```
 
 The ```async``` and ```await``` keywords are required.
@@ -118,7 +118,7 @@ All my domains ([patrikx3.com](https://patrikx3.com) and [corifeus.com](https://
 
 ---
 
-[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2020.4.146
+[**P3X-REDIS-UI-SERVER**](https://pages.corifeus.com/redis-ui-server) Build v2020.4.149
 
 [![Donate for Corifeus / P3X](https://img.shields.io/badge/Donate-Corifeus-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software)
 
