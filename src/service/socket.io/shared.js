@@ -232,6 +232,9 @@ const getKeysInfo = async (options) => {
             continue
         }
         const lengthPipelineElement = lengthsPipeline.shift()
+        if (lengthPipelineElement === undefined) {
+            continue
+        }
         obj.length = lengthPipelineElement[1]
     }
     return result;
