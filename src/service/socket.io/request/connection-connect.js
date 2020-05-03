@@ -151,7 +151,7 @@ module.exports = async (options) => {
 
             //console.warn('create pmessage', actualConnection.id)
             redisSubscriber.on('pmessage', function (channel, pattern, message) {
-                console.log(`receive pmessage channel: ${channel} - pattern: ${pattern}, message: ${message}`);
+                //console.log(`receive pmessage channel: ${channel} - pattern: ${pattern}, message: ${message}`);
                 //console.log('list clients', actualConnection.id, JSON.stringify(p3xrs.redisConnections[actualConnection.id].clients, null, 4))
                 socket.emit('pubsub-message', {
                     channel: pattern,
