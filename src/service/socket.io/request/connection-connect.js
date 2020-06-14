@@ -109,7 +109,7 @@ module.exports = async (options) => {
                 if (!didConnected) {
                     socket.emit(options.responseEvent, {
                         status: 'error',
-                        error: error
+                        error: error.message
                     })
                 }
                 const disconnectedData = {
@@ -177,7 +177,7 @@ module.exports = async (options) => {
                     console.error(e)
                     socket.emit(options.responseEvent, {
                         status: 'error',
-                        error: e,
+                        error: e.message,
                     })
                 } finally {
                     sharedIoRedis.sendStatus({

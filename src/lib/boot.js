@@ -27,6 +27,22 @@ const boot = async () => {
         koaService: p3xrs.koa
     })
 
+    const checkLicense = require('./check-license')
+    checkLicense({
+        socket: p3xrs.socketIo.socketio,
+        payload: {
+            license: p3xrs.connections.license
+        }
+    })
+
+    setInterval(() => {
+        checkLicense({
+            socket: p3xrs.socketIo.socketio,
+            payload: {
+                license: p3xrs.connections.license
+            }
+        })
+    }, 1000 * 60 /* 1 minute */ * 60)
 
     p3xrs.redisConnections = {}
     p3xrs.redisConnectionsSubscriber = {}

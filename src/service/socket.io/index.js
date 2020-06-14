@@ -12,6 +12,7 @@ const socketIoService = function () {
         });
 
         require('./socket')(socketio);
+        this.socketio = socketio
     }
 }
 

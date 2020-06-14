@@ -16,6 +16,11 @@ module.exports = (io) => {
 
         console.info('socket.io connected %s', socket.id);
 
+        socket.emit('info-interval', {
+            status: 'ok',
+            donated: p3xrs.cfg.donated,
+        })
+
         socket.on('disconnect', function () {
             console.warn('socket.p3xrs.connectionId', socket.p3xrs.connectionId)
             if (socket.p3xrs.connectionId !== undefined) {
@@ -51,7 +56,7 @@ module.exports = (io) => {
 
         socket.emit('configuration', {
             readonlyConnections: p3xrs.cfg.readonlyConnections === true,
-            snapshot: p3xrs.cfg.snapshot === true
+            snapshot: p3xrs.cfg.snapshot === true,
         })
 
         socketIoShared.sendStatus({
