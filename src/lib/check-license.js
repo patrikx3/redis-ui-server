@@ -6,8 +6,8 @@ module.exports = async (options) => {
 
     let license = options.payload.license || '';
 
+    let donated = false
     try {
-        let donated = false
         let serverError = false
 
         let disableDonated = false
@@ -52,7 +52,8 @@ module.exports = async (options) => {
     } catch (e) {
         p3xrs.cfg.donated = false
         console.error(e)
-        socket.emit(options.responseEvent, {
+        socket.emit(options.responseEvent || 'info-interval', {
+            donated: false,
             status: 'error',
             error: e.message
         })
