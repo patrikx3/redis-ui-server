@@ -66,7 +66,11 @@ module.exports = async (options) => {
             socket: socket,
             extend: {
                 key: model.key
-            }
+            },
+            payload: {
+                match: payload.match,
+            },
+
         })
     } catch (e) {
         console.error(e)

@@ -26,6 +26,9 @@ module.exports = async (options) => {
             redis: redis,
             responseEvent: options.responseEvent,
             socket: socket,
+            payload: {
+                match: payload.match,
+            },
         })
 
     } catch (e) {

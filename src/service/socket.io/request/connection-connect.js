@@ -4,7 +4,7 @@ const Redis = require('../../../lib/ioredis-cluster')
 const sharedIoRedis = require('../shared')
 
 const generateConnectInfo = async (options) => {
-    const {socket, redis} = options
+    const {socket, redis, payload} = options
 
     // console.warn('generateConnectInfo', options.payload)
 
@@ -34,7 +34,11 @@ const generateConnectInfo = async (options) => {
         extend: {
             databases: databases,
             commands: commands
-        }
+        },
+        payload: {
+            match: payload.match,
+        },
+
     })
 }
 
