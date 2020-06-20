@@ -33,7 +33,7 @@ module.exports = async (options) => {
             console.error(error)
             socket.emit(options.responseEvent, {
                 status: 'error',
-                error: error
+                error: error.message
             })
             redis.disconnect()
         })
@@ -48,7 +48,7 @@ module.exports = async (options) => {
                 console.error(error)
                 socket.emit(options.responseEvent, {
                     status: 'error',
-                    error: error
+                    error: error.message
                 })
             } finally {
                 redis.disconnect()
@@ -60,7 +60,7 @@ module.exports = async (options) => {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',
-            error: e
+            error: e.message
         })
     }
 

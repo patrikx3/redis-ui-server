@@ -118,7 +118,7 @@ module.exports = async (options) => {
                 }
                 const disconnectedData = {
                     connectionId: socket.p3xrs.connectionId,
-                    error: error,
+                    error: error.message,
                     status: 'error',
                 }
                 console.warn(consolePrefix, 'disconnectedData', disconnectedData)
@@ -195,11 +195,11 @@ module.exports = async (options) => {
 
         }
 
-    } catch (error) {
-        console.error(error)
+    } catch (e) {
+        console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',
-            error: error
+            error: e.message
         })
 
     }

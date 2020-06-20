@@ -19,7 +19,7 @@ module.exports = async (options) => {
         console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',
-            error: error
+            error: e.message
         })
 
     }

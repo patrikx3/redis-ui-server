@@ -28,11 +28,11 @@ module.exports = async (options) => {
         socket.emit(options.responseEvent, {
             status: 'ok',
         })
-    } catch (error) {
-        console.log(error)
+    } catch (e) {
+        console.log(e)
         socket.emit(options.responseEvent, {
             status: 'error',
-            error: error
+            error: e.message
         })
     } finally {
         if (!disableReadonlyConnections) {
