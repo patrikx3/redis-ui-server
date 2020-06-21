@@ -29,7 +29,7 @@ module.exports = async (options) => {
             status: 'ok',
         })
     } catch (e) {
-        console.log(e)
+        console.error(e)
         socket.emit(options.responseEvent, {
             status: 'error',
             error: e.message
