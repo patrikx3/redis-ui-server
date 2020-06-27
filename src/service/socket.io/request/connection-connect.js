@@ -1,3 +1,6 @@
+const donationWareFeatureError = new Error('donation-ware-feature')
+donationWareFeatureError.code = 'donation-ware-feature'
+
 const consolePrefix = 'socket.io connection-connect';
 const Redis = require('../../../lib/ioredis-cluster')
 
@@ -47,7 +50,19 @@ module.exports = async (options) => {
 
     const {connection, db} = payload
 
+
     try {
+        if (!p3xrs.cfg.donated) {
+            if (payload.connection.awsElastiCache === true) {
+                throw donationWareFeatureError
+            } else if (payload.connection.azure === true) {
+                throw donationWareFeatureError
+            } else if (payload.connection.cluster === true) {
+                throw donationWareFeatureError
+            }
+        }
+
+
         if (socket.p3xrs.connectionId !== connection.id) {
             sharedIoRedis.disconnectRedis({
                 socket: socket,
