@@ -1,13 +1,13 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2020.4.238",
+    "version": "2020.10.101",
     "description": "🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
         "code": "Reverse",
         "opencollective": false,
         "build": true,
-        "nodejs": "v12.18.1",
+        "nodejs": "v12.18.2",
         "reponame": "redis-ui-server",
         "publish": true,
         "prefix": "p3x-",
