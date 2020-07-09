@@ -67,9 +67,7 @@ module.exports = async (options) => {
             extend: {
                 key: model.key
             },
-            payload: {
-                match: payload.match,
-            },
+            payload: payload,
 
         })
     } catch (e) {

@@ -38,9 +38,7 @@ const generateConnectInfo = async (options) => {
             databases: databases,
             commands: commands
         },
-        payload: {
-            match: payload.match,
-        },
+        payload: payload,
 
     })
 }

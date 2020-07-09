@@ -103,30 +103,58 @@ const disconnectRedisIo = (options) => {
 }
 
 const getStreamKeys = (options) => {
-    const {redis} = options
-    let {dbsize} = options
+    const {redis, } = options
+    let {dbsize, maxKeys} = options
     return new Promise(async (resolve, reject) => {
 
         try {
+            /*
             if (dbsize === undefined) {
                 dbsize = await redis.dbsize()
             }
+             */
 
+            //console.warn('check if received max keys', maxKeys, typeof maxKeys, !isNaN(maxKeys), maxKeys < 10, maxKeys > 100000)
+
+            if (isNaN(maxKeys) || maxKeys < 10 || maxKeys > 100000) {
+                maxKeys = 10000
+            }
+
+            /*
             let count = 100
             if (dbsize > 110000) {
                 count = 10000
             } else if (dbsize > 11000) {
                 count = 1000
             }
-            console.warn('socket.io getStreamKeys dbsize', dbsize, 'count', count)
+             */
+            let count = Math.round(maxKeys / 10)
+            if (count < 100) {
+                count = 100
+            }
+
+            //console.warn('socket.io getStreamKeys dbsize', dbsize, 'count', count, 'maxKeys', maxKeys)
 
             const stream = redis.scanStream({
                 match: options.match,
                 count: count
             });
             let keys = [];
+            //let ended = false
             stream.on('data', (resultKeys) => {
                 keys = keys.concat(resultKeys);
+                if (maxKeys && keys.length >= maxKeys) {
+                    //ended = true
+                    console.warn('reached max key count', maxKeys, 'found', keys.length, 'keys our of unknown total')
+                    stream.pause()
+                    stream.destroy()
+                    stream.emit('end')
+                }
+                /*
+                if (maxKeys && keys.length < maxKeys) {
+                    keys = keys.concat(resultKeys);
+                }
+                 */
                 //   console.log('loading keys', keys.length)
             });
 
@@ -263,6 +291,7 @@ const getFullInfo = async (options) => {
             dbsize: dbsize,
             redis: redis,
             match: payload.match,
+            maxKeys: payload.maxKeys,
         }),
         redis.pubsub('channels', '*'),
         // redis.infoObject(),

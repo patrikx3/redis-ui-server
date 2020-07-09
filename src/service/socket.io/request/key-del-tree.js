@@ -13,7 +13,8 @@ module.exports = async (options) => {
         console.info(consolePrefix, deleteTree)
         const keys = await sharedIoRedis.getStreamKeys({
             redis: redis,
-            match: deleteTree
+            match: deleteTree,
+            maxKeys: payload.maxKeys,
         })
         const pipelineDeleteTree = redis.pipeline()
         for (let key of keys) {
@@ -26,9 +27,7 @@ module.exports = async (options) => {
             redis: redis,
             responseEvent: options.responseEvent,
             socket: socket,
-            payload: {
-                match: payload.match,
-            },
+            payload: payload,
         })
 
     } catch (e) {
