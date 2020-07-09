@@ -114,11 +114,12 @@ const getStreamKeys = (options) => {
             }
              */
 
-            //console.warn('check if received max keys', maxKeys, typeof maxKeys, !isNaN(maxKeys), maxKeys < 10, maxKeys > 100000)
 
-            if (isNaN(maxKeys) || maxKeys < 10 || maxKeys > 100000) {
+            if (isNaN(maxKeys) || maxKeys < 5 || maxKeys > 100000) {
                 maxKeys = 10000
             }
+
+            //console.warn('check if received max keys', maxKeys, typeof maxKeys, !isNaN(maxKeys), maxKeys < 5, maxKeys > 100000)
 
             /*
             let count = 100
@@ -129,8 +130,8 @@ const getStreamKeys = (options) => {
             }
              */
             let count = Math.round(maxKeys / 10)
-            if (count < 100) {
-                count = 100
+            if (count < 5) {
+                count = 5
             }
 
             //console.warn('socket.io getStreamKeys dbsize', dbsize, 'count', count, 'maxKeys', maxKeys)
@@ -140,30 +141,35 @@ const getStreamKeys = (options) => {
                 count: count
             });
             let keys = [];
-            //let ended = false
+            let ended = false
             stream.on('data', (resultKeys) => {
+                /*
                 keys = keys.concat(resultKeys);
-                if (maxKeys && keys.length >= maxKeys) {
-                    //ended = true
+                if (maxKeys && keys.length >= maxKeys && !ended) {
+                    ended = true
                     console.warn('reached max key count', maxKeys, 'found', keys.length, 'keys our of unknown total')
-                    stream.pause()
-                    stream.destroy()
+                    //stream.pause()
+                    //stream.destroy()
                     stream.emit('end')
                 }
-                /*
+                 */
                 if (maxKeys && keys.length < maxKeys) {
                     keys = keys.concat(resultKeys);
+                    if (keys.length >= maxKeys) {
+                        ended = true
+                        resolve(keys)
+                    }
+                } else if (!ended) {
+                    ended = true
+                    resolve(keys)
                 }
-                 */
-                //   console.log('loading keys', keys.length)
             });
 
-            stream.on('end', async () => {
-                try {
-                    resolve(keys);
-                } catch (e) {
-                    reject(e)
+            stream.on('end', () => {
+                if (ended) {
+                    return
                 }
+                resolve(keys);
             });
         } catch (e) {
             reject(e)
