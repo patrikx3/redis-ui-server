@@ -158,6 +158,7 @@ const getStreamKeys = (options) => {
                     if (keys.length >= maxKeys) {
                         ended = true
                         resolve(keys)
+                        //stream.emit('end')
                     }
                 } else if (!ended) {
                     ended = true
@@ -171,6 +172,14 @@ const getStreamKeys = (options) => {
                 }
                 resolve(keys);
             });
+
+            /*
+            stream.on('error', (error) => {
+                console.error('getStreamKeys stream', error)
+                reject(error)
+            })
+             */
+
         } catch (e) {
             reject(e)
         }

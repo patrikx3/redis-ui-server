@@ -170,23 +170,26 @@ module.exports = class Cluster extends Redis.Cluster {
             method,
             params = [],
         } = options
-        for (let node of nodes) {
-            await new Promise((resolve, reject) => {
-                const nodeStream = node[method](...params)
-                nodeStream.on('data', (resultKeys) => {
-                    // console.log({resultKeys})
-                    stream.emit('data', resultKeys)
-                })
-                nodeStream.on('end', async () => {
-                    try {
-                        resolve()
-                    } catch (e) {
-                        stream.emit('error', e)
-                        reject(e)
-                    }
-                })
-            })
+
+        try {
+            const promises = []
+            for (let node of nodes) {
+                promises.push(
+                    new Promise((resolve, reject) => {
+                        const nodeStream = node[method](...params)
+                        nodeStream.on('data', (resultKeys) => {
+                            // console.log({resultKeys})
+                            stream.emit('data', resultKeys)
+                        })
+                        nodeStream.on('end', () => {
+                            resolve()
+                        })
+                    })
+                )
+            }
+            await Promise.all(promises)
+        } finally {
+            stream.emit('end')
         }
-        stream.emit('end')
     }
 }
