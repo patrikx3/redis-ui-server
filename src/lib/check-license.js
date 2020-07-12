@@ -2,6 +2,15 @@ const utils = require('corifeus-utils')
 module.exports = async (options) => {
     const { socket } = options;
 
+    p3xrs.cfg.donated = true
+    socket.emit(options.responseEvent || 'info-interval', {
+        donated: true,
+        info: 'ok',
+        status: 'ok',
+    })
+
+        /*
+
     console.log(new Date().toLocaleString(), 'check license')
 
     let license = options.payload.license || '';
@@ -59,5 +68,5 @@ module.exports = async (options) => {
         })
 
     }
-
+            */
 }
