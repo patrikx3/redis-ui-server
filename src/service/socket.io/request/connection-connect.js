@@ -8,15 +8,39 @@ const sharedIoRedis = require('../shared')
 
 const generateConnectInfo = async (options) => {
     const {socket, redis, payload} = options
-
+    const { db} = payload
     // console.warn('generateConnectInfo', options.payload)
 
 
     let databases
     let results
     let commands
+
     if (options.payload.connection.awsElastiCache === true || options.payload.connection.azure === true) {
-        databases = 0
+        let tryUntilSelectDatabaseIsNotOk = true
+        let currentDb = 0
+        let totalDb = 0
+        let maxDb = 512
+        while(tryUntilSelectDatabaseIsNotOk) {
+            try {
+                currentDb++
+                await redis.call('select', currentDb)
+                //console.info('found correct database index', currentDb)
+                if (currentDb > maxDb) {
+                    console.warn(`limiting to max ${maxDb} database index, as it could crash with a big db index number`)
+                    tryUntilSelectDatabaseIsNotOk = false
+                }
+            } catch(e) {
+                console.warn('found wrong current db index', currentDb)
+                tryUntilSelectDatabaseIsNotOk = false
+            }
+        }
+        totalDb = currentDb - 1
+        if (db <= totalDb) {
+            await redis.call('select', db)
+        }
+        console.log('calculated max databases index', totalDb)
+        databases = totalDb
         commands = await redis.command()
     } else {
         results = await Promise.all([
