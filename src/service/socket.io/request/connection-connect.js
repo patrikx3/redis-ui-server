@@ -16,7 +16,7 @@ const generateConnectInfo = async (options) => {
     let results
     let commands
 
-    if (options.payload.connection.awsElastiCache === true || options.payload.connection.azure === true) {
+    const probeDatabaseCount = async() => {
         let tryUntilSelectDatabaseIsNotOk = true
         let currentDb = 0
         let totalDb = 0
@@ -35,12 +35,17 @@ const generateConnectInfo = async (options) => {
                 tryUntilSelectDatabaseIsNotOk = false
             }
         }
-        totalDb = currentDb - 1
+        totalDb = currentDb
         if (db <= totalDb) {
             await redis.call('select', db)
         }
         console.log('calculated max databases index', totalDb)
-        databases = totalDb
+        return totalDb
+    }
+
+    if (options.payload.connection.awsElastiCache === true || options.payload.connection.azure === true) {
+
+        databases = await probeDatabaseCount()
         commands = await redis.command()
     } else {
         results = await Promise.all([
