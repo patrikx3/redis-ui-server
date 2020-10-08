@@ -54,9 +54,20 @@ module.exports = (io) => {
         })
 
 
+        let dividers = [
+            ":",
+            "/",
+            "|",
+            "-",
+            "@"
+        ]
+        if (p3xrs.cfg.hasOwnProperty('treeDividers') && Array.isArray(p3xrs.cfg.treeDividers)) {
+            dividers = p3xrs.cfg.treeDividers
+        }
         socket.emit('configuration', {
             readonlyConnections: p3xrs.cfg.readonlyConnections === true,
             snapshot: p3xrs.cfg.snapshot === true,
+            treeDividers: dividers,
         })
 
         socketIoShared.sendStatus({
