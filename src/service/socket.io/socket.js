@@ -1,4 +1,16 @@
 const socketIoShared = require('./shared')
+const originalPkg = require('../../../package.json')
+let pkg = originalPkg
+
+try {
+   pkg = require('../../../../../package.json')
+    if (pkg.name !== 'p3x-redis-ui') {
+        console.warn('cannot find p3x-redis-ui version, but it is not required, found', pkg.name)
+        pkg = originalPkg
+    }
+} catch(e) {
+    console.warn('cannot find p3x-redis-ui version, but it is not required', e)
+}
 module.exports = (io) => {
 
     io.on('connect', function (socket) {
@@ -66,8 +78,9 @@ module.exports = (io) => {
         }
         socket.emit('configuration', {
             readonlyConnections: p3xrs.cfg.readonlyConnections === true,
-            snapshot: p3xrs.cfg.snapshot === true,
+            snapshot: pkg.name !== 'p3x-redis-ui',
             treeDividers: dividers,
+            version: pkg.version
         })
 
         socketIoShared.sendStatus({
