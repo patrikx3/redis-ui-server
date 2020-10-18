@@ -46,7 +46,7 @@ const cli = () => {
         p3xrs.cfg = {
             "http": {
                 "port-info": "this is ommitted, it will be default 7843",
-                "port": process.env.hasOwnProperty('P3XRS_DOCKER_HOME') ? 7843 : 7844
+                "port": process.env.hasOwnProperty('P3XRS_DOCKER_HOME') ? 7843 : global.p3xrsElectronPort
             },
             "connections": {
                 "home-dir-info": "if the dir config is empty or home, the connections are saved in the home folder, otherwise it will resolve the directory set as it is, either relative ./ or absolute starting with /. NodeJs will resolve this directory in p3xrs.connections.dir",
