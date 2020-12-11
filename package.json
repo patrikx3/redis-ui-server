@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2020.10.265",
+    "version": "2020.10.266",
     "description": "🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
@@ -63,7 +63,7 @@
         "koa-send": "^5.0.1",
         "koa-static": "^5.0.0",
         "lodash": "^4.17.20",
-        "socket.io": "^3.0.3"
+        "socket.io": "^3.0.4"
     },
     "engines": {
         "node": ">=12.13.0"
