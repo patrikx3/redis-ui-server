@@ -1,3 +1,5 @@
+const sharedIoRedis = require('../shared')
+
 const consolePrefix = 'socket.io key zsit delete member'
 
 module.exports = async (options) => {
@@ -6,6 +8,8 @@ module.exports = async (options) => {
     const redis = socket.p3xrs.ioredis
 
     try {
+        sharedIoRedis.ensureReadonlyConnection({ socket })
+
         const {key, value} = payload;
 
         console.log(consolePrefix, payload)

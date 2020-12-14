@@ -1,9 +1,13 @@
+const sharedIoRedis = require('../shared')
+
 const consolePrefix = 'socket.io expire'
 
 module.exports = async (options) => {
     const {socket, payload} = options;
 
     try {
+        sharedIoRedis.ensureReadonlyConnection({ socket })
+
         let redis = socket.p3xrs.ioredis
 
         console.info(consolePrefix, payload.key, payload.ttl)

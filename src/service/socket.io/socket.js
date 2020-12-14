@@ -23,6 +23,7 @@ module.exports = (io) => {
             io: io,
             ioredis: undefined,
             ioredisSubscriber: undefined,
+            readonly: undefined,
             // commands: undefined,
         }
 

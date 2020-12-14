@@ -1,3 +1,5 @@
+const sharedIoRedis = require('../shared')
+
 const parser = (input, sep, keepQuotes) => {
     var separator = sep || /\s/g;
     var singleQuoteOpen = false;
@@ -54,6 +56,10 @@ module.exports = async (options) => {
         const commands = parser( command);
         let mainCommand = commands.shift()
         mainCommand = mainCommand.toLowerCase();
+
+        if (mainCommand !== 'select') {
+            sharedIoRedis.ensureReadonlyConnection({ socket })
+        }
 
         console.info(consolePrefix, mainCommand, commands)
         /*

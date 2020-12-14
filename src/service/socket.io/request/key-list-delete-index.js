@@ -1,3 +1,5 @@
+const sharedIoRedis = require('../shared')
+
 const consolePrefix = 'socket.io key list delete index'
 
 const utils = require('corifeus-utils')
@@ -8,6 +10,8 @@ module.exports = async (options) => {
     const redis = socket.p3xrs.ioredis
 
     try {
+        sharedIoRedis.ensureReadonlyConnection({ socket })
+
         const {index, key} = payload;
 
         const uniqueValue = utils.random.complexUuid()

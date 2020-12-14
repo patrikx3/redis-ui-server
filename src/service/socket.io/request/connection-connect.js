@@ -143,6 +143,7 @@ module.exports = async (options) => {
             // let redis = await new Redis(redisConfig, {autoDetectCluster: true})
             // let redisSubscriber = await new Redis(redisConfig, {autoDetectCluster: true})
             socket.p3xrs.connectionId = connection.id
+            socket.p3xrs.readonly = actualConnection.readonly === true
             socket.p3xrs.ioredis = redis
             socket.p3xrs.ioredisSubscriber = redisSubscriber
             let didConnected = false

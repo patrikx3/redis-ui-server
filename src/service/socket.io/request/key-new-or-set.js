@@ -1,11 +1,15 @@
-const consolePrefix = 'socket.io key new'
 const sharedIoRedis = require('../shared')
+
+const consolePrefix = 'socket.io key new'
+
 module.exports = async (options) => {
     const {socket, payload} = options;
 
     const redis = socket.p3xrs.ioredis
 
     try {
+        sharedIoRedis.ensureReadonlyConnection({ socket })
+
         const {model} = payload;
 
         model.score = model.score === null ? undefined : model.score

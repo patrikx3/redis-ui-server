@@ -285,8 +285,14 @@ const getKeysInfo = async (options) => {
 
 const ensureReadonlyConnections = () => {
     if (p3xrs.cfg.readonlyConnections === true) {
-        const errorCode = new Error('Connections add/save/delete are readonly only')
-        errorCode.code = 'readonly-connections'
+        const errorCode = new Error('readonly-connection-mode')
+        throw errorCode;
+    }
+}
+
+const ensureReadonlyConnection = ({ socket }) => {
+    if (socket.p3xrs.readonly === true) {
+        const errorCode = new Error('readonly-connection-mode')
         throw errorCode;
     }
 }
@@ -371,3 +377,4 @@ module.exports.disconnectRedis = disconnectRedis
 module.exports.getKeysInfo = getKeysInfo
 module.exports.getFullInfo = getFullInfo
 module.exports.getFullInfoAndSendSocket = getFullInfoAndSendSocket
+module.exports.ensureReadonlyConnection = ensureReadonlyConnection

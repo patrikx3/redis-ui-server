@@ -1,3 +1,5 @@
+const sharedIoRedis = require('../shared')
+
 const consolePrefix = 'socket.io key hash delete key'
 
 const utils = require('corifeus-utils')
@@ -8,6 +10,8 @@ module.exports = async (options) => {
     const redis = socket.p3xrs.ioredis
 
     try {
+        sharedIoRedis.ensureReadonlyConnection({ socket })
+
         const {hashKey, key} = payload;
 
         await redis.hdel(key, hashKey)
