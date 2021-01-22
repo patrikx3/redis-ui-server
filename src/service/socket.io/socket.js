@@ -27,7 +27,7 @@ module.exports = (io) => {
             // commands: undefined,
         }
 
-        console.info('socket.io connected %s', socket.id);
+        console.info(`socket.io connected ${socket.id}`);
 
         socket.emit('info-interval', {
             status: 'ok',
