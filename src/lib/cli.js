@@ -7,6 +7,8 @@ const cli = () => {
 
     if (!process.versions.hasOwnProperty('electron') && !process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
         const program = require('commander')
+
+
         program
             .version(pkg.version)
             .option('-c, --config [config]', 'Set the p3xr.json p3x-redis-ui-server configuration, see more help in https://github.com/patrikx3/redis-ui-server')
@@ -14,30 +16,32 @@ const cli = () => {
             .option('-n, --connections-file-name [filename]', 'Set the connections file name, overrides default .p3xrs-conns.json')
             .parse(process.argv);
 
-        if (!program.config) {
+        const programOptions = program.opts();
+
+        if (!programOptions.config) {
 
 
-            program.config = path.resolve(path.dirname(require.main.filename) + path.sep + '..', `.${path.sep}p3xrs.json`)
+            programOptions.config = path.resolve(path.dirname(require.main.filename) + path.sep + '..', `.${path.sep}p3xrs.json`)
 
             //        program.outputHelp()
             //        return false
         }
 
-        const configPath = path.resolve(process.cwd(), program.config)
+        const configPath = path.resolve(process.cwd(), programOptions.config)
         //console.log(configPath)
 
         p3xrs.cfg = require(configPath).p3xrs
 
 
-        if (program.readonlyConnections) {
-            // console.warn(program.readonlyConnections)
+        if (programOptions.readonlyConnections) {
+            // console.warn(programOptions.readonlyConnections)
             p3xrs.cfg.readonlyConnections = true
             //console.warn(p3xrs.cfg.readonlyConnections === true)
         }
 
-        if (typeof program.connectionsFileName !== 'undefined' && program.connectionsFileName) {
-            // console.warn(program.connectionsFileName)
-            p3xrs.cfg.connectionsFileName = program.connectionsFileName
+        if (typeof programOptions.connectionsFileName !== 'undefined' && programOptions.connectionsFileName) {
+            // console.warn(programOptions.connectionsFileName)
+            p3xrs.cfg.connectionsFileName = programOptions.connectionsFileName
             //console.warn(p3xrs.cfg.readonlyConnections === true)
         }
 
