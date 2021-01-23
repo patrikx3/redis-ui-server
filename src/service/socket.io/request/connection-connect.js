@@ -43,7 +43,10 @@ const generateConnectInfo = async (options) => {
         return totalDb
     }
 
-    if (options.payload.connection.awsElastiCache === true || options.payload.connection.azure === true) {
+    if (options.payload.connection.cluster === true) {
+        databases = 1
+        commands = await redis.command()
+    } else if (options.payload.connection.awsElastiCache === true || options.payload.connection.azure === true) {
 
         databases = await probeDatabaseCount()
         commands = await redis.command()
