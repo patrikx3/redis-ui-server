@@ -248,6 +248,10 @@ const getKeysInfo = async (options) => {
             type: keyType[1]
         }
         switch (obj.type) {
+            case 'stream':
+                complexLengthPipeline.xlen(key)
+                break;
+
             case 'hash':
                 complexLengthPipeline.hlen(key)
                 break;

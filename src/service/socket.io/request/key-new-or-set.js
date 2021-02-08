@@ -17,6 +17,10 @@ module.exports = async (options) => {
         model.hashKey = model.hashKey === null ? undefined : model.hashKey
 //console.warn(consolePrefix, payload)
         switch (model.type) {
+            case 'stream':
+                await redis.xadd(model.key, model.streamTimestamp, model.streamField, model.value)
+                break;
+
             case 'string':
                 await redis.set(model.key, model.value)
                 break;

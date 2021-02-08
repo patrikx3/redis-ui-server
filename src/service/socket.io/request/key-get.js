@@ -36,11 +36,19 @@ module.exports = async (options) => {
             case 'zset':
                 viewPipeline.zrange(key, 0, -1, 'WITHSCORES')
                 break;
+
+            case 'stream':
+                viewPipeline.xrange(key, '-', '+')
+                break;
         }
         viewPipeline.ttl(key)
         viewPipeline.object('encoding', key)
 
         switch (type) {
+            case 'stream':
+                viewPipeline.xlen(key)
+                break;
+
             case 'hash':
                 viewPipeline.hlen(key)
                 break;
