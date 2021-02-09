@@ -18,7 +18,11 @@ module.exports = async (options) => {
 //console.warn(consolePrefix, payload)
         switch (model.type) {
             case 'stream':
-                await redis.xadd(model.key, model.streamTimestamp, model.streamField, model.value)
+                const arguments = [
+                    model.key,
+                    model.streamTimestamp,
+                ].concat(sharedIoRedis.argumentParser(model.value))
+                await redis.xadd(...arguments)
                 break;
 
             case 'string':
