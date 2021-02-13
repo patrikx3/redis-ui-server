@@ -372,16 +372,17 @@ const getFullInfoAndSendSocket = async (options) => {
 }
 
 const argumentParser = (input, sep, keepQuotes) => {
-    var separator = sep || /\s/g;
-    var singleQuoteOpen = false;
-    var doubleQuoteOpen = false;
-    var tokenBuffer = [];
-    var ret = [];
+    const separator = sep || /\s/g;
+    let singleQuoteOpen = false;
+    let doubleQuoteOpen = false;
+    let tokenBuffer = [];
+    const ret = [];
 
-    var arr = input.split('');
-    for (var i = 0; i < arr.length; ++i) {
-        var element = arr[i];
-        var matches = element.match(separator);
+    console.log('argumentParser input', input)
+    const arr = input.split('');
+    for (let i = 0; i < arr.length; ++i) {
+        let element = arr[i];
+        let matches = element.match(separator);
         if (element === "'" && !doubleQuoteOpen) {
             if (keepQuotes === true) {
                 tokenBuffer.push(element);
