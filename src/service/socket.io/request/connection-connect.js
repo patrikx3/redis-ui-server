@@ -125,6 +125,9 @@ module.exports = async (options) => {
             })
         } else {
             const actualConnection = p3xrs.connections.list.find(con => options.payload.connection.id === con.id)
+            if (actualConnection === undefined) {
+                throw new Error('auto-connection-failed')
+            }
             let redisConfig = Object.assign({}, actualConnection);
             delete redisConfig.name
             delete redisConfig.id
