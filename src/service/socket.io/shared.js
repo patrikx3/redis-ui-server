@@ -350,7 +350,16 @@ const getFullInfo = async (options) => {
 }
 
 const getFullInfoAndSendSocket = async (options) => {
-    const {redis, socket, payload} = options
+    const {redis, socket, payload, setDb} = options
+
+    if (setDb === true) {
+        try {
+            await redis.call('select', payload.db)
+        } catch(e) {
+            console.warn(e)
+        }
+    }
+
     const result = await getFullInfo({
         redis: redis,
         payload: payload,

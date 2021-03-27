@@ -63,6 +63,7 @@ const generateConnectInfo = async (options) => {
     //console.log('databases', databases)
 
     await sharedIoRedis.getFullInfoAndSendSocket({
+        setDb: true,
         redis: redis,
         responseEvent: options.responseEvent,
         socket: socket,
@@ -136,9 +137,12 @@ module.exports = async (options) => {
             }
 
 
+            /*
+            redisConfig.showFriendlyErrorStack = true
             if (db !== undefined) {
                 redisConfig.db = db
             }
+             */
 
             if (redisConfig.cluster === true) {
                 redisConfig = [redisConfig].concat(actualConnection.nodes)
