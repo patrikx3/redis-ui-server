@@ -57,7 +57,14 @@ const cli = () => {
                 "home-dir": "home"
             },
             "static-info": "This is the best configuration, if it starts with ~, then it is in resolve the path in the node_modules, otherwise it resolves to the current process current working directory.",
-            "static": "~p3x-redis-ui-material/dist"
+            "static": "~p3x-redis-ui-material/dist",
+            "treeDividers": [
+                ":",
+                "/",
+                "|",
+                "-",
+                "@"
+            ]
         }
         p3xrs.cfg.readonlyConnections = false
     }
@@ -82,6 +89,9 @@ const cli = () => {
     }
     if (process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
         p3xrs.cfg.connections['home-dir'] = process.env.P3XRS_DOCKER_HOME
+    }
+    if (process.env.hasOwnProperty('P3XRS_PORT')) {
+        p3xrs.cfg.http.port = process.env.P3XRS_PORT
     }
     p3xrs.cfg.connections['home'] = path.resolve(p3xrs.cfg.connections['home-dir'], p3xrs.cfg.connectionsFileName)
 
