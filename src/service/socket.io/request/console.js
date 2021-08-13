@@ -17,7 +17,7 @@ module.exports = async (options) => {
         let mainCommand = commands.shift()
         mainCommand = mainCommand.toLowerCase();
 
-        if (disabledCommands.includes('monitor')) {
+        if (disabledCommands.includes(mainCommand)) {
             throw new Error('invalid_console_command')
         }
 
