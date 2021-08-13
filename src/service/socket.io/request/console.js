@@ -2,6 +2,8 @@ const sharedIoRedis = require('../shared')
 
 const parser = sharedIoRedis.argumentParser
 
+const disabledCommands = ['monitor']
+
 const consolePrefix = 'socket.io console call'
 module.exports = async (options) => {
     const {socket, payload} = options;
@@ -14,6 +16,10 @@ module.exports = async (options) => {
         const commands = parser( command);
         let mainCommand = commands.shift()
         mainCommand = mainCommand.toLowerCase();
+
+        if (disabledCommands.includes('monitor')) {
+            throw new Error('invalid_console_command')
+        }
 
         if (mainCommand !== 'select') {
             sharedIoRedis.ensureReadonlyConnection({ socket })
