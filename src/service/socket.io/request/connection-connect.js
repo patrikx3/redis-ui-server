@@ -149,7 +149,10 @@ module.exports = async (options) => {
             }
             if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
                 redisConfig.tls = {
-                    ca: redisConfig.tlsCa
+                    rejectUnauthorized:false,
+                    cert: redisConfig.tlsCrt,
+                    key: redisConfig.tlsKey,
+                    ca: redisConfig.tlsCa,
                 }
             }
 

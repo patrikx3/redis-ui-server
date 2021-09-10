@@ -25,6 +25,15 @@ module.exports = async (options) => {
             if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.password) {
                 connectionSave.password = p3xrs.connections.list[connectionIndexExisting].password;
             }
+            if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.tlsCrt) {
+                connectionSave.tlsCrt = p3xrs.connections.list[connectionIndexExisting].tlsCrt;
+            }
+            if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.tlsKey) {
+                connectionSave.tlsKey = p3xrs.connections.list[connectionIndexExisting].tlsKey;
+            }
+            if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.tlsCa) {
+                connectionSave.tlsCa = p3xrs.connections.list[connectionIndexExisting].tlsCa;
+            }
 
             //TODO fix secured nodes password
             if (Array.isArray(connectionSave.nodes)) {

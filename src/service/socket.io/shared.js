@@ -67,6 +67,9 @@ const sendConnections = (options) => {
     const connections = cloneDeep(p3xrs.connections);
     let connectionsList = connections.list.map(connection => {
         delete connection.password
+        delete connection.tlsCrt
+        delete connection.tlsKey
+        delete connection.tlsCa
 
         //TODO fix secured nodes password
         if (Array.isArray(connection.nodes)) {

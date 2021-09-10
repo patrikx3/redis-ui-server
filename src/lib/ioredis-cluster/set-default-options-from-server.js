@@ -17,7 +17,10 @@ module.exports = function(options, server) {
     }
     if (typeof serverOptions.tlsCa === 'string' && serverOptions.tlsCa.trim() !== '') {
         redisOptions.tls = {
-            ca: serverOptions.tlsCa
+            rejectUnauthorized:false,
+            cert: serverOptions.tlsCrt,
+            key: serverOptions.tlsKey,
+            ca: serverOptions.tlsCa,
         }
     }
     return options

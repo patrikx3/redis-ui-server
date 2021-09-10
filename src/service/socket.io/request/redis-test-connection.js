@@ -10,6 +10,15 @@ module.exports = async (options) => {
             if (redisConfig.password === actualConnection.id) {
                 redisConfig.password = actualConnection.password;
             }
+            if (redisConfig.tlsCrt === actualConnection.id) {
+                redisConfig.tlsCrt = actualConnection.tlsCrt;
+            }
+            if (redisConfig.tlsKey === actualConnection.id) {
+                redisConfig.tlsKey = actualConnection.tlsKey;
+            }
+            if (redisConfig.tlsCa === actualConnection.id) {
+                redisConfig.tlsCa = actualConnection.tlsCa;
+            }
         }
 
         //TODO fix secured nodes password
@@ -30,7 +39,10 @@ module.exports = async (options) => {
 
         if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
             redisConfig.tls = {
-                ca: redisConfig.tlsCa
+                rejectUnauthorized:false,
+                cert: redisConfig.tlsCrt,
+                key: redisConfig.tlsKey,
+                ca: redisConfig.tlsCa,
             }
         }
 
