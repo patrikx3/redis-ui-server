@@ -147,6 +147,11 @@ module.exports = async (options) => {
             if (redisConfig.cluster === true) {
                 redisConfig = [redisConfig].concat(actualConnection.nodes)
             }
+            if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
+                redisConfig.tls = {
+                    ca: redisConfig.tlsCa
+                }
+            }
 
             let redis = new Redis(redisConfig)
             let redisSubscriber = new Redis(redisConfig)

@@ -28,6 +28,12 @@ module.exports = async (options) => {
             redisConfig = [redisConfig].concat(redisConfig.nodes)
         }
 
+        if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
+            redisConfig.tls = {
+                ca: redisConfig.tlsCa
+            }
+        }
+
         let redis = new Redis(redisConfig)
         redis.on('error', function (error) {
             console.error(error)
