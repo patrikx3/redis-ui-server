@@ -14,12 +14,18 @@ module.exports = async (options) => {
 
         await redis.rename(payload.key, payload.keyNew)
 
+        /*
         await sharedIoRedis.getFullInfoAndSendSocket({
             redis: redis,
             responseEvent: options.responseEvent,
             socket: socket,
             payload: payload,
 
+        })
+         */
+
+        socket.emit(options.responseEvent, {
+            status: 'ok',
         })
 
     } catch (e) {

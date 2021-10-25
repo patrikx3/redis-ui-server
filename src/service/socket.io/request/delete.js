@@ -14,12 +14,17 @@ module.exports = async (options) => {
 
         await redis.del(payload.key)
 
+        socket.emit(options.responseEvent, {
+            status: 'ok',
+        })
+        /*
         await sharedIoRedis.getFullInfoAndSendSocket({
             redis: redis,
             responseEvent: options.responseEvent,
             socket: socket,
             payload: payload,
         })
+         */
 
     } catch (e) {
         console.error(e)

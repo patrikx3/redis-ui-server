@@ -72,6 +72,11 @@ module.exports = async (options) => {
 
         }
 
+        socket.emit(options.responseEvent, {
+            status: 'ok',
+            key: model.key,
+        })
+        /*
         await sharedIoRedis.getFullInfoAndSendSocket({
             redis: redis,
             responseEvent: options.responseEvent,
@@ -82,6 +87,7 @@ module.exports = async (options) => {
             payload: payload,
 
         })
+         */
     } catch (e) {
         console.error(e)
         socket.emit(options.responseEvent, {
