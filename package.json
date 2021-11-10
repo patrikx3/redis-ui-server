@@ -47,7 +47,7 @@
     "author": "Patrik Laszlo <alabard@gmail.com>",
     "license": "MIT",
     "devDependencies": {
-        "corifeus-builder": "^2021.10.176",
+        "corifeus-builder": "^2021.10.181",
         "nodemon": "^2.0.15"
     },
     "dependencies-saved": {
