@@ -357,7 +357,7 @@ const getFullInfoAndSendSocket = async (options) => {
 
     if (setDb === true) {
         try {
-            await redis.call('select', payload.db)
+            await redis.call('select', payload.db || 0)
         } catch(e) {
             console.warn(e)
         }

@@ -14,7 +14,7 @@ const generateConnectInfo = async (options) => {
 
     let databases
     let results
-    let commands
+    let commands = []
 
     const probeDatabaseCount = async() => {
         let tryUntilSelectDatabaseIsNotOk = true
@@ -45,22 +45,20 @@ const generateConnectInfo = async (options) => {
 
     if (options.payload.connection.cluster === true) {
         databases = 1
-        commands = await redis.command()
-    } else if (options.payload.connection.awsElastiCache === true || options.payload.connection.azure === true) {
+        //commands = await redis.command()
+    } else {
 
         databases = await probeDatabaseCount()
+        //commands = await redis.command()
+    } 
+    
+    if (options.payload.connection.commandsListing === true || options.payload.connection.commandsListing === undefined) {
         commands = await redis.command()
-    } else {
-        results = await Promise.all([
-            redis.config('get', 'databases'),
-            redis.command(),
-        ])
-        databases = parseInt(results[0][1])
-        commands = results[1]
     }
+    
     //socket.p3xrs.commands = commands.map(e => e[0].toLowerCase())
 
-    //console.log('databases', databases)
+    //console.log('payload', payload)
 
     await sharedIoRedis.getFullInfoAndSendSocket({
         setDb: true,
@@ -84,11 +82,7 @@ module.exports = async (options) => {
 
     try {
         if (!p3xrs.cfg.donated) {
-            if (payload.connection.awsElastiCache === true) {
-                throw donationWareFeatureError
-            } else if (payload.connection.azure === true) {
-                throw donationWareFeatureError
-            } else if (payload.connection.cluster === true) {
+            if (payload.connection.cluster === true) {
                 throw donationWareFeatureError
             }
         }
