@@ -50,10 +50,12 @@ const generateConnectInfo = async (options) => {
 
         databases = await probeDatabaseCount()
         //commands = await redis.command()
-    } 
-    
-    if (options.payload.connection.commandsListing === true || options.payload.connection.commandsListing === undefined) {
-        commands = await redis.command()
+    }
+
+    if (!options.payload.connection.awsElastiCache && !options.payload.connection.azure) {
+        if (options.payload.connection.commandsListing === true || options.payload.connection.commandsListing === undefined) {
+            commands = await redis.command()
+        }
     }
     
     //socket.p3xrs.commands = commands.map(e => e[0].toLowerCase())
