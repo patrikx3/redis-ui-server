@@ -160,7 +160,7 @@ module.exports = async (options) => {
                 }
             }
             if ((typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') || redisConfig.tlsWithoutCert) {
-                redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized
+                redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized
             }
             
             let redis = new Redis(redisConfig)

@@ -27,6 +27,7 @@ module.exports = function(options, server) {
     }
     if ((typeof serverOptions.tlsCa === 'string' && serverOptions.tlsCa.trim() !== '') || serverOptions.tlsWithoutCert) {
         redisOptions.tls.rejectUnauthorized = serverOptions.tlsRejectUnauthorized
+        redisOptions.tls.rejectUnauthorized = serverOptions.tlsRejectUnauthorized === undefined ? false : serverOptions.tlsRejectUnauthorized
     }
     return options
 }
