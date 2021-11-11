@@ -13,7 +13,7 @@ const generateConnectInfo = async (options) => {
 
 
     let databases
-    let results
+    //let results
     let commands = []
 
     const probeDatabaseCount = async() => {
