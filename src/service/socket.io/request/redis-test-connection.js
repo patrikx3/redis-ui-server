@@ -37,9 +37,12 @@ module.exports = async (options) => {
             redisConfig = [redisConfig].concat(redisConfig.nodes)
         }
 
-        if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
+        if (redisConfig.tlsWithoutCert) {
+            redisConfig.tls =  {
+            }
+        } else if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
             redisConfig.tls = {
-                rejectUnauthorized:false,
+                rejectUnauthorized: false,
                 cert: redisConfig.tlsCrt,
                 key: redisConfig.tlsKey,
                 ca: redisConfig.tlsCa,

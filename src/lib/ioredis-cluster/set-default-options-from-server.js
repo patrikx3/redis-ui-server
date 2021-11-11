@@ -15,9 +15,12 @@ module.exports = function(options, server) {
     if (redisOptions.password === undefined) {
         redisOptions.password = serverOptions.password
     }
-    if (typeof serverOptions.tlsCa === 'string' && serverOptions.tlsCa.trim() !== '') {
+    if (serverOptions.tlsWithoutCert) {
+        serverOptions.tls =  {
+        }
+    } else if (typeof serverOptions.tlsCa === 'string' && serverOptions.tlsCa.trim() !== '') {
         redisOptions.tls = {
-            rejectUnauthorized:false,
+            rejectUnauthorized: false,
             cert: serverOptions.tlsCrt,
             key: serverOptions.tlsKey,
             ca: serverOptions.tlsCa,
