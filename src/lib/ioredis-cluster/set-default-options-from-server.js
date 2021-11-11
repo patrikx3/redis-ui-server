@@ -20,11 +20,13 @@ module.exports = function(options, server) {
         }
     } else if (typeof serverOptions.tlsCa === 'string' && serverOptions.tlsCa.trim() !== '') {
         redisOptions.tls = {
-            rejectUnauthorized: false,
             cert: serverOptions.tlsCrt,
             key: serverOptions.tlsKey,
             ca: serverOptions.tlsCa,
         }
+    }
+    if ((typeof serverOptions.tlsCa === 'string' && serverOptions.tlsCa.trim() !== '') || serverOptions.tlsWithoutCert) {
+        redisOptions.tls.rejectUnauthorized = serverOptions.tlsRejectUnauthorized
     }
     return options
 }

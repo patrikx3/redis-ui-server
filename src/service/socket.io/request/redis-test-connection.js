@@ -42,11 +42,14 @@ module.exports = async (options) => {
             }
         } else if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
             redisConfig.tls = {
-                rejectUnauthorized: false,
+                //rejectUnauthorized: false,
                 cert: redisConfig.tlsCrt,
                 key: redisConfig.tlsKey,
                 ca: redisConfig.tlsCa,
             }
+        }
+        if ((typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') || redisConfig.tlsWithoutCert) {
+            redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized
         }
 
         let redis = new Redis(redisConfig)
