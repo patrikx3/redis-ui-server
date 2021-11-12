@@ -50,15 +50,23 @@ const generateConnectInfo = async (options) => {
         databases = 1
         //commands = await redis.command()
     } else {
-        databases = await probeDatabaseCount()
+        try {
+            databases = (await redis.config('get', 'databases'))[1]
+            console.info(options.payload.connection.name, 'instance successfully works the database listing')
+        } catch(e) {
+            console.warn(options.payload.connection.name, 'instance get databases listing is disabled', e)
+            databases = await probeDatabaseCount()
+        }
     }
 
+    console.info(options.payload.connection.name, 'databases got', databases)
+    
     try {
         //commands = await redis.call('command2')
         commands = await redis.command()
-        console.info(options.payload.connection.name, 'instance, command listing is available')
+        console.info(options.payload.connection.name, 'instance command listing is available')
     } catch(e) {
-        console.warn(options,payload.connection.name, 'instance, command listing is not available, not all redis instances are not avilable command listing', e)
+        console.warn(options,payload.connection.name, 'instance command listing is not available, not all redis instances are not available command listing', e)
     }
 
     //console.log(JSON.stringify(commands))
