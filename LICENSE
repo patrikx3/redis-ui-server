@@ -1,11 +1,11 @@
 
-@license p3x-redis-ui-server v2021.10.206
+@license p3x-redis-ui-server v2022.4.102
   
 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface
 
 https://corifeus.com/redis-ui-server
 
-Copyright (c) 2021 Patrik Laszlo / P3X / Corifeus and contributors.
+Copyright (c) 2022 Patrik Laszlo / P3X / Corifeus and contributors.
 
 MIT License
 
