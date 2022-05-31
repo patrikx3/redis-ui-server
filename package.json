@@ -1,13 +1,13 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2022.4.119",
+    "version": "2022.4.120",
     "description": "🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
         "code": "Reverse",
         "opencollective": false,
         "build": true,
-        "nodejs": "v16.14.0",
+        "nodejs": "v16.15.0",
         "reponame": "redis-ui-server",
         "publish": true,
         "prefix": "p3x-",
@@ -48,7 +48,7 @@
     "license": "MIT",
     "devDependencies": {
         "corifeus-builder": "^2022.4.115",
-        "nodemon": "^2.0.15"
+        "nodemon": "^2.0.16"
     },
     "dependencies-saved": {
         "koa-body": "^4.0.4",
@@ -56,14 +56,14 @@
     },
     "dependencies": {
         "chalk": "^4.1.2",
-        "commander": "^9.0.0",
+        "commander": "^9.3.0",
         "corifeus-utils": "^2022.4.114",
-        "ioredis": "^4.28.5",
+        "ioredis": "^5.0.5",
         "koa": "^2.13.4",
         "koa-send": "^5.0.1",
         "koa-static": "^5.0.0",
         "lodash": "^4.17.21",
-        "socket.io": "^4.4.1"
+        "socket.io": "^4.5.1"
     },
     "engines": {
         "node": ">=12.13.0"
