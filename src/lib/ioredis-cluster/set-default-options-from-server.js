@@ -7,6 +7,7 @@ function getDefaultOptionsFromServer(server) {
 
 module.exports = function(options, server) {
     const serverOptions = getDefaultOptionsFromServer(server)
+    console.log('serverOptions', serverOptions)
     let {redisOptions} = options
     if (redisOptions === undefined) {
         redisOptions = {}
@@ -16,7 +17,7 @@ module.exports = function(options, server) {
         redisOptions.password = serverOptions.password
     }
     if (serverOptions.tlsWithoutCert) {
-        serverOptions.tls =  {
+        redisOptions.tls =  {
         }
     } else if (typeof serverOptions.tlsCa === 'string' && serverOptions.tlsCa.trim() !== '') {
         redisOptions.tls = {
