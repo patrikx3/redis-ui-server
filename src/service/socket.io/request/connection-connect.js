@@ -137,6 +137,16 @@ module.exports = async (options) => {
             if (actualConnection === undefined) {
                 throw new Error('auto-connection-failed')
             }
+            if (connection.askAuth) {
+                actualConnection.username = undefined
+                actualConnection.password = undefined
+                if (connection.username) {
+                    actualConnection.username = connection.username
+                }
+                if (connection.password) {
+                    actualConnection.password = connection.password
+                }
+            }
             let redisConfig = Object.assign({}, actualConnection);
             delete redisConfig.name
             delete redisConfig.id
@@ -172,6 +182,7 @@ module.exports = async (options) => {
             }
             
             let redis = new Redis(redisConfig)
+            console.warn('redis connection', redisConfig)
             let redisSubscriber = new Redis(redisConfig)
             // let redis = await new Redis(redisConfig, {autoDetectCluster: true})
             // let redisSubscriber = await new Redis(redisConfig, {autoDetectCluster: true})

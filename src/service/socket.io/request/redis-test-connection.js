@@ -65,9 +65,11 @@ module.exports = async (options) => {
             try {
                 //await redis.call('client', 'list')
 
-                socket.emit(options.responseEvent, {
-                    status: 'ok',
-                })
+                setTimeout(() => {
+                    socket.emit(options.responseEvent, {
+                        status: 'ok',
+                    })    
+                }, 2500)
             } catch (error) {
                 console.error(error)
                 socket.emit(options.responseEvent, {
