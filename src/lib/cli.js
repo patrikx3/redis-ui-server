@@ -6,7 +6,7 @@ const cli = () => {
     const pkg = require('../../package')
 
     if (!process.versions.hasOwnProperty('electron') && !process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
-        const program = require('commander')
+        const program = require('commander').program
 
 
         program
