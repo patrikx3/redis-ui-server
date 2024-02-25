@@ -22,7 +22,7 @@ const koaService = function () {
             let resolvedPath
             if (inputPath.startsWith('~')) {
                 const inputPathFromNodeModules = inputPath.substring(1)
-                let basePath = require.main ? path.dirname(require.main.filename) : process.cwd();
+                let basePath = process.cwd();
                 resolvedPath = path.resolve(basePath + path.sep + '..', `node_modules${path.sep}${inputPathFromNodeModules}`);
             } else {
                 resolvedPath = path.resolve(process.cwd(), inputPath)
