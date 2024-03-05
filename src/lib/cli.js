@@ -5,18 +5,19 @@ const fs = require('fs')
 const cli = () => {
     const pkg = require('../../package')
 
+    const program = require('commander').program
+
+
+    program
+        .version(pkg.version)
+        .option('-c, --config [config]', 'Set the p3xr.json p3x-redis-ui-server configuration, see more help in https://github.com/patrikx3/redis-ui-server')
+        .option('-r, --readonly-connections', 'Set the connections to be readonly, no adding, saving or delete a connection')
+        .option('-n, --connections-file-name [filename]', 'Set the connections file name, overrides default .p3xrs-conns.json')
+        .parse(process.argv);
+
+    const programOptions = program.opts();
+
     if (!process.versions.hasOwnProperty('electron') && !process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
-        const program = require('commander').program
-
-
-        program
-            .version(pkg.version)
-            .option('-c, --config [config]', 'Set the p3xr.json p3x-redis-ui-server configuration, see more help in https://github.com/patrikx3/redis-ui-server')
-            .option('-r, --readonly-connections', 'Set the connections to be readonly, no adding, saving or delete a connection')
-            .option('-n, --connections-file-name [filename]', 'Set the connections file name, overrides default .p3xrs-conns.json')
-            .parse(process.argv);
-
-        const programOptions = program.opts();
 
         if (!programOptions.config) {
 
@@ -66,7 +67,13 @@ const cli = () => {
                 "@"
             ]
         }
-        p3xrs.cfg.readonlyConnections = false
+        if (programOptions.readonlyConnections) {
+            // console.warn(programOptions.readonlyConnections)
+            p3xrs.cfg.readonlyConnections = true
+            //console.warn(p3xrs.cfg.readonlyConnections === true)
+        } else {
+            p3xrs.cfg.readonlyConnections = false
+        }
     }
 
     if (p3xrs.cfg.connectionsFileName === undefined) {
