@@ -27,6 +27,7 @@ const boot = async () => {
         koaService: p3xrs.koa
     })
 
+    /*
     const checkLicense = require('./check-license')
     checkLicense({
         socket: p3xrs.socketIo.socketio,
@@ -42,7 +43,11 @@ const boot = async () => {
                 license: p3xrs.connections.license
             }
         })
-    }, 1000 * 60 /* 1 minute */ * 60)
+    }, 1000 * 60 /* 1 minute */ //* 60)
+
+    
+    // it was not working, so it's disabled...
+    p3xrs.cfg.donated = true
 
     p3xrs.redisConnections = {}
     p3xrs.redisConnectionsSubscriber = {}
