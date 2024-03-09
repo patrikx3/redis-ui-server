@@ -9,6 +9,7 @@ const socketIoService = function () {
         const socketio = require('socket.io')(koaService.server, {
             secure: true,
             path: '/socket.io',
+            maxHttpBufferSize: 256 * 1024 * 1024, // 256 MB
         });
 
         require('./socket')(socketio);
