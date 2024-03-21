@@ -97,6 +97,10 @@ const cli = () => {
     if (process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
         p3xrs.cfg.connections['home-dir'] = process.env.P3XRS_DOCKER_HOME
     }
+    if (process.env.FLATPAK_ID) {
+        // process.env.XDG_DATA_HOME
+        p3xrs.cfg.connections['home-dir'] = '/var/data/'
+    }
     if (process.env.hasOwnProperty('P3XRS_PORT')) {
         p3xrs.cfg.http.port = process.env.P3XRS_PORT
     }
