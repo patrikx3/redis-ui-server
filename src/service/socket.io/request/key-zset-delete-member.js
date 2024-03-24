@@ -12,8 +12,7 @@ module.exports = async (options) => {
 
         const {key, value} = payload;
 
-        console.log(consolePrefix, payload)
-        await redis.zrem(key, value)
+        await redis.zremBuffer(key, value)
 
         socket.emit(options.responseEvent, {
             status: 'ok',

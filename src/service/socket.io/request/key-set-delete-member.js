@@ -14,7 +14,7 @@ module.exports = async (options) => {
 
         const {key, value} = payload;
 
-        await redis.srem(key, value)
+        await redis.sremBuffer(key, value)
 
         socket.emit(options.responseEvent, {
             status: 'ok',
