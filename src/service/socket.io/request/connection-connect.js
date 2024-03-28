@@ -97,6 +97,8 @@ module.exports = async (options) => {
         if (!p3xrs.cfg.donated) {
             if (payload.connection.cluster === true) {
                 throw donationWareFeatureError
+            } else if (payload.connection.sentinel === true) {
+                throw donationWareFeatureError
             }
         }
 
@@ -147,6 +149,7 @@ module.exports = async (options) => {
                 }
             }
             let redisConfig = Object.assign({}, actualConnection);
+            const sentinelName = redisConfig.name
             delete redisConfig.name
             delete redisConfig.id
             redisConfig.retryStrategy = () => {
@@ -161,9 +164,6 @@ module.exports = async (options) => {
             }
              */
 
-            if (redisConfig.cluster === true) {
-                redisConfig = [redisConfig].concat(actualConnection.nodes)
-            }
             
             if (redisConfig.tlsWithoutCert) {
                 redisConfig.tls =  {
@@ -179,7 +179,24 @@ module.exports = async (options) => {
             if ((typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') || redisConfig.tlsWithoutCert) {
                 redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized
             }
+
+            if (redisConfig.hasOwnProperty('sentinel') && redisConfig.sentinel === true) {
+                redisConfig = [redisConfig].concat(actualConnection.nodes)
+            } else if (redisConfig.cluster === true) {
+                redisConfig = [redisConfig].concat(actualConnection.nodes)
+            }
             
+            if (Array.isArray(redisConfig) && redisConfig[0].hasOwnProperty('sentinel') && redisConfig[0].sentinel === true) {
+                redisConfig = {
+                    sentinels: redisConfig,
+                    name: sentinelName,
+                    sentinelPassword: redisConfig[0].password,
+                    sentinelRetryStrategy: () => {
+                        return false
+                    }
+                }
+            }
+
             let redis = new Redis(redisConfig)
             //console.warn('redis connection', redisConfig)
             let redisSubscriber = new Redis(redisConfig)
@@ -243,6 +260,7 @@ module.exports = async (options) => {
             redisSubscriber.on('pmessage', function (channel, pattern, message) {
                 //console.log(`receive pmessage channel: ${channel} - pattern: ${pattern}, message: ${message}`);
                 //console.log('list clients', actualConnection.id, JSON.stringify(p3xrs.redisConnections[actualConnection.id].clients, null, 4))
+                
                 socket.emit('pubsub-message', {
                     channel: pattern,
                     message: message,

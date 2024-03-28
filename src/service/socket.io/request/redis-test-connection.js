@@ -21,21 +21,11 @@ module.exports = async (options) => {
             }
         }
 
+        const sentinelName = redisConfig.name
         //TODO fix secured nodes password
-
         delete redisConfig.name
         delete redisConfig.id
 
-        if (redisConfig.cluster === true) {
-            redisConfig.nodes = redisConfig.nodes.map((node) => {
-                if (node.password === node.id) {
-                    const foundNode = actualConnection.nodes.find((findNode) => findNode.id === node.password)
-                    node.password = foundNode.password
-                }
-                return node
-            })
-            redisConfig = [redisConfig].concat(redisConfig.nodes)
-        }
 
         if (redisConfig.tlsWithoutCert) {
             redisConfig.tls =  {
@@ -52,6 +42,37 @@ module.exports = async (options) => {
             redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized 
         }
 
+        if (redisConfig.hasOwnProperty('sentinel') && redisConfig.sentinel === true) {
+            redisConfig.nodes = redisConfig.nodes.map((node) => {
+                if (node.password === node.id) {
+                    const foundNode = actualConnection.nodes.find((findNode) => findNode.id === node.password)
+                    node.password = foundNode.password
+                }
+                return node
+            })
+            redisConfig = [redisConfig].concat(redisConfig.nodes)
+        } else if (redisConfig.cluster === true) {
+            redisConfig.nodes = redisConfig.nodes.map((node) => {
+                if (node.password === node.id) {
+                    const foundNode = actualConnection.nodes.find((findNode) => findNode.id === node.password)
+                    node.password = foundNode.password
+                }
+                return node
+            })
+            redisConfig = [redisConfig].concat(redisConfig.nodes)
+        }
+
+
+        if (Array.isArray(redisConfig) && redisConfig[0].hasOwnProperty('sentinel') && redisConfig[0].sentinel === true) {
+            redisConfig = {
+                sentinels: redisConfig,
+                name: sentinelName,
+                sentinelPassword: redisConfig[0].password,
+                sentinelRetryStrategy: () => {
+                    return false
+                }
+            }
+        }
         let redis = new Redis(redisConfig)
         redis.on('error', function (error) {
             console.error(error)
