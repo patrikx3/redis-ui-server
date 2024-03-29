@@ -183,8 +183,8 @@ module.exports = async (options) => {
                     ca: redisConfig.tlsCa,
                 }
             }
-            if ((typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') || redisConfig.tlsWithoutCert) {
-                redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized
+            if (redisConfig.hasOwnProperty('tls')) {
+                redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized 
             }
 
             if (redisConfig.hasOwnProperty('sentinel') && redisConfig.sentinel === true) {

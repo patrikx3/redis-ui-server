@@ -41,12 +41,13 @@ module.exports = async (options) => {
                 //rejectUnauthorized: false,
                 cert: redisConfig.tlsCrt,
                 key: redisConfig.tlsKey,
-                ca: redisConfig.tlsCa,
+                ca: redisConfig.tlsCa,                
             }
         }
-        if ((typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') || redisConfig.tlsWithoutCert) {
+        if (redisConfig.hasOwnProperty('tls')) {
             redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized 
         }
+
 
         if (redisConfig.hasOwnProperty('sentinel') && redisConfig.sentinel === true) {
             redisConfig.nodes = redisConfig.nodes.map((node) => {
@@ -138,7 +139,7 @@ module.exports = async (options) => {
         }
 
         let redis = new Redis(redisConfig)
-        console.info('redis-test-connection', redisConfig)
+        //console.info('redis-test-connection', redisConfig)
         redis.on('error', function (error) {
             console.error(error)
             socket.emit(options.responseEvent, {
