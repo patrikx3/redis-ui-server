@@ -27,7 +27,7 @@ module.exports = async (options) => {
             }
         }
 
-        const sentinelName = redisConfig.name
+        const sentinelName = redisConfig.sentinelName 
         //TODO fix secured nodes password
         delete redisConfig.name
         delete redisConfig.id

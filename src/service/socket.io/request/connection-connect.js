@@ -156,7 +156,7 @@ module.exports = async (options) => {
                 }
             }
             let redisConfig = Object.assign({}, actualConnection);
-            const sentinelName = redisConfig.name
+            const sentinelName = redisConfig.sentinelName
             delete redisConfig.name
             delete redisConfig.id
             redisConfig.retryStrategy = () => {
