@@ -8,6 +8,7 @@ module.exports = class Cluster extends Redis.Cluster {
     constructor(server, options = {}) {
         server = Array.isArray(server) ? server : [server]
         options = setDefaultOptionsFromServer(options, server)
+        options.clusterRetryStrategy = null
         super(server, options)
     }
 

@@ -159,9 +159,10 @@ module.exports = async (options) => {
             const sentinelName = redisConfig.sentinelName
             delete redisConfig.name
             delete redisConfig.id
-            redisConfig.retryStrategy = () => {
-                return false
-            }
+            redisConfig.retryStrategy = null
+
+            // module.exports = class Cluster extends Redis.Cluster <- right as it says
+            redisConfig.clusterRetryStrategy = null
 
 
             /*
