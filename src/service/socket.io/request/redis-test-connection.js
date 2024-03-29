@@ -74,6 +74,7 @@ module.exports = async (options) => {
             }
         }
         let redis = new Redis(redisConfig)
+        console.info('redis-test-connection', redisConfig)
         redis.on('error', function (error) {
             console.error(error)
             socket.emit(options.responseEvent, {

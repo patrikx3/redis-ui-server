@@ -23,23 +23,30 @@ const generateConnectInfo = async (options) => {
         let currentDb = 0
         let totalDb = 0
         let maxDb = 512
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         while(tryUntilSelectDatabaseIsNotOk) {
             try {
-                currentDb++
                 await redis.call('select', currentDb)
                 //console.info('found correct database index', currentDb)
                 if (currentDb > maxDb) {
                     console.warn(`limiting to max ${maxDb} database index, as it could crash with a big db index number`)
                     tryUntilSelectDatabaseIsNotOk = false
                 }
+                currentDb++
             } catch(e) {
+                console.error(e);
                 console.warn('found wrong current db index', currentDb)
                 tryUntilSelectDatabaseIsNotOk = false
             }
         }
         totalDb = currentDb
         if (db <= totalDb) {
-            await redis.call('select', db)
+            try {
+                await redis.call('select', db)
+            } catch(e) {
+                console.error(e)
+            }
         }
         console.log('calculated max databases index', totalDb)
         return totalDb
@@ -63,7 +70,7 @@ const generateConnectInfo = async (options) => {
     try {
         //commands = await redis.call('command2')
         commands = await redis.command()
-        console.info(options.payload.connection.name, 'instance command listing is available', JSON.stringify(commands))
+        console.info(options.payload.connection.name, 'instance command listing is available') // , JSON.stringify(commands))
     } catch(e) {
         console.warn(options,payload.connection.name, 'instance command listing is not available, not all redis instances are not available command listing', e)
     }
