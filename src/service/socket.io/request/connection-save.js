@@ -34,6 +34,16 @@ module.exports = async (options) => {
             if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.tlsCa) {
                 connectionSave.tlsCa = p3xrs.connections.list[connectionIndexExisting].tlsCa;
             }
+            if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.tlsCa) {
+                connectionSave.tlsCa = p3xrs.connections.list[connectionIndexExisting].tlsCa;
+            }
+            if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.sshPassword) {
+                connectionSave.sshPassword = p3xrs.connections.list[connectionIndexExisting].sshPassword
+            }
+            if (p3xrs.connections.list[connectionIndexExisting].id === connectionSave.sshPrivateKey) {
+                connectionSave.sshPrivateKey = p3xrs.connections.list[connectionIndexExisting].sshPrivateKey
+            }
+
 
             //TODO fix secured nodes password
             if (Array.isArray(connectionSave.nodes)) {

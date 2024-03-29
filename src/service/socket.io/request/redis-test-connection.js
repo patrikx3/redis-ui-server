@@ -19,6 +19,12 @@ module.exports = async (options) => {
             if (redisConfig.tlsCa === actualConnection.id) {
                 redisConfig.tlsCa = actualConnection.tlsCa;
             }
+            if (redisConfig.sshPassword === actualConnection.id) {
+                redisConfig.sshPassword = actualConnection.sshPassword;
+            }
+            if (redisConfig.sshPrivateKey === actualConnection.id) {
+                redisConfig.sshPrivateKey = actualConnection.sshPrivateKey;
+            }
         }
 
         const sentinelName = redisConfig.name
@@ -73,6 +79,64 @@ module.exports = async (options) => {
                 }
             }
         }
+
+        let ssh = {
+            server: undefined,
+            client: undefined,
+        }
+        if (!Array.isArray(redisConfig)) {
+            if (redisConfig.ssh === true) {
+
+                const tunnelOptions = {
+                    autoClose: false
+                }
+                const sshOptions = {
+                    host: redisConfig.sshHost,
+                    port: redisConfig.sshPort,
+                    username: redisConfig.sshUsername,
+                };
+                if (redisConfig.sshPrivateKey) {
+                    sshOptions.privateKey = redisConfig.sshPrivateKey
+                } else {
+                    sshOptions.password = redisConfig.sshPassword
+                }
+                
+                const serverOptions = null
+                
+                const forwardOptions = {
+                    dstAddr: redisConfig.host,
+                    dstPort: redisConfig.port,
+                }
+
+                const { createTunnel } = require('tunnel-ssh')
+                let [server, client] = await createTunnel(tunnelOptions, serverOptions, sshOptions, forwardOptions);
+
+
+                ssh.server = server
+                ssh.client = client
+
+                redisConfig.port = server.address().port
+
+                server.on('error',(e)=>{
+                    console.error(e);
+                    ssh.server.close()
+                    socket.emit(options.responseEvent, {
+                        status: 'error',
+                        error: e.message
+                    })
+                });
+            
+                client.on('error',(e)=>{
+                    console.error(e);
+                    ssh.server.close()
+                    socket.emit(options.responseEvent, {
+                        status: 'error',
+                        error: e.message
+                    })
+                });
+            }
+        }
+
         let redis = new Redis(redisConfig)
         console.info('redis-test-connection', redisConfig)
         redis.on('error', function (error) {
@@ -82,6 +146,9 @@ module.exports = async (options) => {
                 error: error.message
             })
             redis.disconnect()
+            if (ssh.server) {   
+                ssh.server.close()
+            }
         })
         redis.on('connect', async function () {
             try {
@@ -100,7 +167,9 @@ module.exports = async (options) => {
                 })
             } finally {
                 redis.disconnect()
-
+                if (ssh.server) {   
+                    ssh.server.close()
+                }    
             }
         })
 
