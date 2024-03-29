@@ -8,7 +8,7 @@ function getDefaultOptionsFromServer(server) {
 module.exports = function(options, server) {
     const serverOptions = getDefaultOptionsFromServer(server)
     //console.log('serverOptions', serverOptions)
-    let {redisOptions} = options
+    let redisOptions = options.redisOptions
     if (redisOptions === undefined) {
         redisOptions = {}
         options.redisOptions = redisOptions
@@ -26,8 +26,8 @@ module.exports = function(options, server) {
             ca: serverOptions.tlsCa,
         }
     }
-    if (redisConfig.hasOwnProperty('tls')) {
-        redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized 
+    if (redisOptions.hasOwnProperty('tls')) {
+        redisOptions.tls.rejectUnauthorized = redisOptions.tlsRejectUnauthorized === undefined ? false : redisOptions.tlsRejectUnauthorized 
     }
     return options
 }
