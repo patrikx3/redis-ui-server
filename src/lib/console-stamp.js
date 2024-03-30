@@ -24,7 +24,7 @@ const consoleStamp = () => {
                 }
 
                 let data = '' //chalk`${moment().format(`YYYY/MM/DD HH:mm:ss.SSS`)} `
-                data += chalk`{black.grey [P3XRS]}` + ` [PID: ${(String(process.pid).padStart(6, 0))}] `
+                data += chalk`{black.grey [P3XRS]}` + ` [PID: ${(String(process.pid).padStart(6, 0))}] [${label.padStart(5, ' ')}]: `
 
                 //arguments[0] = data + arguments[0]
                 const mainArguments = Array.prototype.slice.call(arguments);

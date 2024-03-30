@@ -60,6 +60,9 @@ module.exports = (io) => {
             socketIoShared.sendStatus({
                 socket: socket,
             })
+            socketIoShared.disconnectRedis({
+                socket: socket,
+            })
         });
 
         socket.on('p3xr-request', (options) => {
