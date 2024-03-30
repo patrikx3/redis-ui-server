@@ -52,6 +52,10 @@ const boot = async () => {
     p3xrs.redisConnections = {}
     p3xrs.redisConnectionsSubscriber = {}
 
+    process.on('uncaughtException', (error) => {
+        console.error('Uncaught Exception:', error);
+    });
+
 }
 
 module.exports = boot

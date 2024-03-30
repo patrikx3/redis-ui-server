@@ -205,12 +205,19 @@ module.exports = async (options) => {
                 }
             }
 
+            const closeRedis = () => {
+                delete p3xrs.redisConnections[socket.connectionId]
+
+                socket.p3xrs.connectionId = undefined
+                socket.p3xrs.ioredis = undefined
+                socket.p3xrs.ioredisSubscriber = undefined
+            }
             
             if (!Array.isArray(redisConfig)) {
                 if (redisConfig.ssh === true) {
     
                     const tunnelOptions = {
-                        autoClose: false
+                        autoClose: true
                     }
                     const sshOptions = {
                         host: redisConfig.sshHost,
@@ -231,52 +238,31 @@ module.exports = async (options) => {
                     }
     
                     const { createTunnel } = require('tunnel-ssh')
+
                     let [server, client] = await createTunnel(tunnelOptions, serverOptions, sshOptions, forwardOptions);
     
     
                     socket.p3xrs.tunnel = server
-    
+                    socket.p3xrs.tunnelClient = client
+
                     redisConfig.port = server.address().port
     
                     server.on('error', async(e)=>{
-                        console.error(e);
-
-                        const disconnectedData = {
-                            connectionId: socket.p3xrs.connectionId,
-                            error: error.message,
-                            status: 'error',
-                        }
-                        console.warn(consolePrefix, 'disconnectedData', disconnectedData)
-                        socket.p3xrs.io.emit('redis-disconnected', disconnectedData)
-        
-                        try {
-                            await sharedIoRedis.disconnectRedis({
-                                socket: socket,
-                            })
-                        } catch (e) {
-                            console.warn(consolePrefix, 'disconnectRedis')
-                            console.error(e)
-                        }
-                        delete p3xrs.redisConnections[socket.connectionId]
-        
-                        socket.p3xrs.connectionId = undefined
-                        socket.p3xrs.ioredis = undefined
-                        socket.p3xrs.ioredisSubscriber = undefined
-        
-                        sharedIoRedis.sendStatus({
-                            socket: socket,
-                        })
-
+                        console.error('ssh server error', e);
+                        //socket.p3xrs.tunnelClient.close()
                         socket.p3xrs.tunnel.close()
+                        closeRedis()
                         socket.emit(options.responseEvent, {
                             status: 'error',
                             error: e.message
                         })
                     });
                 
-                    client.on('error',(e)=>{
-                        console.error(e);
+                    client.on('error', async(e)=>{     
+                        console.error('ssh client error', e);
+                        //socket.p3xrs.tunnelClient.close()
                         socket.p3xrs.tunnel.close()
+                        closeRedis()
                         socket.emit(options.responseEvent, {
                             status: 'error',
                             error: e.message
@@ -322,11 +308,7 @@ module.exports = async (options) => {
                     console.warn(consolePrefix, 'disconnectRedis')
                     console.error(e)
                 }
-                delete p3xrs.redisConnections[socket.connectionId]
-
-                socket.p3xrs.connectionId = undefined
-                socket.p3xrs.ioredis = undefined
-                socket.p3xrs.ioredisSubscriber = undefined
+                closeRedis()
 
                 sharedIoRedis.sendStatus({
                     socket: socket,

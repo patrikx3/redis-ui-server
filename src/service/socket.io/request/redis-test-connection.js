@@ -121,6 +121,7 @@ module.exports = async (options) => {
                 server.on('error',(e)=>{
                     console.error(e);
                     ssh.server.close()
+                    ssh.server = undefined
                     socket.emit(options.responseEvent, {
                         status: 'error',
                         error: e.message
@@ -130,6 +131,7 @@ module.exports = async (options) => {
                 client.on('error',(e)=>{
                     console.error(e);
                     ssh.server.close()
+                    ssh.server = undefined
                     socket.emit(options.responseEvent, {
                         status: 'error',
                         error: e.message
@@ -155,14 +157,11 @@ module.exports = async (options) => {
             try {
                 //await redis.call('client', 'list')
 
-                socket.emit(options.responseEvent, {
-                    status: 'ok',
-                })    
-
-                /*
                 setTimeout(() => {
+                    socket.emit(options.responseEvent, {
+                        status: 'ok',
+                    })            
                 }, 1000)
-                */
                
             } catch (error) {
                 console.error(error)

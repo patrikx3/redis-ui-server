@@ -24,6 +24,7 @@ module.exports = (io) => {
             ioredis: undefined,
             ioredisSubscriber: undefined,
             tunnel: undefined,
+            tunnelClient: undefined,
             readonly: undefined,
             // commands: undefined,
         }
