@@ -238,8 +238,35 @@ module.exports = async (options) => {
     
                     redisConfig.port = server.address().port
     
-                    server.on('error',(e)=>{
+                    server.on('error', async(e)=>{
                         console.error(e);
+
+                        const disconnectedData = {
+                            connectionId: socket.p3xrs.connectionId,
+                            error: error.message,
+                            status: 'error',
+                        }
+                        console.warn(consolePrefix, 'disconnectedData', disconnectedData)
+                        socket.p3xrs.io.emit('redis-disconnected', disconnectedData)
+        
+                        try {
+                            await sharedIoRedis.disconnectRedis({
+                                socket: socket,
+                            })
+                        } catch (e) {
+                            console.warn(consolePrefix, 'disconnectRedis')
+                            console.error(e)
+                        }
+                        delete p3xrs.redisConnections[socket.connectionId]
+        
+                        socket.p3xrs.connectionId = undefined
+                        socket.p3xrs.ioredis = undefined
+                        socket.p3xrs.ioredisSubscriber = undefined
+        
+                        sharedIoRedis.sendStatus({
+                            socket: socket,
+                        })
+
                         socket.p3xrs.tunnel.close()
                         socket.emit(options.responseEvent, {
                             status: 'error',
