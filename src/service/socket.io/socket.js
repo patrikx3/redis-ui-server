@@ -65,7 +65,7 @@ module.exports = (io) => {
         socket.on('p3xr-request', (options) => {
             options.socket = socket;
             options.responseEvent = `p3xr-response-${options.requestId}`
-            if (options && options.action && typeof options.action === 'string' && !options.action.includes('\\') && !options.action.includes('/')) {
+            if (options && options.action && typeof options.action === 'string' && !options.action.includes('.')  && !options.action.includes('\\') && !options.action.includes('/')) {
                 require(`./request/${options.action}`)(options)
             } else {
                 console.warn('trying bad action socket.on p3xr-request with options', options)
