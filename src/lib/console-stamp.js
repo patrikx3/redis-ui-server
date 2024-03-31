@@ -1,6 +1,8 @@
 const chalk = require('chalk');
 const consoleStamp = () => {
-// overriding the console should be after this!!!
+
+    // overriding the console should be after this!!!
+    console.warn = console.log
 
     const methods = ['log', 'info', 'warn', 'error', 'debug']
     const originalMethods = {}
