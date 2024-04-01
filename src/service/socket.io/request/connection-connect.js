@@ -281,6 +281,10 @@ module.exports = async (options) => {
             let didConnected = false
 
             const redisErrorFun = async function (error) {
+                if (!error) {
+                    error = new Error('Connection is closed.')
+                    error.p3xCode = 'disconnect'
+                }
                 const consolePrefix = 'socket.io connection-connect redis error fun'
                 console.warn(consolePrefix, connection.id, connection.name, 'error')
                 console.error(error)
@@ -315,6 +319,7 @@ module.exports = async (options) => {
             }
 
             redis.on('error', redisErrorFun)
+            redis.on('disconnect', redisErrorFun)
             redisSubscriber.on('error', redisErrorFun)
 
             //console.warn('create psubscribe', actualConnection.id)
