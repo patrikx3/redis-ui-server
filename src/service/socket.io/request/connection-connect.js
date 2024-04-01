@@ -206,8 +206,9 @@ module.exports = async (options) => {
             }
 
             const closeRedis = () => {
-                delete p3xrs.redisConnections[socket.connectionId]
-
+                sharedIoRedis.disconnectRedis({
+                    socket: socket,
+                })
                 socket.p3xrs.connectionId = undefined
                 socket.p3xrs.ioredis = undefined
                 socket.p3xrs.ioredisSubscriber = undefined
@@ -250,7 +251,6 @@ module.exports = async (options) => {
                     server.on('error', async(e)=>{
                         console.error('ssh server error', e);
                         //socket.p3xrs.tunnelClient.close()
-                        socket.p3xrs.tunnel.close()
                         closeRedis()
                         socket.emit(options.responseEvent, {
                             status: 'error',
@@ -261,7 +261,6 @@ module.exports = async (options) => {
                     client.on('error', async(e)=>{     
                         console.error('ssh client error', e);
                         //socket.p3xrs.tunnelClient.close()
-                        socket.p3xrs.tunnel.close()
                         closeRedis()
                         socket.emit(options.responseEvent, {
                             status: 'error',
