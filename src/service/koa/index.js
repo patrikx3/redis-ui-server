@@ -18,15 +18,31 @@ const koaService = function () {
 
         // app.use(koaBody());
 
-        const resolvePath = (inputPath) => {
-            let resolvedPath
-            if (inputPath.startsWith('~')) {
-                const inputPathFromNodeModules = inputPath.substring(1)
-                resolvedPath = path.resolve(path.dirname(require.main.filename) + path.sep + '..', `node_modules${path.sep}${inputPathFromNodeModules}`)
-            } else {
-                resolvedPath = path.resolve(process.cwd(), inputPath)
+        const path = require('path');
+        const fs = require('fs');
+        
+        const findModulePath = (startPath, targetPath) => {
+            let currentPath = startPath;
+            while (currentPath !== path.resolve(currentPath, '..')) { // Check until we reach the root directory
+                const nodeModulesPath = path.join(currentPath, targetPath);
+                if (fs.existsSync(nodeModulesPath)) {
+                    return nodeModulesPath;
+                }
+                currentPath = path.resolve(currentPath, '..'); // Move up one directory level
             }
-            return resolvedPath
+            throw new Error('The specified module could not be found in any node_modules directory');
+        }
+        
+        const resolvePath = (inputPath) => {
+            if (inputPath.startsWith('~')) {
+                const inputPathFromNodeModules = inputPath.substring(1);
+                // Attempt to find the module starting from the directory of the main script or current directory
+                const startPath = __dirname;
+                return findModulePath(startPath, inputPathFromNodeModules);
+            } else {
+                // Resolve the path relative to the current working directory for non-module specific paths
+                return path.resolve(process.cwd(), inputPath);
+            }
         }
 
         let hasStatic = false

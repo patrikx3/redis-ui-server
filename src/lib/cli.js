@@ -20,9 +20,25 @@ const cli = () => {
     if (!process.versions.hasOwnProperty('electron') && !process.env.hasOwnProperty('P3XRS_DOCKER_HOME')) {
 
         if (!programOptions.config) {
-
-
-            programOptions.config = path.resolve(path.dirname(require.main.filename) + path.sep + '..', `.${path.sep}p3xrs.json`)
+            const path = require('path');
+            const fs = require('fs');
+            const findConfigFile = (startPath, filename) => {
+                let currentPath = startPath;
+                while (currentPath !== path.resolve(currentPath, '..')) { // Check until we reach the root directory
+                    const filePath = path.join(currentPath, filename);
+                    if (fs.existsSync(filePath)) {
+                        return filePath;
+                    }
+                    currentPath = path.resolve(currentPath, '..'); // Move up one directory level
+                }
+                throw new Error('The specified configuration file could not be found.');
+            }
+            const resolveConfigPath = () => {
+                // Attempt to find the config file starting from the directory of the main script or current directory
+                const startPath = process.cwd();
+                return findConfigFile(startPath, 'p3xrs.json');
+            }
+            programOptions.config = resolveConfigPath()
 
             //        program.outputHelp()
             //        return false
@@ -51,7 +67,9 @@ const cli = () => {
         p3xrs.cfg = {
             "http": {
                 "port-info": "this is ommitted, it will be default 7843",
-                "port": process.env.hasOwnProperty('P3XRS_DOCKER_HOME') ? 7843 : global.p3xrsElectronPort
+                "port": process.env.hasOwnProperty('P3XRS_DOCKER_HOME') ? 7843 : global.p3xrsElectronPort,
+                "bind-info": "the interface with listen to, could be 127.0.0.1 or 0.0.0.0 or specific interface",
+                "bind": "0.0.0.0",
             },
             "connections": {
                 "home-dir-info": "if the dir config is empty or home, the connections are saved in the home folder, otherwise it will resolve the directory set as it is, either relative ./ or absolute starting with /. NodeJs will resolve this directory in p3xrs.connections.dir",

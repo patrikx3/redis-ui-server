@@ -27,6 +27,7 @@ module.exports = (io) => {
             tunnelClient: undefined,
             readonly: undefined,
             // commands: undefined,
+            subsciber: false,
         }
 
         console.info(`socket.io connected ${socket.id}`);

@@ -322,24 +322,6 @@ module.exports = async (options) => {
             redis.on('disconnect', redisErrorFun)
             redisSubscriber.on('error', redisErrorFun)
 
-            //console.warn('create psubscribe', actualConnection.id)
-            redisSubscriber.psubscribe('*', function (error, count) {
-                if (error) {
-                    console.error(error)
-                }
-            })
-
-            //console.warn('create pmessage', actualConnection.id)
-            redisSubscriber.on('pmessage', function (channel, pattern, message) {
-                //console.log(`receive pmessage channel: ${channel} - pattern: ${pattern}, message: ${message}`);
-                //console.log('list clients', actualConnection.id, JSON.stringify(p3xrs.redisConnections[actualConnection.id].clients, null, 4))
-                
-                socket.emit('pubsub-message', {
-                    channel: pattern,
-                    message: message,
-                })
-            });
-
             redis.on('connect', async function () {
 
                 try {
