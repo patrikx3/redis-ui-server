@@ -1,7 +1,12 @@
+const sharedIoRedis = require('../shared')
+
 module.exports = async (options) => {
     const { socket, payload } = options;
 
     try {
+
+        sharedIoRedis.ensureReadonlyConnection({ socket })
+
         //console.log('Unsubscribing from all patterns');
         await socket.p3xrs.ioredisSubscriber.punsubscribe();
         //console.log('All patterns unsubscribed');
