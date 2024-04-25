@@ -2,13 +2,13 @@ module.exports = async (options) => {
     const { socket, payload } = options;
 
     try {
-        if (socket.p3xrs && socket.p3xrs.subscription) {
-            // Unsubscribe before clearing the old listener to prevent memory leaks
-            await socket.p3xrs.ioredisSubscriber.punsubscribe('*');
+        //console.log('Unsubscribing from all patterns');
+        await socket.p3xrs.ioredisSubscriber.punsubscribe();
+        //console.log('All patterns unsubscribed');
+        
+        socket.p3xrs.ioredisSubscriber.removeAllListeners('pmessage');
+        //console.log('Removed all pmessage listeners');
 
-            // Remove old listeners to prevent multiple listeners from accumulating
-            socket.p3xrs.ioredisSubscriber.removeAllListeners('pmessage');
-        }
 
         // Updating subscription settings
         socket.p3xrs.subscription = payload.subscription;
@@ -18,13 +18,13 @@ module.exports = async (options) => {
 
         if (socket.p3xrs.subscription === true) {
             // Subscribe to the pattern
+            //console.log('socket.p3xrs.ioredisSubscriber.psubscribe', payload.subscriberPattern)
             await socket.p3xrs.ioredisSubscriber.psubscribe(payload.subscriberPattern);
 
-            console.log('socket.p3xrs.subscription', payload.subscriberPattern)
 
             // Handle incoming messages
             socket.p3xrs.ioredisSubscriber.on('pmessage', (pattern, channel, message) => {
-                //console.log('subscription', pattern, channel, message)
+                console.log('socket.p3xrs.ioredisSubscriber.on(pmessage)', pattern, channel, message)
                 socket.emit('pubsub-message', { 
                     channel: channel,
                     message: message,
