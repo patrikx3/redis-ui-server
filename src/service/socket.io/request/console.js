@@ -2,7 +2,7 @@ const sharedIoRedis = require('../shared')
 
 const parser = sharedIoRedis.argumentParser
 
-const disabledCommands = ['monitor', 'quit']
+const disabledCommands = ['subscribe', 'monitor', 'quit', 'psubscribe']
 
 const consolePrefix = 'socket.io console call'
 module.exports = async (options) => {
