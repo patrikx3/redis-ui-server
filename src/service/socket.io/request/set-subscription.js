@@ -5,7 +5,7 @@ module.exports = async (options) => {
 
     try {
 
-        sharedIoRedis.ensureReadonlyConnection({ socket })
+        //sharedIoRedis.ensureReadonlyConnection({ socket })
 
         //console.log('Unsubscribing from all patterns');
         await socket.p3xrs.ioredisSubscriber.punsubscribe();
