@@ -12,3 +12,5 @@ node_modules/.yarn-integrity
 
 
 /p3xrs.json
+
+.DS_Store
