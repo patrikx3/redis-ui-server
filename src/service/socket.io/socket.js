@@ -91,7 +91,7 @@ module.exports = (io) => {
             readonlyConnections: p3xrs.cfg.readonlyConnections === true,
             snapshot: pkg.name !== 'p3x-redis-ui',
             treeDividers: dividers,
-            version: pkg.version
+            version: pkg.version,
         })
 
         socketIoShared.sendStatus({

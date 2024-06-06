@@ -20,7 +20,53 @@ const koaService = function () {
 
         const path = require('path');
         const fs = require('fs');
+        /*
+        const cors = require('@koa/cors'); // Added CORS
+        const crypto = require('crypto');
+
+        // Middleware to add a nonce to each request
+        app.use(async (ctx, next) => {
+            ctx.state.nonce = crypto.randomBytes(16).toString('base64');
+            await next();
+        });
+
+        // Middleware to add CSP header
+        app.use(async (ctx, next) => {
+            const nonce = ctx.state.nonce;
+            const csp = `
+                default-src 'self';
+                script-src 'self' https://pagead2.googlesyndication.com https://www.googletagmanager.com 'nonce-${nonce}';
+                style-src 'self' 'unsafe-inline';
+                img-src * data:;
+                connect-src *;
+                font-src *;
+                object-src 'none';
+                frame-src 'self' https://*.doubleclick.net https://*.google.com;
+            `.replace(/\s{2,}/g, ' ').trim(); // Remove extra spaces and trim
         
+            ctx.set('Content-Security-Policy', csp);
+            await next();
+        });
+
+
+        // Added CORS middleware
+        app.use(cors({
+            origin: '*', // Allow all origins
+            allowMethods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
+            allowHeaders: ['DNT', 'User-Agent', 'X-Requested-With', 'If-Modified-Since', 'Cache-Control', 'Content-Type', 'Range'],
+            exposeHeaders: ['Content-Length', 'Content-Range'],
+        }));
+
+
+        app.use(async (ctx, next) => {
+            if (ctx.path === '/nonce') {
+                ctx.body = { nonce: ctx.state.nonce };
+            } else {
+                await next();
+            }
+        });
+        */
+
         const findModulePath = (startPath, targetPath) => {
             let currentPath = startPath;
             while (currentPath !== path.resolve(currentPath, '..')) { // Check until we reach the root directory
@@ -32,7 +78,7 @@ const koaService = function () {
             }
             throw new Error('The specified module could not be found in any node_modules directory');
         }
-        
+
         const resolvePath = (inputPath) => {
             if (inputPath.startsWith('~')) {
                 const inputPathFromNodeModules = inputPath.substring(1);
