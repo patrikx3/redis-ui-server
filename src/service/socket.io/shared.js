@@ -106,7 +106,7 @@ const disconnectRedisIo = (options) => {
         socket.p3xrs.ioredisSubscriber = undefined
     }
     if (socket.p3xrs.tunnel !== undefined) {
-        socket.p3xrs.tunnel.close()
+        socket.p3xrs.tunnel.connection.end()
         socket.p3xrs.tunnel = undefined    
         socket.p3xrs.tunnelClient = undefined
     }
