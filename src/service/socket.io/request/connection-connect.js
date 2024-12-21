@@ -217,7 +217,7 @@ module.exports = async (options) => {
             if (!Array.isArray(redisConfig)) {
                 if (redisConfig.ssh === true) {
 
-                    const { NodeSSH } = require('node-ssh-no-cpu-features');
+                    const { NodeSSH } = require('node-ssh');
                     const getPort = require('get-port');
 
                     const ssh = new NodeSSH();
