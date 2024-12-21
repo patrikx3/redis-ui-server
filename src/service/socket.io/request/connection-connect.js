@@ -9,8 +9,8 @@ const sharedIoRedis = require('../shared')
 const staticCommands = require('../../../lib/redis-static-commands')
 
 const generateConnectInfo = async (options) => {
-    const { socket, redis, payload } = options
-    const { db } = payload
+    const {socket, redis, payload} = options
+    const { db} = payload
     // console.warn('generateConnectInfo', options.payload)
 
 
@@ -18,14 +18,14 @@ const generateConnectInfo = async (options) => {
     //let results
     let commands = staticCommands
 
-    const probeDatabaseCount = async () => {
+    const probeDatabaseCount = async() => {
         let tryUntilSelectDatabaseIsNotOk = true
         let currentDb = 0
         let totalDb = 0
         let maxDb = 512
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        while (tryUntilSelectDatabaseIsNotOk) {
+        while(tryUntilSelectDatabaseIsNotOk) {
             try {
                 await redis.call('select', currentDb)
                 //console.info('found correct database index', currentDb)
@@ -34,7 +34,7 @@ const generateConnectInfo = async (options) => {
                     tryUntilSelectDatabaseIsNotOk = false
                 }
                 currentDb++
-            } catch (e) {
+            } catch(e) {
                 console.error(e);
                 console.warn('found wrong current db index', currentDb)
                 tryUntilSelectDatabaseIsNotOk = false
@@ -44,7 +44,7 @@ const generateConnectInfo = async (options) => {
         if (db <= totalDb) {
             try {
                 await redis.call('select', db)
-            } catch (e) {
+            } catch(e) {
                 console.error(e)
             }
         }
@@ -59,20 +59,20 @@ const generateConnectInfo = async (options) => {
         try {
             databases = (await redis.config('get', 'databases'))[1]
             console.info(options.payload.connection.name, 'instance successfully works the database listing')
-        } catch (e) {
+        } catch(e) {
             console.warn(options.payload.connection.name, 'instance get databases listing is disabled', e)
             databases = await probeDatabaseCount()
         }
     }
 
     console.info(options.payload.connection.name, 'databases got', databases)
-
+    
     try {
         //commands = await redis.call('command2')
         commands = await redis.command()
         console.info(options.payload.connection.name, 'instance command listing is available') // , JSON.stringify(commands))
-    } catch (e) {
-        console.warn(options, payload.connection.name, 'instance command listing is not available, not all redis instances are not available command listing', e)
+    } catch(e) {
+        console.warn(options,payload.connection.name, 'instance command listing is not available, not all redis instances are not available command listing', e)
     }
 
     //console.log(JSON.stringify(commands))
@@ -95,9 +95,9 @@ const generateConnectInfo = async (options) => {
 }
 
 module.exports = async (options) => {
-    const { socket, payload } = options;
+    const {socket, payload} = options;
 
-    const { connection, db } = payload
+    const {connection, db} = payload
 
 
     try {
@@ -172,9 +172,9 @@ module.exports = async (options) => {
             }
              */
 
-
+            
             if (redisConfig.tlsWithoutCert) {
-                redisConfig.tls = {
+                redisConfig.tls =  {
                 }
             } else if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
                 redisConfig.tls = {
@@ -185,7 +185,7 @@ module.exports = async (options) => {
                 }
             }
             if (redisConfig.hasOwnProperty('tls')) {
-                redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized
+                redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized 
             }
 
             if (redisConfig.hasOwnProperty('sentinel') && redisConfig.sentinel === true) {
@@ -193,7 +193,7 @@ module.exports = async (options) => {
             } else if (redisConfig.cluster === true) {
                 redisConfig = [redisConfig].concat(actualConnection.nodes)
             }
-
+            
             if (Array.isArray(redisConfig) && redisConfig[0].hasOwnProperty('sentinel') && redisConfig[0].sentinel === true) {
                 redisConfig = {
                     sentinels: redisConfig,
@@ -213,61 +213,62 @@ module.exports = async (options) => {
                 socket.p3xrs.ioredis = undefined
                 socket.p3xrs.ioredisSubscriber = undefined
             }
-
+            
             if (!Array.isArray(redisConfig)) {
                 if (redisConfig.ssh === true) {
-
-                    const { NodeSSH } = require('node-ssh');
-                    const getPort = require('get-port');
-
-                    const ssh = new NodeSSH();
-
+    
+                    const tunnelOptions = {
+                        autoClose: true
+                    }
                     const sshOptions = {
                         host: redisConfig.sshHost,
-                        port: parseInt(redisConfig.sshPort, 10),
+                        port: redisConfig.sshPort,
                         username: redisConfig.sshUsername,
-                        ...(redisConfig.sshPrivateKey
-                            ? { privateKey: redisConfig.sshPrivateKey }
-                            : { password: redisConfig.sshPassword }),
                     };
+                    if (redisConfig.sshPrivateKey) {
+                        sshOptions.privateKey = redisConfig.sshPrivateKey
+                    } else {
+                        sshOptions.password = redisConfig.sshPassword
+                    }
+                    
+                    const serverOptions = null
+                    
+                    const forwardOptions = {
+                        dstAddr: redisConfig.host,
+                        dstPort: redisConfig.port,
+                    }
+    
+                    const { createTunnel } = require('tunnel-ssh')
 
-                    try {
-                        console.log('Connecting to SSH server...');
-                        await ssh.connect(sshOptions);
-                        console.log('SSH connection established.');
+                    let [server, client] = await createTunnel(tunnelOptions, serverOptions, sshOptions, forwardOptions);
+    
+    
+                    socket.p3xrs.tunnel = server
+                    socket.p3xrs.tunnelClient = client
 
-                        // Dynamically get an available local port
-                        const localPort = await getPort.default();
-                        console.log(`Dynamic local port allocated: ${localPort}`);
-
-                        // Manually set up port forwarding using the exec command
-                        const forwardCommand = `ssh -L 127.0.0.1:${localPort}:${redisConfig.host}:${redisConfig.port} -N`;
-                        const result = await ssh.execCommand(forwardCommand, { execOptions: { pty: true } });
-
-                        if (result.stderr) {
-                            throw new Error(`Failed to forward port: ${result.stderr}`);
-                        }
-
-                        console.log('Port forwarding set up successfully.');
-
-                        // Update redisConfig with the dynamically assigned port
-                        //redisConfig.port = localPort;
-
-                        // Assign the SSH connection as tunnel and client
-                        socket.p3xrs.tunnel = ssh;
-                        socket.p3xrs.tunnelClient = ssh;
-
-                        console.log(`Tunnel created on local port: ${localPort}`);
-                    } catch (error) {
-                        console.error('Failed to set up SSH tunnel:', error);
+                    redisConfig.port = server.address().port
+    
+                    server.on('error', async(e)=>{
+                        console.error('ssh server error', e);
+                        //socket.p3xrs.tunnelClient.close()
+                        closeRedis()
                         socket.emit(options.responseEvent, {
                             status: 'error',
-                            error: error.message,
-                        });
-                    }
-
+                            error: e.message
+                        })
+                    });
+                
+                    client.on('error', async(e)=>{     
+                        console.error('ssh client error', e);
+                        //socket.p3xrs.tunnelClient.close()
+                        closeRedis()
+                        socket.emit(options.responseEvent, {
+                            status: 'error',
+                            error: e.message
+                        })
+                    });
                 }
-            }
+            }            
             let redis = new Redis(redisConfig)
             //console.warn('redis connection', redisConfig)
             let redisSubscriber = new Redis(redisConfig)
