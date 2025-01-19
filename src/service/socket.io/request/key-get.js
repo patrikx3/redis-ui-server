@@ -18,32 +18,32 @@ module.exports = async (options) => {
         const viewPipeline = redis.pipeline()
         switch (type) {
             case 'string':
-                viewPipeline.get(key)
+                //viewPipeline.get(key)
                 viewPipeline.getBuffer(key)
                 break;
 
             case 'list':
-                viewPipeline.lrange(key, 0, -1)
+                //viewPipeline.lrange(key, 0, -1)
                 viewPipeline.lrangeBuffer(key, 0, -1)
                 break;
 
             case 'hash':
-                viewPipeline.hgetall(key)
+                //viewPipeline.hgetall(key)
                 viewPipeline.hgetallBuffer(key)
                 break;
 
             case 'set':
-                viewPipeline.smembers(key)
+                //viewPipeline.smembers(key)
                 viewPipeline.smembersBuffer(key)
                 break;
 
             case 'zset':
-                viewPipeline.zrange(key, 0, -1, 'WITHSCORES')
+                //viewPipeline.zrange(key, 0, -1, 'WITHSCORES')
                 viewPipeline.zrangeBuffer(key, 0, -1, 'WITHSCORES')
                 break;
 
             case 'stream':
-                viewPipeline.xrange(key, '-', '+')
+                //viewPipeline.xrange(key, '-', '+')
                 viewPipeline.xrangeBuffer(key, '-', '+')
                 break;
         }
@@ -76,14 +76,14 @@ module.exports = async (options) => {
         const viewPipelineResult = await viewPipeline.exec()
         // console.log(viewPipelineResult)
 
-        const value = viewPipelineResult[0][1]
-        const valueBuffer = viewPipelineResult[1][1]
-        const ttl = viewPipelineResult[2][1]
-        const encoding = viewPipelineResult[3][1]
+        //const value = viewPipelineResult[0][1]
+        const valueBuffer = viewPipelineResult[0][1]
+        const ttl = viewPipelineResult[1][1]
+        const encoding = viewPipelineResult[2][1]
         let length
 
         if (type !== 'string') {
-            length = viewPipelineResult[4][1]
+            length = viewPipelineResult[3][1]
         }
 
         const socketResult = {
@@ -91,7 +91,6 @@ module.exports = async (options) => {
             key: key,
             status: 'ok',
             type: type,
-            value: value,
             valueBuffer: valueBuffer,
             ttl: ttl,
             encoding: encoding,
