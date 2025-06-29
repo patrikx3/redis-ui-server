@@ -13,6 +13,7 @@ const generateConnectInfo = async (options) => {
     const { db} = payload
     // console.warn('generateConnectInfo', options.payload)
 
+
     let databases
     //let results
     let commands = staticCommands
@@ -98,6 +99,7 @@ module.exports = async (options) => {
 
     const {connection, db} = payload
 
+
     try {
         if (!p3xrs.cfg.donated) {
             if (payload.connection.cluster === true) {
@@ -106,6 +108,7 @@ module.exports = async (options) => {
                 throw donationWareFeatureError
             }
         }
+
 
         if (socket.p3xrs.connectionId !== connection.id) {
             sharedIoRedis.disconnectRedis({
@@ -161,12 +164,14 @@ module.exports = async (options) => {
             // module.exports = class Cluster extends Redis.Cluster <- right as it says
             redisConfig.clusterRetryStrategy = null
 
+
             /*
             redisConfig.showFriendlyErrorStack = true
             if (db !== undefined) {
                 redisConfig.db = db
             }
              */
+
 
             if (redisConfig.tlsWithoutCert) {
                 redisConfig.tls =  {
@@ -243,6 +248,7 @@ module.exports = async (options) => {
 
                     let [server, client] = await createTunnel(tunnelOptions, serverOptions, sshOptions, forwardOptions);
     
+
                     socket.p3xrs.tunnel = server
                     socket.p3xrs.tunnelClient = client
 
@@ -328,6 +334,7 @@ module.exports = async (options) => {
                     console.info(consolePrefix, options.payload.connection.id, options.payload.connection.name, 'connected')
                     didConnected = true
 
+
                     await generateConnectInfo({
                         redis: redis,
                         socket: socket,
@@ -348,6 +355,7 @@ module.exports = async (options) => {
 
                 }
 
+
             })
 
         }
@@ -362,4 +370,3 @@ module.exports = async (options) => {
     }
 
 }
-
