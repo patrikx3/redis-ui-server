@@ -13,6 +13,7 @@ const generateConnectInfo = async (options) => {
     const { db} = payload
     // console.warn('generateConnectInfo', options.payload)
 
+
     let databases
     //let results
     let commands = staticCommands
@@ -98,6 +99,7 @@ module.exports = async (options) => {
 
     const {connection, db} = payload
 
+
     try {
         if (!p3xrs.cfg.donated) {
             if (payload.connection.cluster === true) {
@@ -106,6 +108,7 @@ module.exports = async (options) => {
                 throw donationWareFeatureError
             }
         }
+
 
         if (socket.p3xrs.connectionId !== connection.id) {
             sharedIoRedis.disconnectRedis({
@@ -161,6 +164,7 @@ module.exports = async (options) => {
             // module.exports = class Cluster extends Redis.Cluster <- right as it says
             redisConfig.clusterRetryStrategy = null
 
+
             /*
             redisConfig.showFriendlyErrorStack = true
             if (db !== undefined) {
@@ -168,9 +172,9 @@ module.exports = async (options) => {
             }
              */
 
+            
             if (redisConfig.tlsWithoutCert) {
                 redisConfig.tls =  {
-                    servername: redisConfig.host
                 }
             } else if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
                 redisConfig.tls = {
@@ -178,15 +182,10 @@ module.exports = async (options) => {
                     cert: redisConfig.tlsCrt,
                     key: redisConfig.tlsKey,
                     ca: redisConfig.tlsCa,
-                    servername: redisConfig.host
                 }
             }
             if (redisConfig.hasOwnProperty('tls')) {
                 redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized 
-                // Ensure SNI is always set to the host
-                if (!redisConfig.tls.hasOwnProperty('servername')) {
-                    redisConfig.tls.servername = redisConfig.host
-                } 
             }
 
             if (redisConfig.hasOwnProperty('sentinel') && redisConfig.sentinel === true) {
@@ -242,6 +241,7 @@ module.exports = async (options) => {
                     const { createTunnel } = require('tunnel-ssh')
 
                     let [server, client] = await createTunnel(tunnelOptions, serverOptions, sshOptions, forwardOptions);
+    
     
                     socket.p3xrs.tunnel = server
                     socket.p3xrs.tunnelClient = client
@@ -328,6 +328,7 @@ module.exports = async (options) => {
                     console.info(consolePrefix, options.payload.connection.id, options.payload.connection.name, 'connected')
                     didConnected = true
 
+
                     await generateConnectInfo({
                         redis: redis,
                         socket: socket,
@@ -348,6 +349,7 @@ module.exports = async (options) => {
 
                 }
 
+
             })
 
         }
@@ -362,4 +364,3 @@ module.exports = async (options) => {
     }
 
 }
-
