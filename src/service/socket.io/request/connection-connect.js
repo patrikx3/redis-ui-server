@@ -172,9 +172,10 @@ module.exports = async (options) => {
             }
              */
 
-            
+
             if (redisConfig.tlsWithoutCert) {
                 redisConfig.tls =  {
+                    servername: redisConfig.host
                 }
             } else if (typeof redisConfig.tlsCa === 'string' && redisConfig.tlsCa.trim() !== '') {
                 redisConfig.tls = {
@@ -182,10 +183,15 @@ module.exports = async (options) => {
                     cert: redisConfig.tlsCrt,
                     key: redisConfig.tlsKey,
                     ca: redisConfig.tlsCa,
+                    servername: redisConfig.host
                 }
             }
             if (redisConfig.hasOwnProperty('tls')) {
                 redisConfig.tls.rejectUnauthorized = redisConfig.tlsRejectUnauthorized === undefined ? false : redisConfig.tlsRejectUnauthorized 
+                // Ensure SNI is always set to the host
+                if (!redisConfig.tls.hasOwnProperty('servername')) {
+                    redisConfig.tls.servername = redisConfig.host
+                } 
             }
 
             if (redisConfig.hasOwnProperty('sentinel') && redisConfig.sentinel === true) {
@@ -242,7 +248,7 @@ module.exports = async (options) => {
 
                     let [server, client] = await createTunnel(tunnelOptions, serverOptions, sshOptions, forwardOptions);
     
-    
+
                     socket.p3xrs.tunnel = server
                     socket.p3xrs.tunnelClient = client
 

@@ -18,16 +18,21 @@ module.exports = function(options, server) {
     }
     if (serverOptions.tlsWithoutCert) {
         redisOptions.tls =  {
+            servername: serverOptions.host
         }
     } else if (typeof serverOptions.tlsCa === 'string' && serverOptions.tlsCa.trim() !== '') {
         redisOptions.tls = {
             cert: serverOptions.tlsCrt,
             key: serverOptions.tlsKey,
             ca: serverOptions.tlsCa,
+            servername: serverOptions.host
         }
     }
     if (redisOptions.hasOwnProperty('tls')) {
         redisOptions.tls.rejectUnauthorized = redisOptions.tlsRejectUnauthorized === undefined ? false : redisOptions.tlsRejectUnauthorized 
+        if (!redisOptions.tls.hasOwnProperty('servername')) {
+            redisOptions.tls.servername = serverOptions.host
+        }
     }
     return options
 }
