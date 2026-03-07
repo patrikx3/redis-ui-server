@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2026.4.100",
+    "version": "2026.4.101",
     "description": "🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
@@ -56,7 +56,7 @@
         "@koa/cors": "^5.0.0"
     },
     "dependencies": {
-        "chalk": "^4.1.2",
+        "chalk": "^5.6.2",
         "commander": "^14.0.3",
         "corifeus-utils": "^2025.4.123",
         "ioredis": "^5.10.0",

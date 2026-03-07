@@ -1,4 +1,5 @@
-const chalk = require('chalk');
+const chalkModule = require('chalk');
+const chalk = chalkModule.default || chalkModule;
 const consoleStamp = () => {
 
     // overriding the console should be after this!!!
@@ -14,19 +15,19 @@ const consoleStamp = () => {
                 let label
                 switch(method) {
                     case 'error':
-                        label = chalk`{bold.red ${method.toUpperCase()}}`;
+                        label = chalk.bold.red(method.toUpperCase());
                         break;
 
                     case 'warn':
-                        label = chalk`{bold.blue ${method.toUpperCase()}}`;
+                        label = chalk.bold.blue(method.toUpperCase());
                         break;
 
                     default:
-                        label = chalk`{green ${method.toUpperCase()}}`;
+                        label = chalk.green(method.toUpperCase());
                 }
 
                 let data = '' //chalk`${moment().format(`YYYY/MM/DD HH:mm:ss.SSS`)} `
-                data += chalk`{black.grey [P3XRS]}` + ` [PID: ${(String(process.pid).padStart(6, 0))}] [${label.padStart(5, ' ')}]: `
+                data += chalk.gray('[P3XRS]') + ` [PID: ${(String(process.pid).padStart(6, 0))}] [${label.padStart(5, ' ')}]: `
 
                 //arguments[0] = data + arguments[0]
                 const mainArguments = Array.prototype.slice.call(arguments);
