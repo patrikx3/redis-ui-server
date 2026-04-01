@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2026.4.308",
+    "version": "2026.4.309",
     "description": "🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
@@ -59,6 +59,7 @@
         "commander": "^14.0.3",
         "corifeus-utils": "^2025.4.123",
         "express": "^5.2.1",
+        "groq-sdk": "^1.1.2",
         "ioredis": "^5.10.1",
         "lodash-es": "^4.18.0",
         "socket.io": "^4.8.3",

@@ -144,6 +144,8 @@ export default (io) => {
             version: pkg.version,
             groqApiKey: p3xrs.cfg.groqApiKey || '',
             groqApiKeyReadonly: p3xrs.cfg.groqApiKeyReadonly === true,
+            aiEnabled: p3xrs.cfg.aiEnabled !== false,
+            aiUseOwnKey: p3xrs.cfg.aiUseOwnKey === true,
         })
 
         socketIoShared.sendStatus({

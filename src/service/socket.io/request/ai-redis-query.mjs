@@ -1,5 +1,133 @@
+import Groq from 'groq-sdk'
+
 const AI_NETWORK_URL_PROD = 'https://network.corifeus.com'
 const AI_NETWORK_URL_DEV = 'http://localhost:8003'
+
+const SYSTEM_PROMPT = `You are an expert Redis command generator embedded in a Redis GUI console. Users type natural language in any human language (English, Hungarian, Chinese, etc.) and you translate it into a single, valid Redis CLI command.
+
+# Output Format
+Line 1: The exact Redis command to execute (nothing else)
+Line 2: A brief human-friendly explanation in the SAME LANGUAGE as the user's input: what the command does AND how to read the output (e.g. if user writes in Hungarian, respond in Hungarian; if English, respond in English)
+
+# Core Principles
+1. Generate ONLY real, valid Redis commands that a Redis server will accept
+2. Never invent key names, index names, or field names — use only what is provided in context or use wildcard patterns
+3. The user's Redis GUI will execute your command directly — it must be syntactically correct
+4. Support all human languages as input — always output a Redis command regardless of input language
+
+# Command Selection Guide
+
+## Key Discovery & Listing
+- "show all keys" / "list keys" → KEYS *
+- "find keys matching user" → KEYS user:*
+- "keys starting with session" → KEYS session:*
+- "how many keys" → DBSIZE
+
+## Key Type Filtering
+When user asks for keys of a specific data type, use SCAN with TYPE filter:
+- "show all hash keys" → SCAN 0 MATCH * TYPE hash COUNT 10000
+- "show all json keys" / "rejson keys" → SCAN 0 MATCH * TYPE ReJSON-RL COUNT 10000
+- "show all set keys" → SCAN 0 MATCH * TYPE set COUNT 10000
+- "show all list keys" → SCAN 0 MATCH * TYPE list COUNT 10000
+- "show all string keys" → SCAN 0 MATCH * TYPE string COUNT 10000
+- "show all stream keys" → SCAN 0 MATCH * TYPE stream COUNT 10000
+- "show all sorted set keys" → SCAN 0 MATCH * TYPE zset COUNT 10000
+- For checking a single key's type → TYPE keyname
+Note: SCAN returns [cursor, [keys...]]. cursor=0 means scan complete.
+
+## Reading Values
+- String: GET key
+- Hash: HGETALL key | HGET key field
+- List: LRANGE key 0 -1
+- Set: SMEMBERS key
+- Sorted Set: ZRANGE key 0 -1 WITHSCORES
+- Stream: XRANGE key - +
+- JSON/ReJSON: JSON.GET key $ | JSON.GET key $.fieldname
+- Multiple strings: MGET key1 key2
+- Multiple JSON: JSON.MGET key1 key2 $
+
+## Writing Values
+- String: SET key value [EX seconds]
+- Hash: HSET key field value [field value ...]
+- List: LPUSH/RPUSH key value [value ...]
+- Set: SADD key member [member ...]
+- Sorted Set: ZADD key score member [score member ...]
+- Stream: XADD key * field value [field value ...]
+- JSON: JSON.SET key $ 'jsonvalue'
+
+## Key Management
+- Delete: DEL key [key ...]
+- Rename: RENAME key newkey
+- TTL check: TTL key | PTTL key
+- Set expiry: EXPIRE key seconds | PEXPIRE key ms
+- Persist (remove TTL): PERSIST key
+- Check existence: EXISTS key [key ...]
+
+## Server & Info
+- Server info: INFO [section] (sections: server, clients, memory, stats, replication, cpu, modules, keyspace, all)
+- Memory usage: MEMORY USAGE key | INFO memory
+- Connected clients: CLIENT LIST
+- Config: CONFIG GET parameter
+- Slow log: SLOWLOG GET [count]
+- Database size: DBSIZE
+- Flush database: FLUSHDB
+- Flush all: FLUSHALL
+- Last save: LASTSAVE
+- Server time: TIME
+
+## RediSearch (only when explicitly requested)
+- Search: FT.SEARCH indexname query
+- List indexes: FT._LIST
+- Index info: FT.INFO indexname
+- Aggregate: FT.AGGREGATE indexname query
+- Create index: FT.CREATE indexname ON HASH PREFIX 1 prefix: SCHEMA field TYPE ...
+- Drop index: FT.DROPINDEX indexname
+
+## Pub/Sub
+- Publish: PUBLISH channel message
+- Subscribe: SUBSCRIBE channel
+
+## Cluster
+- Cluster info: CLUSTER INFO
+- Cluster nodes: CLUSTER NODES
+
+# Redis Type Names (for TYPE command responses)
+- string, list, set, zset, hash, stream, ReJSON-RL
+
+# Critical Rules
+- NEVER use FT.SEARCH or FT.AGGREGATE unless the user explicitly mentions "search index", "full-text search", "FT.", or "RediSearch"
+- NEVER fabricate key names — if unsure, use patterns like KEYS * or KEYS prefix:*
+- NEVER fabricate index names — if indexes are provided in context, use those exact names
+- When the user mentions "rejson", "json keys", or "JSON type", they mean keys stored with the RedisJSON module
+- Prefer simple commands — KEYS over SCAN for readability in a GUI console
+- If the user asks something impossible in a single Redis command, pick the closest useful command`
+
+function buildSystemPrompt(context) {
+    let prompt = SYSTEM_PROMPT
+    if (context) {
+        const parts = []
+        if (context.redisVersion) parts.push(`Redis version: ${context.redisVersion}`)
+        if (context.redisMode) parts.push(`Mode: ${context.redisMode}`)
+        if (context.usedMemory) parts.push(`Memory: ${context.usedMemory}`)
+        if (context.connectedClients) parts.push(`Clients: ${context.connectedClients}`)
+        if (context.os) parts.push(`OS: ${context.os}`)
+        if (context.modules) parts.push(`Loaded modules: ${JSON.stringify(context.modules)}`)
+        if (context.databases && context.databases.length > 0) parts.push(`Databases: ${context.databases.join(', ')}`)
+        if (parts.length > 0) {
+            prompt += `\n\n# Connected Redis Server\n${parts.join('\n')}`
+        }
+        if (context.indexes && context.indexes.length > 0) {
+            prompt += `\n\nAvailable RediSearch indexes: ${context.indexes.join(', ')}`
+        }
+        if (context.schema) {
+            prompt += `\n\nSchema information: ${JSON.stringify(context.schema)}`
+        }
+        if (context.uiLanguage) {
+            prompt += `\n\n# Response Language\nYou MUST write the explanation (line 2) in the SAME language as the user's prompt. If they write in Hungarian, respond in Hungarian. If in English, respond in English. Always match the user's language.`
+        }
+    }
+    return prompt
+}
 
 function getNetworkUrl() {
     if (typeof p3xrs.cfg.aiNetworkUrl === 'string' && p3xrs.cfg.aiNetworkUrl.length > 0) {
@@ -7,6 +135,61 @@ function getNetworkUrl() {
     }
     const isDev = process.env.NODE_ENV === 'development'
     return isDev ? AI_NETWORK_URL_DEV : AI_NETWORK_URL_PROD
+}
+
+async function callGroqDirect(prompt, context, apiKey) {
+    const client = new Groq({ apiKey })
+    const systemPrompt = buildSystemPrompt(context)
+
+    const chatCompletion = await client.chat.completions.create({
+        messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt },
+        ],
+        model: 'openai/gpt-oss-120b',
+        max_tokens: 512,
+        temperature: 0.1,
+    })
+
+    const responseText = chatCompletion.choices?.[0]?.message?.content?.trim() || ''
+    const lines = responseText.split('\n').filter(line => line.trim().length > 0)
+    return {
+        command: lines[0] || '',
+        explanation: lines.slice(1).join(' ') || '',
+    }
+}
+
+async function callNetworkProxy(prompt, context, apiKey) {
+    const networkUrl = getNetworkUrl()
+    let response
+    try {
+        response = await fetch(`${networkUrl}/public/ai/redis-query`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt,
+                context: context || {},
+                apiKey: apiKey || undefined,
+            }),
+        })
+    } catch (fetchError) {
+        throw new Error('AI service is not reachable')
+    }
+
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+        throw new Error(`AI service returned invalid response (${response.status})`)
+    }
+
+    const data = await response.json()
+    if (data.status !== 'ok') {
+        throw new Error(data.message || 'AI query failed')
+    }
+
+    return {
+        command: data.data.command,
+        explanation: data.data.explanation,
+    }
 }
 
 export default async (options) => {
@@ -19,38 +202,28 @@ export default async (options) => {
             throw new Error('AI_PROMPT_REQUIRED')
         }
 
-        const networkUrl = getNetworkUrl()
-        console.info('ai-redis-query using network URL:', networkUrl)
-        let response
-        try {
-            response = await fetch(`${networkUrl}/public/ai/redis-query`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    prompt: prompt.trim(),
-                    context: context || {},
-                    apiKey: p3xrs.cfg.groqApiKey || undefined,
-                }),
-            })
-        } catch (fetchError) {
-            throw new Error('AI service is not reachable')
+        if (p3xrs.cfg.aiEnabled === false) {
+            throw new Error('AI_DISABLED')
         }
 
-        const contentType = response.headers.get('content-type') || ''
-        if (!contentType.includes('application/json')) {
-            throw new Error(`AI service returned invalid response (${response.status})`)
-        }
+        const apiKey = p3xrs.cfg.groqApiKey || ''
+        const useOwnKey = p3xrs.cfg.aiUseOwnKey === true
+        let result
 
-        const data = await response.json()
-
-        if (data.status !== 'ok') {
-            throw new Error(data.message || 'AI query failed')
+        if (useOwnKey && apiKey) {
+            // Direct Groq call - no network dependency
+            console.info('ai-redis-query: using direct Groq API (own key)')
+            result = await callGroqDirect(prompt.trim(), context, apiKey)
+        } else {
+            // Proxy through network.corifeus.com (default)
+            console.info('ai-redis-query: using network proxy')
+            result = await callNetworkProxy(prompt.trim(), context, apiKey || undefined)
         }
 
         socket.emit(options.responseEvent, {
             status: 'ok',
-            command: data.data.command,
-            explanation: data.data.explanation,
+            command: result.command,
+            explanation: result.explanation,
         })
     } catch (e) {
         console.error('ai-redis-query error', e)

@@ -9,9 +9,13 @@ export default async (options) => {
         }
 
         const apiKey = (payload.apiKey || '').trim()
+        const aiEnabled = payload.aiEnabled !== false
+        const aiUseOwnKey = payload.aiUseOwnKey === true
 
         // Update runtime config
         p3xrs.cfg.groqApiKey = apiKey || undefined
+        p3xrs.cfg.aiEnabled = aiEnabled
+        p3xrs.cfg.aiUseOwnKey = aiUseOwnKey
 
         // Persist to p3xrs.json
         if (p3xrs.configPath) {
@@ -26,9 +30,11 @@ export default async (options) => {
                 } else {
                     delete config.p3xrs.groqApiKey
                 }
+                config.p3xrs.aiEnabled = aiEnabled
+                config.p3xrs.aiUseOwnKey = aiUseOwnKey
                 fs.writeFileSync(p3xrs.configPath, JSON.stringify(config, null, 4))
             } catch (e) {
-                console.error('failed to persist groqApiKey', e.message)
+                console.error('failed to persist AI settings', e.message)
             }
         }
 
