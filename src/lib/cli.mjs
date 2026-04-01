@@ -56,6 +56,8 @@ const cli = async () => {
         .option('--http-auth-password [password]', 'HTTP Basic auth plain password')
         .option('--http-auth-password-hash [hash]', 'HTTP Basic auth bcrypt password hash')
         .option('--http-auth-password-hash-file [file]', 'Read HTTP Basic auth bcrypt password hash from file')
+        .option('--groq-api-key [key]', 'Groq API key for AI-powered Redis query translation (get a free key at console.groq.com)')
+        .option('--groq-api-key-readonly', 'Prevent users from changing the Groq API key via the UI')
         .parse(process.argv);
 
     const programOptions = program.opts();
@@ -96,6 +98,13 @@ const cli = async () => {
             // console.warn(programOptions.readonlyConnections)
             p3xrs.cfg.readonlyConnections = true
             //console.warn(p3xrs.cfg.readonlyConnections === true)
+        }
+
+        if (typeof programOptions.groqApiKey === 'string' && programOptions.groqApiKey.trim()) {
+            p3xrs.cfg.groqApiKey = programOptions.groqApiKey.trim()
+        }
+        if (programOptions.groqApiKeyReadonly) {
+            p3xrs.cfg.groqApiKeyReadonly = true
         }
 
         if (typeof programOptions.connectionsFileName !== 'undefined' && programOptions.connectionsFileName) {
@@ -166,11 +175,16 @@ const cli = async () => {
         p3xrs.cfg = mergeDeep(defaultElectronConfig, persistedConfig)
 
         if (programOptions.readonlyConnections) {
-            // console.warn(programOptions.readonlyConnections)
             p3xrs.cfg.readonlyConnections = true
-            //console.warn(p3xrs.cfg.readonlyConnections === true)
         } else {
             p3xrs.cfg.readonlyConnections = false
+        }
+
+        if (typeof programOptions.groqApiKey === 'string' && programOptions.groqApiKey.trim()) {
+            p3xrs.cfg.groqApiKey = programOptions.groqApiKey.trim()
+        }
+        if (programOptions.groqApiKeyReadonly) {
+            p3xrs.cfg.groqApiKeyReadonly = true
         }
     }
 

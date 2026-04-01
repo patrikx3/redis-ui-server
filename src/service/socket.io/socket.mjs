@@ -142,6 +142,8 @@ export default (io) => {
             snapshot: pkg.name !== 'p3x-redis-ui',
             treeDividers: dividers,
             version: pkg.version,
+            groqApiKey: p3xrs.cfg.groqApiKey || '',
+            groqApiKeyReadonly: p3xrs.cfg.groqApiKeyReadonly === true,
         })
 
         socketIoShared.sendStatus({
