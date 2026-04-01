@@ -1,30 +1,32 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2026.4.101",
+    "version": "2026.4.306",
     "description": "🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
         "code": "Reverse",
         "opencollective": false,
         "build": true,
-        "nodejs": "v24.14.0",
+        "nodejs": "v24.14.1",
         "reponame": "redis-ui-server",
         "publish": true,
         "prefix": "p3x-",
         "type": "p3x"
     },
-    "main": "src/indexjs",
+    "type": "module",
+    "main": "dist/index.mjs",
     "bin": {
-        "p3xrs": "./bin/p3xrs.js"
+        "p3xrs": "./bin/p3xrs.mjs"
     },
     "scripts": {
-        "test": "grunt",
-        "start": "node ./bin/p3xrs --config ./p3xrs.json",
-        "dev": "nodemon --watch src  --watch package.json --watch bin ./bin/p3xrs",
-        "dev-readonly-connections": "nodemon --watch src  --watch package.json --watch bin ./bin/p3xrs --readonly-connections"
+        "test": "grunt --gruntfile Gruntfile.cjs",
+        "build:compressed": "node ./scripts/build-compressed.mjs",
+        "start": "node ./bin/p3xrs.mjs --config ./p3xrs.json",
+        "dev": "NODE_ENV=development nodemon --watch src --watch package.json --watch bin ./bin/p3xrs.mjs --config ../p3xrs.json",
+        "dev-readonly-connections": "NODE_ENV=development nodemon --watch src --watch package.json --watch bin ./bin/p3xrs.mjs --config ../p3xrs.json --readonly-connections"
     },
     "watch": {
-        "run": "src/**/*.js"
+        "run": "src/**/*.mjs"
     },
     "repository": {
         "type": "git",
@@ -45,25 +47,20 @@
         "light"
     ],
     "author": "Patrik Laszlo <alabard@gmail.com>",
-    "license": "MIT",
+    "license": "SEE LICENSE IN LICENSE",
     "devDependencies": {
         "corifeus-builder": "^2025.4.135",
-        "nodemon": "^3.1.14"
-    },
-    "dependencies-saved": {
-        "koa-body": "^4.0.4",
-        "koa-router": "^7.4.0",
-        "@koa/cors": "^5.0.0"
+        "nodemon": "^3.1.14",
+        "terser": "^5.46.1"
     },
     "dependencies": {
+        "bcryptjs": "^3.0.3",
         "chalk": "^5.6.2",
         "commander": "^14.0.3",
         "corifeus-utils": "^2025.4.123",
-        "ioredis": "^5.10.0",
-        "koa": "^3.1.2",
-        "koa-send": "^5.0.1",
-        "koa-static": "^5.0.0",
-        "lodash": "^4.17.23",
+        "express": "^5.2.1",
+        "ioredis": "^5.10.1",
+        "lodash-es": "^4.18.0",
         "socket.io": "^4.8.3",
         "tunnel-ssh": "^5.2.0"
     },

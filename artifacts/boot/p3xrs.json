@@ -12,6 +12,15 @@
         },
         "static-info": "This is the best configuration, if it starts with ~, then it is in resolve the path in the node_modules, otherwise it resolves to the current process current working directory.",
         "static-disabled": "~p3x-redis-ui-material/dist",
+        "httpAuth-info": "Optional HTTP Basic auth for HTTP + Socket.IO. Prefer passwordHash (bcrypt).",
+        "httpAuth": {
+            "enabled": false,
+            "username": "admin",
+            "password": "",
+            "passwordHash": ""
+        },
+        "licenseEditable": true,
+        "licenseKey": "",
         "treeDividers": [
             ":",
             "/",

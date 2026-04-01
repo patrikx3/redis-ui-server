@@ -12,7 +12,7 @@ https://corifeus.com/redis-ui
 
 
 ---
-# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface v2026.4.101
+# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface v2026.4.306
 
 
   
@@ -28,7 +28,7 @@ https://corifeus.com/redis-ui
 ### 🛠️ Built on NodeJs version
 
 ```txt
-v24.14.0
+v24.14.1
 ```
 
 
@@ -41,7 +41,7 @@ v24.14.0
 [//]: #@corifeus-header:end
 
 
-This is part of a composable  `p3x-redis-ui` package. This is the server based on Socket.IO (no rest at all).  
+This version require minimum NodeJs v22. This is part of a composable  `p3x-redis-ui` package. This is the server based on Socket.IO (no rest at all).  
 The server will be using the `p3x-redis-ui-material` web client package based on built with Webpack, Socket.IO and AngularJs Material.  
 This package is named as `p3x-redis-ui-server`.
 
@@ -65,6 +65,52 @@ You may also set connections file name which overrides default .p3xrs-conns.json
 p3xrs --connections-file-name .p3xrs-conns.json
 ```
 
+## Optional HTTP Basic Authentication
+
+The server can protect both HTTP routes and Socket.IO with HTTP Basic authentication.
+
+Config (`p3xrs.json`):
+
+```json
+{
+  "p3xrs": {
+    "httpAuth": {
+      "enabled": true,
+      "username": "admin",
+      "passwordHash": "$2b$10$..."
+    }
+  }
+}
+```
+
+Generate BCrypt password hash:
+
+```bash
+node ./bin/bcrypt-password.js -p myplainpass
+```
+
+Environment variables:
+
+- `HTTP_USER`
+- `HTTP_PASSWORD`
+- `HTTP_PASSWORD_HASH`
+- `HTTP_PASSWORD_HASH_FILE`
+- `HTTP_AUTH_ENABLED` (`true|false`)
+
+CLI options:
+
+- `--http-auth-enable`
+- `--http-auth-disable`
+- `--http-auth-username`
+- `--http-auth-password`
+- `--http-auth-password-hash`
+- `--http-auth-password-hash-file`
+
+Notes:
+
+- `passwordHash` is preferred over plain `password`.
+- Use HTTPS/reverse proxy TLS when HTTP auth is enabled.
+
 
 ### Verbose CLI help
 
@@ -74,9 +120,15 @@ Usage: p3xrs [options]
 
 Options:
   -V, --version                           output the version number
-  -c, --config [config]                   Set the p3xr.json p3x-redis-ui-server configuration, see more help in https://github.com/patrikx3/redis-ui-server
+  -c, --config [config]                   Set the p3xr.json p3x-redis-ui-server configuration, see more help in p3x-redis-ui-server
   -r, --readonly-connections              Set the connections to be readonly, no adding, saving or delete a connection
   -n, --connections-file-name [filename]  Set the connections file name, overrides default .p3xrs-conns.json
+  --http-auth-enable                      Enable HTTP Basic auth
+  --http-auth-disable                     Disable HTTP Basic auth
+  --http-auth-username [username]         HTTP Basic auth username
+  --http-auth-password [password]         HTTP Basic auth plain password
+  --http-auth-password-hash [hash]        HTTP Basic auth bcrypt password hash
+  --http-auth-password-hash-file [file]   Read HTTP Basic auth bcrypt password hash from file
   -h, --help                              output usage information
 ```
 
@@ -144,7 +196,7 @@ All my domains, including [patrikx3.com](https://patrikx3.com), [corifeus.eu](ht
 ---
 
 
-[**P3X-REDIS-UI-SERVER**](https://corifeus.com/redis-ui-server) Build v2026.4.101
+[**P3X-REDIS-UI-SERVER**](https://corifeus.com/redis-ui-server) Build v2026.4.306
 
  [![NPM](https://img.shields.io/npm/v/p3x-redis-ui-server.svg)](https://www.npmjs.com/package/p3x-redis-ui-server)  [![Donate for PatrikX3 / P3X](https://img.shields.io/badge/Donate-PatrikX3-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software)
 
