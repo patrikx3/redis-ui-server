@@ -3,11 +3,23 @@ import Groq from 'groq-sdk'
 const AI_NETWORK_URL_PROD = 'https://network.corifeus.com'
 const AI_NETWORK_URL_DEV = 'http://localhost:8003'
 
-const SYSTEM_PROMPT = `You are an expert Redis command generator embedded in a Redis GUI console. Users type natural language in any human language (English, Hungarian, Chinese, etc.) and you translate it into a single, valid Redis CLI command.
+const SYSTEM_PROMPT = `You are an expert Redis command generator embedded in a Redis GUI console. Users type natural language in any human language (English, Hungarian, Chinese, etc.) and you translate it into valid Redis CLI commands.
 
 # Output Format
-Line 1: The exact Redis command to execute (nothing else)
-Line 2: A brief human-friendly explanation in the SAME LANGUAGE as the user's input: what the command does AND how to read the output (e.g. if user writes in Hungarian, respond in Hungarian; if English, respond in English)
+One or more Redis commands (one per line), then a separator, then an explanation:
+
+\`\`\`
+COMMAND1
+COMMAND2
+---
+Brief explanation in the user's language
+\`\`\`
+
+- For simple requests: output a single command line
+- For complex requests needing multiple steps: output multiple command lines (one per line)
+- For bulk operations: prefer a single EVAL script, but use multiple commands if clearer
+- The --- separator is REQUIRED between commands and explanation
+- The explanation should be in the SAME LANGUAGE as the user's input
 
 # Core Principles
 1. Generate ONLY real, valid Redis commands that a Redis server will accept
@@ -91,13 +103,26 @@ Note: SCAN returns [cursor, [keys...]]. cursor=0 means scan complete.
 - Cluster info: CLUSTER INFO
 - Cluster nodes: CLUSTER NODES
 
-## Scripting (EVAL) — for bulk or multi-step operations
-When the user asks to create, generate, or manipulate many keys at once (e.g. "generate 100 random keys"), use a Lua script via EVAL:
+## Multi-step operations — PREFER multiple commands over EVAL
+When the user needs multiple Redis operations, output them as separate commands (one per line):
+- SET test:str hello
+- HSET test:hash f1 v1 f2 v2
+- RPUSH test:list a b c
+This is ALWAYS preferred over EVAL unless a loop is needed.
+
+## Scripting (EVAL) — ONLY for loops or atomic operations
+Use EVAL ONLY when a loop or atomicity is required (e.g. "generate 100 random keys"):
 - EVAL "lua_script" numkeys [key ...] [arg ...]
-- Use all 6 Redis data types in Lua: string (redis.call('SET',...)), hash (redis.call('HSET',...)), list (redis.call('RPUSH',...)), set (redis.call('SADD',...)), sorted set (redis.call('ZADD',...)), stream (redis.call('XADD',...,'*',...))
-- Use math.random() for random values and tostring() for conversions
-- Always return a confirmation message via return, e.g. return 'Created 100 keys'
-- Keep scripts concise — use short variable names and avoid unnecessary whitespace
+- Write Lua code with REAL line breaks inside the quotes — the console supports multi-line input
+- NEVER use literal \\n escape sequences — they cause Redis script compilation errors
+- CORRECT example:
+EVAL "
+for i=1,3 do
+  redis.call('SET','k'..i,i)
+end
+return 'done'
+" 0
+- WRONG: EVAL "for i=1,3 do\\nredis.call('SET','k'..i,i)\\nend" 0
 
 # Redis Type Names (for TYPE command responses)
 - string, list, set, zset, hash, stream, ReJSON-RL
@@ -108,7 +133,7 @@ When the user asks to create, generate, or manipulate many keys at once (e.g. "g
 - NEVER fabricate index names — if indexes are provided in context, use those exact names
 - When the user mentions "rejson", "json keys", or "JSON type", they mean keys stored with the RedisJSON module
 - Prefer simple commands — KEYS over SCAN for readability in a GUI console
-- If the user asks something impossible in a single Redis command, pick the closest useful command`
+- If the user asks something that needs multiple steps, output multiple commands (one per line)`
 
 function buildSystemPrompt(context) {
     let prompt = SYSTEM_PROMPT
@@ -145,6 +170,21 @@ function getNetworkUrl() {
     return isDev ? AI_NETWORK_URL_DEV : AI_NETWORK_URL_PROD
 }
 
+function parseAiResponse(responseText) {
+    const separatorIndex = responseText.indexOf('\n---')
+    if (separatorIndex !== -1) {
+        const command = responseText.substring(0, separatorIndex).trim()
+        const explanation = responseText.substring(separatorIndex).replace(/^[\n\r]*---[\n\r]*/, '').trim()
+        return { command, explanation }
+    }
+    // Fallback: first line is command, rest is explanation
+    const lines = responseText.split('\n').filter(line => line.trim().length > 0)
+    return {
+        command: lines[0] || '',
+        explanation: lines.slice(1).join(' ') || '',
+    }
+}
+
 async function callGroqDirect(prompt, context, apiKey) {
     const client = new Groq({ apiKey })
     const systemPrompt = buildSystemPrompt(context)
@@ -160,11 +200,7 @@ async function callGroqDirect(prompt, context, apiKey) {
     })
 
     const responseText = chatCompletion.choices?.[0]?.message?.content?.trim() || ''
-    const lines = responseText.split('\n').filter(line => line.trim().length > 0)
-    return {
-        command: lines[0] || '',
-        explanation: lines.slice(1).join(' ') || '',
-    }
+    return parseAiResponse(responseText)
 }
 
 async function callNetworkProxy(prompt, context, apiKey) {

@@ -2,6 +2,10 @@ export default async (options) => {
     const { socket, payload } = options;
 
     try {
+        if (!socket.p3xrs.ioredis) {
+            socket.emit(options.responseEvent, { status: 'error', error: 'Not connected to Redis' })
+            return
+        }
         if (payload.enabled) {
             // Start MONITOR - need a dedicated connection since MONITOR blocks
             if (!socket.p3xrs.ioredisMonitor) {
