@@ -1,10 +1,5 @@
 import fs from 'fs'
 import * as sharedIoRedis from '../shared.mjs'
-import {
-    ensureReadonlyFeatureAllowed,
-    ensureClusterSentinelFeatureAllowed,
-    ensureSshFeatureAllowed,
-} from '../../../lib/license-tier.mjs'
 
 export default async (options) => {
     const {socket} = options;
@@ -16,9 +11,6 @@ export default async (options) => {
     try {
         sharedIoRedis.ensureReadonlyConnections()
         disableReadonlyConnections = false
-        ensureReadonlyFeatureAllowed(connectionSave)
-        ensureClusterSentinelFeatureAllowed(connectionSave)
-        ensureSshFeatureAllowed(connectionSave)
 
         let connectionIndexExisting;
         for (let connectionIndex in p3xrs.connections.list) {

@@ -1,5 +1,4 @@
 import * as sharedIoRedis from '../shared.mjs'
-import { isProOrEnterpriseTier } from '../../../lib/license-tier.mjs'
 
 const isBinaryLike = (value) => {
     if (value === undefined || value === null) {
@@ -28,9 +27,6 @@ export default async (options) => {
         sharedIoRedis.ensureReadonlyConnection({ socket })
 
         const {model} = payload;
-        if (isBinaryLike(model.value) && !isProOrEnterpriseTier()) {
-            throw new Error('feature-pro-json-binary-required')
-        }
 
         model.score = model.score === null ? undefined : model.score
         model.index = model.index === null ? undefined : model.index
@@ -89,10 +85,92 @@ export default async (options) => {
                 await redis.zadd(model.key, model.score, model.value)
                 break;
 
-            case 'json':
-                if (!isProOrEnterpriseTier()) {
-                    throw new Error('feature-pro-rejson-required')
+            case 'timeseries':
+                if (payload.type === 'add' || payload.type === 'append') {
+                    // For new keys, create first with options
+                    if (payload.type === 'add') {
+                        try {
+                            const createArgs = [model.key, 'DUPLICATE_POLICY', model.tsDuplicatePolicy || 'LAST']
+                            const retention = parseInt(model.tsRetention)
+                            if (!isNaN(retention) && retention > 0) {
+                                createArgs.push('RETENTION', retention)
+                            }
+                            await redis.call('TS.CREATE', ...createArgs)
+                        } catch (e) {
+                            if (!e.message.includes('already exists')) {
+                                throw e
+                            }
+                        }
+                        // Always set labels via TS.ALTER (works for both new and existing keys)
+                        const labelStr = model.tsLabels && model.tsLabels.trim().length > 0
+                            ? model.tsLabels.trim()
+                            : `key ${model.key}`
+                        console.info('timeseries set labels:', model.key, labelStr)
+                        await redis.call('TS.ALTER', model.key, 'LABELS', ...labelStr.split(/\s+/))
+                    }
+                    if (model.tsBulkMode) {
+                        // Bulk mode: value is multiline "timestamp value\n..."
+                        const spread = parseInt(model.tsSpread) || 60000
+                        const lines = model.value.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+                        let autoTs = Date.now()
+                        for (const line of lines) {
+                            const parts = line.split(/\s+/)
+                            if (parts.length >= 2) {
+                                let ts = parts[0]
+                                if (ts === '*') {
+                                    ts = autoTs
+                                    autoTs += spread
+                                }
+                                await redis.call('TS.ADD', model.key, ts, parseFloat(parts[1]), 'ON_DUPLICATE', 'LAST')
+                            }
+                        }
+                    } else {
+                        await redis.call('TS.ADD', model.key, model.tsTimestamp || '*', parseFloat(model.value), 'ON_DUPLICATE', 'LAST')
+                    }
+                } else if (payload.type === 'edit') {
+                    if (model.tsEditAll) {
+                        // Global edit: value is multiline "timestamp value\n..." format
+                        // Delete all existing points first, then re-add from the edited text
+                        const tsInfo = await redis.call('TS.INFO', model.key)
+                        let firstTs = 0, lastTs = 0
+                        for (let i = 0; i < tsInfo.length; i += 2) {
+                            if (tsInfo[i] === 'firstTimestamp') firstTs = tsInfo[i + 1]
+                            if (tsInfo[i] === 'lastTimestamp') lastTs = tsInfo[i + 1]
+                        }
+                        if (firstTs !== 0 || lastTs !== 0) {
+                            await redis.call('TS.DEL', model.key, firstTs, lastTs)
+                        }
+                        // Parse and re-add each line
+                        // For * timestamps, space them by the selected spread interval
+                        const spread = parseInt(model.tsSpread) || 60000
+                        const lines = model.value.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+                        let autoTs = Date.now()
+                        for (const line of lines) {
+                            const parts = line.split(/\s+/)
+                            if (parts.length >= 2) {
+                                let ts = parts[0]
+                                if (ts === '*') {
+                                    ts = autoTs
+                                    autoTs += spread
+                                }
+                                await redis.call('TS.ADD', model.key, ts, parseFloat(parts[1]), 'ON_DUPLICATE', 'LAST')
+                            }
+                        }
+                    } else {
+                        // Single point edit: delete original, add new
+                        if (model.originalTimestamp !== undefined) {
+                            await redis.call('TS.DEL', model.key, model.originalTimestamp, model.originalTimestamp)
+                        }
+                        await redis.call('TS.ADD', model.key, model.tsTimestamp || '*', parseFloat(model.value), 'ON_DUPLICATE', 'LAST')
+                    }
+                    // Update labels if provided
+                    if (model.tsLabels && model.tsLabels.trim().length > 0) {
+                        await redis.call('TS.ALTER', model.key, 'LABELS', ...model.tsLabels.trim().split(/\s+/))
+                    }
                 }
+                break;
+
+            case 'json':
                 // Validate JSON before sending to Redis
                 try {
                     JSON.parse(model.value)

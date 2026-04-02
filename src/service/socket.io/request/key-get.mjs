@@ -1,5 +1,3 @@
-import { isProOrEnterpriseTier } from '../../../lib/license-tier.mjs'
-
 const consolePrefix = 'socket.io key get full'
 
 
@@ -15,9 +13,14 @@ export default async (options) => {
 
         let type = await redis.type(key)
 
-        // Normalize ReJSON-RL to json (viewing is free, editing requires Pro+)
+        // Normalize ReJSON-RL to json for the client.
         if (type === 'ReJSON-RL') {
             type = 'json'
+        }
+
+        // Normalize TSDB-TYPE to timeseries
+        if (type === 'TSDB-TYPE') {
+            type = 'timeseries'
         }
 
         //console.info(consolePrefix, payload, type, key)
@@ -57,11 +60,16 @@ export default async (options) => {
             case 'json':
                 viewPipeline.call('JSON.GET', key, '$')
                 break;
+
+            case 'timeseries':
+                // TS.INFO via pipeline call
+                viewPipeline.call('TS.INFO', key)
+                break;
         }
         viewPipeline.ttl(key)
 
-        // JSON keys don't support OBJECT ENCODING
-        if (type !== 'json') {
+        // JSON and timeseries keys don't support OBJECT ENCODING
+        if (type !== 'json' && type !== 'timeseries') {
             viewPipeline.object('encoding', key)
         }
 
@@ -97,7 +105,32 @@ export default async (options) => {
         let length
         let pipelineIndex = 2
 
-        if (type === 'json') {
+        if (type === 'timeseries') {
+            encoding = 'timeseries'
+            // TS.INFO returns flat array [field, value, ...]; parse to object
+            const tsInfo = {}
+            if (Array.isArray(valueBuffer)) {
+                for (let i = 0; i < valueBuffer.length; i += 2) {
+                    const field = valueBuffer[i]
+                    let value = valueBuffer[i + 1]
+                    if (field === 'labels' && Array.isArray(value)) {
+                        const labels = {}
+                        for (const pair of value) {
+                            if (Array.isArray(pair) && pair.length === 2) {
+                                labels[pair[0]] = pair[1]
+                            }
+                        }
+                        value = labels
+                    }
+                    if (field === 'rules' && Array.isArray(value)) {
+                        value = value.map(rule => Array.isArray(rule) ? { destKey: rule[0], bucketDuration: rule[1], aggregationType: rule[2] } : rule)
+                    }
+                    tsInfo[field] = value
+                }
+            }
+            valueBuffer = Buffer.from(JSON.stringify(tsInfo))
+            length = tsInfo.totalSamples || 0
+        } else if (type === 'json') {
             encoding = 'json'
             // JSON.GET returns a JSON string; convert to Buffer for consistency
             if (typeof valueBuffer === 'string') {
@@ -108,7 +141,7 @@ export default async (options) => {
             pipelineIndex++
         }
 
-        if (type !== 'string' && type !== 'json') {
+        if (type !== 'string' && type !== 'json' && type !== 'timeseries') {
             length = viewPipelineResult[pipelineIndex][1]
         }
 

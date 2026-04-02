@@ -2,7 +2,6 @@ import 'corifeus-utils'
 import cli from './cli.mjs'
 import consoleStamp from './console-stamp.mjs'
 import httpService from '../service/http/index.mjs'
-import checkLicense from './check-license.mjs'
 import socketIoService from '../service/socket.io/index.mjs'
 
 const boot = async () => {
@@ -20,32 +19,10 @@ const boot = async () => {
     p3xrs.http = new httpService()
     await p3xrs.http.boot()
 
-    // All features are free — always enterprise
-    p3xrs.cfg.donated = true
-    // Resolve effective tier before socket request handling starts.
-    await checkLicense({
-        payload: {},
-        save: true
-    })
-
     p3xrs.socketIo = new socketIoService();
     await p3xrs.socketIo.boot({
         httpService: p3xrs.http
     })
-
-    checkLicense({
-        socket: p3xrs.socketIo.socketio,
-        payload: {},
-        save: true
-    })
-
-    setInterval(() => {
-        checkLicense({
-            socket: p3xrs.socketIo.socketio,
-            payload: {},
-            save: true
-        })
-    }, 1000 * 60 * 60)
 
     p3xrs.redisConnections = {}
     p3xrs.redisConnectionsSubscriber = {}
@@ -53,6 +30,36 @@ const boot = async () => {
     process.on('uncaughtException', (error) => {
         console.error('Uncaught Exception:', error);
     });
+
+    const gracefulShutdown = async (signal) => {
+        console.info(`Received ${signal}, shutting down gracefully...`)
+        try {
+            // Close Socket.IO connections
+            if (p3xrs.socketIo?.socketio) {
+                p3xrs.socketIo.socketio.close()
+            }
+            // Close all Redis connections
+            if (p3xrs.redisConnections) {
+                for (const key of Object.keys(p3xrs.redisConnections)) {
+                    try {
+                        if (p3xrs.redisConnections[key]?.ioredis) {
+                            p3xrs.redisConnections[key].ioredis.disconnect()
+                        }
+                    } catch {}
+                }
+            }
+            // Close HTTP server
+            if (p3xrs.http?.server) {
+                p3xrs.http.server.close()
+            }
+        } catch (e) {
+            console.error('Error during shutdown:', e)
+        }
+        process.exit(0)
+    }
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'))
 
 }
 

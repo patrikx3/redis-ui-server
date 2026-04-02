@@ -1,4 +1,3 @@
-import { isReadonlyConnectionsEnabled } from '../../lib/license-tier.mjs'
 import { cloneDeep } from 'lodash-es'
 
 const triggerDisconnect = (options) => {
@@ -268,6 +267,10 @@ const getKeysInfo = async (options) => {
         if (obj.type === 'ReJSON-RL') {
             obj.type = 'json'
         }
+        // Normalize TSDB-TYPE to timeseries for the client
+        if (obj.type === 'TSDB-TYPE') {
+            obj.type = 'timeseries'
+        }
         switch (obj.type) {
             case 'stream':
                 complexLengthPipeline.xlen(key)
@@ -288,6 +291,10 @@ const getKeysInfo = async (options) => {
             case 'zset':
                 complexLengthPipeline.zcard(key)
                 break;
+
+            case 'timeseries':
+                complexLengthPipeline.call('TS.INFO', key)
+                break;
         }
         result[key] = obj
     }
@@ -303,14 +310,27 @@ const getKeysInfo = async (options) => {
         if (lengthPipelineElement === undefined) {
             continue
         }
-        obj.length = lengthPipelineElement[1]
+        if (obj.type === 'timeseries') {
+            // TS.INFO returns flat array [field, value, ...]; extract totalSamples
+            const tsInfo = lengthPipelineElement[1]
+            if (Array.isArray(tsInfo)) {
+                for (let i = 0; i < tsInfo.length; i += 2) {
+                    if (tsInfo[i] === 'totalSamples') {
+                        obj.length = tsInfo[i + 1]
+                        break
+                    }
+                }
+            }
+        } else {
+            obj.length = lengthPipelineElement[1]
+        }
     }
 
     return result;
 }
 
 const ensureReadonlyConnections = () => {
-    if (isReadonlyConnectionsEnabled()) {
+    if (p3xrs.cfg.readonlyConnections === true) {
         const errorCode = new Error('readonly-connection-mode')
         throw errorCode;
     }

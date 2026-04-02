@@ -18,6 +18,24 @@ const httpService = function () {
 
         app.disable('x-powered-by')
 
+        // Health endpoint — before auth, always accessible
+        app.get('/health', (req, res) => {
+            const result = {
+                status: 'ok',
+                version: p3xrs.cfg?.version || 'unknown',
+                uptime: process.uptime(),
+            }
+            if (req.query.ready === 'true') {
+                const hasConnections = p3xrs.redisConnections && Object.keys(p3xrs.redisConnections).length > 0
+                result.ready = hasConnections
+                if (!hasConnections) {
+                    res.status(503).json(result)
+                    return
+                }
+            }
+            res.json(result)
+        })
+
         app.use((req, res, next) => {
             const httpAuth = resolveConfiguredHttpAuth()
             if (!httpAuth.enabled) {

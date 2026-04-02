@@ -91,6 +91,14 @@ Note: SCAN returns [cursor, [keys...]]. cursor=0 means scan complete.
 - Cluster info: CLUSTER INFO
 - Cluster nodes: CLUSTER NODES
 
+## Scripting (EVAL) — for bulk or multi-step operations
+When the user asks to create, generate, or manipulate many keys at once (e.g. "generate 100 random keys"), use a Lua script via EVAL:
+- EVAL "lua_script" numkeys [key ...] [arg ...]
+- Use all 6 Redis data types in Lua: string (redis.call('SET',...)), hash (redis.call('HSET',...)), list (redis.call('RPUSH',...)), set (redis.call('SADD',...)), sorted set (redis.call('ZADD',...)), stream (redis.call('XADD',...,'*',...))
+- Use math.random() for random values and tostring() for conversions
+- Always return a confirmation message via return, e.g. return 'Created 100 keys'
+- Keep scripts concise — use short variable names and avoid unnecessary whitespace
+
 # Redis Type Names (for TYPE command responses)
 - string, list, set, zset, hash, stream, ReJSON-RL
 
@@ -147,7 +155,7 @@ async function callGroqDirect(prompt, context, apiKey) {
             { role: 'user', content: prompt },
         ],
         model: 'openai/gpt-oss-120b',
-        max_tokens: 512,
+        max_tokens: 4096,
         temperature: 0.1,
     })
 

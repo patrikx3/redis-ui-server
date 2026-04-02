@@ -1,5 +1,4 @@
 import * as sharedIoRedis from '../shared.mjs'
-import { isProOrEnterpriseTier } from '../../../lib/license-tier.mjs'
 
 const isBinaryLike = (value) => {
     if (value === undefined || value === null) {
@@ -24,9 +23,6 @@ export default async (options) => {
 
     try {
         sharedIoRedis.ensureReadonlyConnection({ socket })
-        if (isBinaryLike(payload.value) && !isProOrEnterpriseTier()) {
-            throw new Error('feature-pro-json-binary-required')
-        }
 
         const ttl = await redis.ttl(payload.key)
         await redis.set(payload.key, payload.value)

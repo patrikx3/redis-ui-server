@@ -1,16 +1,10 @@
 import Redis from '../../../lib/ioredis-cluster/index.mjs'
-import {
-    ensureClusterSentinelFeatureAllowed,
-    ensureSshFeatureAllowed,
-} from '../../../lib/license-tier.mjs'
 
 export default async (options) => {
     const {socket} = options;
 
     try {
         let redisConfig = options.payload.model;
-        ensureClusterSentinelFeatureAllowed(redisConfig)
-        ensureSshFeatureAllowed(redisConfig)
         const actualConnection = p3xrs.connections.list.find(con => redisConfig.id === con.id)
         if (actualConnection !== undefined) {
             if (redisConfig.password === actualConnection.id) {

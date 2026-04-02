@@ -1,9 +1,4 @@
 import Redis from '../../../lib/ioredis-cluster/index.mjs'
-import {
-    isProOrEnterpriseTier,
-    ensureClusterSentinelFeatureAllowed,
-    ensureSshFeatureAllowed,
-} from '../../../lib/license-tier.mjs'
 import * as sharedIoRedis from '../shared.mjs'
 import staticCommands from '../../../lib/redis-static-commands.mjs'
 
@@ -104,10 +99,6 @@ export default async (options) => {
 
 
     try {
-        ensureClusterSentinelFeatureAllowed(connection)
-        ensureSshFeatureAllowed(connection)
-
-
         if (socket.p3xrs.connectionId !== connection.id) {
             sharedIoRedis.disconnectRedis({
                 socket: socket,
@@ -143,7 +134,6 @@ export default async (options) => {
             if (actualConnection === undefined) {
                 throw new Error('auto-connection-failed')
             }
-            ensureClusterSentinelFeatureAllowed(actualConnection)
             if (connection.askAuth) {
                 actualConnection.username = undefined
                 actualConnection.password = undefined

@@ -1,5 +1,4 @@
 import * as socketIoShared from './shared.mjs'
-import { isReadonlyConnectionsEnabled } from '../../lib/license-tier.mjs'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import path from 'path'
@@ -42,45 +41,6 @@ export default (io) => {
 
         console.info(`socket.io connected ${socket.id}`);
 
-        const maskLicenseKey = (value) => {
-            if (typeof value !== 'string' || value.trim().length === 0) {
-                return ''
-            }
-            if (value.length <= 8) {
-                return '****'
-            }
-            return `${value.slice(0, 4)}...${value.slice(-4)}`
-        }
-
-        let license
-        if (p3xrs.cfg.license && typeof p3xrs.cfg.license === 'object') {
-            license = Object.assign({}, p3xrs.cfg.license)
-            license.licenseKeyMasked = maskLicenseKey(license.licenseKey)
-            delete license.licenseKey
-            delete license.customerEmail
-        }
-        let licenseEditable = true
-        if (typeof p3xrs.cfg.licenseEditable === 'boolean') {
-            licenseEditable = p3xrs.cfg.licenseEditable
-        } else if (typeof p3xrs.cfg.editableActive === 'boolean') {
-            licenseEditable = p3xrs.cfg.editableActive
-        } else if (typeof p3xrs.cfg.disabled === 'boolean') {
-            licenseEditable = !p3xrs.cfg.disabled
-        }
-        socket.emit('info-interval', {
-            status: 'ok',
-            // All features are free — always enterprise
-            donated: true,
-            readonlyConnections: isReadonlyConnectionsEnabled(),
-            licenseEditable: licenseEditable,
-            editableActive: licenseEditable,
-            disabled: !licenseEditable,
-            hasLicenseKey: typeof p3xrs.cfg.licenseKey === 'string' && p3xrs.cfg.licenseKey.length > 0,
-            licenseKeyMasked: maskLicenseKey(p3xrs.cfg.licenseKey),
-            tier: license && typeof license.tier === 'string' ? license.tier : 'free',
-            license: license,
-        })
-
         socket.on('disconnect', function () {
             console.warn('socket.p3xrs.connectionId', socket.p3xrs.connectionId)
             if (socket.p3xrs.connectionId !== undefined) {
@@ -98,6 +58,12 @@ export default (io) => {
                         socket: socket,
                     })
                 }
+            }
+
+            // Stop MONITOR if active
+            if (socket.p3xrs.ioredisMonitor) {
+                try { socket.p3xrs.ioredisMonitor.disconnect() } catch {}
+                socket.p3xrs.ioredisMonitor = undefined
             }
 
             // Call on disconnect.
@@ -138,7 +104,7 @@ export default (io) => {
             dividers = p3xrs.cfg.treeDividers
         }
         socket.emit('configuration', {
-            readonlyConnections: isReadonlyConnectionsEnabled(),
+            readonlyConnections: p3xrs.cfg.readonlyConnections === true,
             snapshot: pkg.name !== 'p3x-redis-ui',
             treeDividers: dividers,
             version: pkg.version,
