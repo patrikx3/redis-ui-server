@@ -1,6 +1,7 @@
 import Redis from '../../../lib/ioredis-cluster/index.mjs'
 import * as sharedIoRedis from '../shared.mjs'
 import staticCommands from '../../../lib/redis-static-commands.mjs'
+import { buildCommandMeta } from '../../../lib/redis-command-meta.mjs'
 
 const consolePrefix = 'socket.io connection-connect';
 
@@ -85,6 +86,7 @@ const generateConnectInfo = async (options) => {
         extend: {
             databases: databases,
             commands: commands,
+            commandsMeta: buildCommandMeta(commands),
             modules: modules,
         },
         payload: payload,

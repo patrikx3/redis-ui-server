@@ -248,20 +248,21 @@ const getKeysInfo = async (options) => {
     const {redis, keys} = options;
 
     const keyTypePipeline = redis.pipeline()
-//    const promises = [];
     for (let key of keys) {
         keyTypePipeline.type(key)
-//        promises.push(redis.type(key))
+        keyTypePipeline.ttl(key)
     }
-//    const keysType = await Promise.all(promises);
-    const keysType = await keyTypePipeline.exec();
+    const keyTypeAndTtlResults = await keyTypePipeline.exec();
     const result = {}
     const complexLengthPipeline = redis.pipeline()
     for (let keysIndex in keys) {
-        const keyType = keysType[keysIndex]
+        const pipelineIndex = keysIndex * 2
+        const keyType = keyTypeAndTtlResults[pipelineIndex]
+        const keyTtl = keyTypeAndTtlResults[pipelineIndex + 1]
         const key = keys[keysIndex]
         const obj = {
-            type: keyType[1]
+            type: keyType[1],
+            ttl: keyTtl[1],
         }
         // Normalize ReJSON-RL to json for the client
         if (obj.type === 'ReJSON-RL') {
@@ -418,6 +419,7 @@ const getFullInfoAndSendSocket = async (options) => {
         //  infoObject: result.infoObject,
         keys: result.keys,
         keysInfo: result.keysInfo,
+        keysInfoFetchedAt: Date.now(),
         dbsize: result.dbsize,
     }))
 }

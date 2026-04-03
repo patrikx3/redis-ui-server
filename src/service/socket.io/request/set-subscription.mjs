@@ -14,6 +14,7 @@ export default async (options) => {
         //console.log('All patterns unsubscribed');
 
         socket.p3xrs.ioredisSubscriber.removeAllListeners('pmessage');
+        socket.p3xrs.ioredisSubscriber.removeAllListeners('pmessageBuffer');
         //console.log('Removed all pmessage listeners');
 
 
@@ -29,11 +30,13 @@ export default async (options) => {
             await socket.p3xrs.ioredisSubscriber.psubscribe(payload.subscriberPattern);
 
 
-            // Handle incoming messages
-            socket.p3xrs.ioredisSubscriber.on('pmessage', (pattern, channel, message) => {
-                console.log('socket.p3xrs.ioredisSubscriber.on(pmessage)', pattern, channel, message)
+            // Use pmessageBuffer to preserve raw binary data (e.g. msgpack from socket.io-adapter)
+            // Socket.IO will transmit the Buffer as binary, frontend handles decoding
+            socket.p3xrs.ioredisSubscriber.on('pmessageBuffer', (pattern, channel, message) => {
+                const channelStr = channel.toString('utf-8');
+                console.log('socket.p3xrs.ioredisSubscriber.on(pmessageBuffer)', pattern.toString('utf-8'), channelStr)
                 socket.emit('pubsub-message', {
-                    channel: channel,
+                    channel: channelStr,
                     message: message,
                 });
             });

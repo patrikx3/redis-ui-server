@@ -1,3 +1,5 @@
+import { tryDecompress } from '../../decompress.mjs'
+
 const consolePrefix = 'socket.io key get full'
 
 
@@ -145,6 +147,98 @@ export default async (options) => {
             length = viewPipelineResult[pipelineIndex][1]
         }
 
+        // Try to decompress the value (string type: single buffer, collections: each item)
+        let compression = null
+        if (type === 'string' && Buffer.isBuffer(valueBuffer)) {
+            const result = await tryDecompress(valueBuffer)
+            if (result) {
+                compression = {
+                    algorithm: result.algorithm,
+                    originalSize: valueBuffer.length,
+                    decompressedSize: result.decompressed.length,
+                    ratio: +((1 - valueBuffer.length / result.decompressed.length) * 100).toFixed(1),
+                }
+                valueBuffer = result.decompressed
+            }
+        } else if (type === 'list' && Array.isArray(valueBuffer)) {
+            for (let i = 0; i < valueBuffer.length; i++) {
+                if (Buffer.isBuffer(valueBuffer[i])) {
+                    const result = await tryDecompress(valueBuffer[i])
+                    if (result) {
+                        if (!compression) {
+                            compression = { algorithm: result.algorithm, items: 0, originalSize: 0, decompressedSize: 0 }
+                        }
+                        compression.items++
+                        compression.originalSize += valueBuffer[i].length
+                        compression.decompressedSize += result.decompressed.length
+                        valueBuffer[i] = result.decompressed
+                    }
+                }
+            }
+            if (compression) {
+                compression.ratio = +((1 - compression.originalSize / compression.decompressedSize) * 100).toFixed(1)
+            }
+        } else if (type === 'hash' && valueBuffer && typeof valueBuffer === 'object' && !Array.isArray(valueBuffer)) {
+            for (const field of Object.keys(valueBuffer)) {
+                if (Buffer.isBuffer(valueBuffer[field])) {
+                    const result = await tryDecompress(valueBuffer[field])
+                    if (result) {
+                        if (!compression) {
+                            compression = { algorithm: result.algorithm, items: 0, originalSize: 0, decompressedSize: 0 }
+                        }
+                        compression.items++
+                        compression.originalSize += valueBuffer[field].length
+                        compression.decompressedSize += result.decompressed.length
+                        valueBuffer[field] = result.decompressed
+                    }
+                }
+            }
+            if (compression) {
+                compression.ratio = +((1 - compression.originalSize / compression.decompressedSize) * 100).toFixed(1)
+            }
+        } else if ((type === 'set' || type === 'zset') && Array.isArray(valueBuffer)) {
+            for (let i = 0; i < valueBuffer.length; i++) {
+                if (Buffer.isBuffer(valueBuffer[i])) {
+                    const result = await tryDecompress(valueBuffer[i])
+                    if (result) {
+                        if (!compression) {
+                            compression = { algorithm: result.algorithm, items: 0, originalSize: 0, decompressedSize: 0 }
+                        }
+                        compression.items++
+                        compression.originalSize += valueBuffer[i].length
+                        compression.decompressedSize += result.decompressed.length
+                        valueBuffer[i] = result.decompressed
+                    }
+                }
+            }
+            if (compression) {
+                compression.ratio = +((1 - compression.originalSize / compression.decompressedSize) * 100).toFixed(1)
+            }
+        } else if (type === 'stream' && Array.isArray(valueBuffer)) {
+            // Stream entries: [[id, [field, value, field, value]], ...]
+            for (const entry of valueBuffer) {
+                if (!Array.isArray(entry) || !Array.isArray(entry[1])) continue
+                const fields = entry[1]
+                for (let i = 0; i < fields.length; i++) {
+                    if (Buffer.isBuffer(fields[i])) {
+                        const result = await tryDecompress(fields[i])
+                        if (result) {
+                            if (!compression) {
+                                compression = { algorithm: result.algorithm, items: 0, originalSize: 0, decompressedSize: 0 }
+                            }
+                            compression.items++
+                            compression.originalSize += fields[i].length
+                            compression.decompressedSize += result.decompressed.length
+                            fields[i] = result.decompressed
+                        }
+                    }
+                }
+            }
+            if (compression) {
+                compression.ratio = +((1 - compression.originalSize / compression.decompressedSize) * 100).toFixed(1)
+            }
+        }
+
         const socketResult = {
             length: length,
             key: key,
@@ -153,6 +247,7 @@ export default async (options) => {
             valueBuffer: valueBuffer,
             ttl: ttl,
             encoding: encoding,
+            compression: compression,
         };
         // console.warn('socketResult', socketResult)
         socket.emit(options.responseEvent, socketResult)
