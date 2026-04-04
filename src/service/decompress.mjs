@@ -58,22 +58,20 @@ export async function tryDecompress(buffer) {
         return null
     }
 
-    // Snappy + Brotli: no reliable magic bytes — try on binary data only
-    if (!isLikelyUtf8(buffer)) {
-        try {
-            const result = Buffer.from(snappyjs.uncompress(buffer))
-            if (result.length > 0 && isLikelyUtf8(result)) {
-                return { algorithm: 'snappy', decompressed: result }
-            }
-        } catch { /* not snappy */ }
+    // Snappy + Brotli: no reliable magic bytes — always try, validate output
+    try {
+        const result = Buffer.from(snappyjs.uncompress(buffer))
+        if (result.length > 0 && isLikelyUtf8(result)) {
+            return { algorithm: 'snappy', decompressed: result }
+        }
+    } catch { /* not snappy */ }
 
-        try {
-            const result = zlib.brotliDecompressSync(buffer)
-            if (result.length > 0 && isLikelyUtf8(result)) {
-                return { algorithm: 'brotli', decompressed: result }
-            }
-        } catch { /* not brotli */ }
-    }
+    try {
+        const result = zlib.brotliDecompressSync(buffer)
+        if (result.length > 0 && isLikelyUtf8(result)) {
+            return { algorithm: 'brotli', decompressed: result }
+        }
+    } catch { /* not brotli */ }
 
     return null
 }
@@ -83,6 +81,7 @@ export async function tryDecompress(buffer) {
  * ZIP local file header: signature 50 4B 03 04, then metadata, then compressed data.
  */
 async function decompressZip(buffer) {
+    if (buffer.length < 30) return null
     // Local file header offsets
     const compressionMethod = buffer.readUInt16LE(8)
     const compressedSize = buffer.readUInt32LE(18)

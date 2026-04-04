@@ -264,8 +264,10 @@ const cli = async () => {
     }
 
     if (!p3xrs.cfg.hasOwnProperty('static')) {
-
+        p3xrs.cfg.static = '~p3x-redis-ui-material/dist'
     }
+
+    // staticReact: no default — auto-detected from static path in http service
 
     if (!p3xrs.cfg.hasOwnProperty('connections')) {
         p3xrs.cfg.connections = {}

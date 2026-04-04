@@ -65,31 +65,85 @@ const httpService = function () {
             return path.resolve(process.cwd(), inputPath)
         }
 
-        let hasStatic = false
-        let staticPath
-        if (typeof p3xrs.cfg.static === 'string') {
-            hasStatic = true
-            staticPath = resolvePath(p3xrs.cfg.static)
-            app.use(express.static(staticPath))
+        // Mount Angular at /
+        let hasNg = false
+        let ngPath
+        const ngStatic = p3xrs.cfg.static || p3xrs.cfg.staticNg
+        if (typeof ngStatic === 'string') {
+            try {
+                ngPath = resolvePath(ngStatic)
+                app.use(express.static(ngPath))
+                hasNg = true
+                console.info('Angular static mounted at / from', ngPath)
+            } catch (e) {
+                console.warn('Could not resolve Angular static path:', ngStatic, '-', e.message)
+            }
         }
 
-        if (hasStatic) {
+        // Mount React at /react/
+        // Auto-detect: if Angular is at /path/public, React is at /path/public-react
+        let hasReact = false
+        let reactPath
+        let reactStatic = p3xrs.cfg.staticReact
+        if (!reactStatic && ngPath) {
+            const autoReactPath = ngPath + '-react'
+            if (fs.existsSync(autoReactPath)) {
+                reactStatic = autoReactPath
+            }
+        }
+        if (!reactStatic) {
+            reactStatic = '~p3x-redis-ui-material/dist-react'
+        }
+        if (typeof reactStatic === 'string') {
+            try {
+                reactPath = reactStatic.startsWith('~') ? resolvePath(reactStatic) : reactStatic
+                if (fs.existsSync(reactPath)) {
+                    app.use('/react', express.static(reactPath))
+                    hasReact = true
+                    console.info('React static mounted at /react/ from', reactPath)
+                }
+            } catch (e) {
+                // React build may not exist yet — that's ok
+            }
+        }
+
+        // Pre-read index.html files so SPA fallback works inside .asar archives
+        // (res.sendFile uses the `send` library which breaks inside .asar)
+        let ngIndexHtml
+        if (hasNg) {
+            ngIndexHtml = fs.readFileSync(path.resolve(ngPath, 'index.html'), 'utf8')
+        }
+        let reactIndexHtml
+        if (hasReact) {
+            reactIndexHtml = fs.readFileSync(path.resolve(reactPath, 'index.html'), 'utf8')
+        }
+
+        // SPA fallback for Angular (root)
+        if (hasNg) {
             app.use((req, res, next) => {
+                if (req.path.startsWith('/socket.io') || req.path.startsWith('/react')) {
+                    next()
+                    return
+                }
+                res.type('html').send(ngIndexHtml)
+            })
+        }
+
+        // SPA fallback for /react/* routes
+        if (hasReact) {
+            app.use('/react', (req, res, next) => {
                 if (req.path.startsWith('/socket.io')) {
                     next()
                     return
                 }
-                res.sendFile(path.resolve(staticPath, 'index.html'), (error) => {
-                    if (error) {
-                        next(error)
-                    }
-                })
+                res.type('html').send(reactIndexHtml)
             })
-        } else {
+        }
+
+        // Fallback when no frontends are available
+        if (!hasNg && !hasReact) {
             app.use((req, res) => {
-                res.json({
-                    status: 'operational'
-                })
+                res.json({ status: 'operational' })
             })
         }
 
