@@ -72,7 +72,7 @@ const httpService = function () {
         if (typeof ngStatic === 'string') {
             try {
                 ngPath = resolvePath(ngStatic)
-                app.use('/ng', express.static(ngPath))
+                app.use('/ng', express.static(ngPath, { etag: true, lastModified: true, setHeaders: (res, filePath) => { if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate') } }))
                 hasNg = true
                 console.info('Angular static mounted at /ng/ from', ngPath)
             } catch (e) {
@@ -98,7 +98,7 @@ const httpService = function () {
             try {
                 reactPath = reactStatic.startsWith('~') ? resolvePath(reactStatic) : reactStatic
                 if (fs.existsSync(reactPath)) {
-                    app.use('/react', express.static(reactPath))
+                    app.use('/react', express.static(reactPath, { etag: true, lastModified: true, setHeaders: (res, filePath) => { if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate') } }))
                     hasReact = true
                     console.info('React static mounted at /react/ from', reactPath)
                 }
