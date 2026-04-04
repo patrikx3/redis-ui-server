@@ -1,25 +1,5 @@
 import * as socketIoShared from './shared.mjs'
-import fs from 'fs'
-import { fileURLToPath } from 'url'
-import path from 'path'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-const originalPkg = JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'))
-let pkg = originalPkg
-
-try {
-    const parentPkgPath = path.resolve(__dirname, '../../../../../package.json')
-    if (fs.existsSync(parentPkgPath)) {
-        pkg = JSON.parse(fs.readFileSync(parentPkgPath, 'utf8'))
-        if (pkg.name !== 'p3x-redis-ui') {
-            console.warn('cannot find p3x-redis-ui version, but it is not required, found', pkg.name)
-            pkg = originalPkg
-        }
-    }
-} catch(e) {
-    console.warn('cannot find p3x-redis-ui version, but it is not required', e)
-}
+import { isSnapshot, version } from '../../lib/resolve-version.mjs'
 export default (io) => {
 
     io.on('connect', function (socket) {
@@ -105,9 +85,9 @@ export default (io) => {
         }
         socket.emit('configuration', {
             readonlyConnections: p3xrs.cfg.readonlyConnections === true,
-            snapshot: pkg.name !== 'p3x-redis-ui',
+            snapshot: isSnapshot,
             treeDividers: dividers,
-            version: pkg.version,
+            version: version,
             groqApiKey: p3xrs.cfg.groqApiKey || '',
             groqApiKeyReadonly: p3xrs.cfg.groqApiKeyReadonly === true,
             aiEnabled: p3xrs.cfg.aiEnabled !== false,

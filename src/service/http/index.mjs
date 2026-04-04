@@ -4,6 +4,7 @@ import path from 'path'
 import http from 'http'
 import { fileURLToPath } from 'url'
 import { resolveConfiguredHttpAuth, verifyAuthorizationHeader } from '../../lib/http-auth.mjs'
+import { version } from '../../lib/resolve-version.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -22,7 +23,7 @@ const httpService = function () {
         app.get('/health', (req, res) => {
             res.json({
                 status: 'ok',
-                version: p3xrs.version || 'unknown',
+                version: version,
                 uptime: process.uptime(),
             })
         })
