@@ -20,11 +20,13 @@ const httpService = function () {
         app.disable('x-powered-by')
 
         // Health endpoint — before auth, always accessible
+        const startedAt = new Date().toISOString()
         app.get('/health', (req, res) => {
             res.json({
                 status: 'ok',
                 version: version,
                 uptime: process.uptime(),
+                startedAt: startedAt,
             })
         })
 
