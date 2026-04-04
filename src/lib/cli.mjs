@@ -44,6 +44,7 @@ const loadJsonFile = (filePath) => {
 
 const cli = async () => {
     const pkg = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8'))
+    p3xrs.version = pkg.version
 
     program
         .version(pkg.version)

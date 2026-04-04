@@ -22,7 +22,7 @@ const httpService = function () {
         app.get('/health', (req, res) => {
             res.json({
                 status: 'ok',
-                version: p3xrs.cfg?.version || 'unknown',
+                version: p3xrs.version || 'unknown',
                 uptime: process.uptime(),
             })
         })
