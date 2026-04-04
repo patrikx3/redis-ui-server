@@ -72,7 +72,7 @@ const httpService = function () {
         if (typeof ngStatic === 'string') {
             try {
                 ngPath = resolvePath(ngStatic)
-                app.use('/ng', express.static(ngPath, { etag: true, lastModified: true, setHeaders: (res, filePath) => { if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate') } }))
+                app.use('/ng', express.static(ngPath, { etag: true, lastModified: true, setHeaders: (res, filePath) => { if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache') } }))
                 hasNg = true
                 console.info('Angular static mounted at /ng/ from', ngPath)
             } catch (e) {
@@ -98,7 +98,7 @@ const httpService = function () {
             try {
                 reactPath = reactStatic.startsWith('~') ? resolvePath(reactStatic) : reactStatic
                 if (fs.existsSync(reactPath)) {
-                    app.use('/react', express.static(reactPath, { etag: true, lastModified: true, setHeaders: (res, filePath) => { if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate') } }))
+                    app.use('/react', express.static(reactPath, { etag: true, lastModified: true, setHeaders: (res, filePath) => { if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache') } }))
                     hasReact = true
                     console.info('React static mounted at /react/ from', reactPath)
                 }
@@ -111,16 +111,19 @@ const httpService = function () {
         // (res.sendFile uses the `send` library which breaks inside .asar)
         let ngIndexHtml
         if (hasNg) {
-            ngIndexHtml = fs.readFileSync(path.resolve(ngPath, 'index.html'), 'utf8')
+            ngIndexHtml = await fs.promises.readFile(path.resolve(ngPath, 'index.html'), 'utf8')
         }
         let reactIndexHtml
         if (hasReact) {
-            reactIndexHtml = fs.readFileSync(path.resolve(reactPath, 'index.html'), 'utf8')
+            reactIndexHtml = await fs.promises.readFile(path.resolve(reactPath, 'index.html'), 'utf8')
         }
+
+        const noCacheHeaders = (res) => res.set('Cache-Control', 'no-cache')
 
         // Root / → redirect based on localStorage preference (client-side)
         if (hasNg || hasReact) {
             app.get('/', (req, res) => {
+                noCacheHeaders(res)
                 res.type('html').send(`<!DOCTYPE html><html><head><title>P3X Redis UI</title></head><body><script>
 var pref='ng';try{pref=localStorage.getItem('p3xr-frontend')||'ng'}catch(e){}
 location.replace(pref==='react'&&${hasReact}?'/react/':'/ng/')
@@ -135,6 +138,7 @@ location.replace(pref==='react'&&${hasReact}?'/react/':'/ng/')
                     next()
                     return
                 }
+                noCacheHeaders(res)
                 res.type('html').send(ngIndexHtml)
             })
         }
@@ -146,6 +150,7 @@ location.replace(pref==='react'&&${hasReact}?'/react/':'/ng/')
                     next()
                     return
                 }
+                noCacheHeaders(res)
                 res.type('html').send(reactIndexHtml)
             })
         }
