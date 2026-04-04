@@ -65,16 +65,16 @@ const httpService = function () {
             return path.resolve(process.cwd(), inputPath)
         }
 
-        // Mount Angular at /
+        // Mount Angular at /ng/
         let hasNg = false
         let ngPath
         const ngStatic = p3xrs.cfg.static || p3xrs.cfg.staticNg
         if (typeof ngStatic === 'string') {
             try {
                 ngPath = resolvePath(ngStatic)
-                app.use(express.static(ngPath))
+                app.use('/ng', express.static(ngPath))
                 hasNg = true
-                console.info('Angular static mounted at / from', ngPath)
+                console.info('Angular static mounted at /ng/ from', ngPath)
             } catch (e) {
                 console.warn('Could not resolve Angular static path:', ngStatic, '-', e.message)
             }
@@ -118,10 +118,20 @@ const httpService = function () {
             reactIndexHtml = fs.readFileSync(path.resolve(reactPath, 'index.html'), 'utf8')
         }
 
-        // SPA fallback for Angular (root)
+        // Root / → redirect based on localStorage preference (client-side)
+        if (hasNg || hasReact) {
+            app.get('/', (req, res) => {
+                res.type('html').send(`<!DOCTYPE html><html><head><title>P3X Redis UI</title></head><body><script>
+var pref='ng';try{pref=localStorage.getItem('p3xr-frontend')||'ng'}catch(e){}
+location.replace(pref==='react'&&${hasReact}?'/react/':'/ng/')
+</script></body></html>`)
+            })
+        }
+
+        // SPA fallback for /ng/* routes
         if (hasNg) {
-            app.use((req, res, next) => {
-                if (req.path.startsWith('/socket.io') || req.path.startsWith('/react')) {
+            app.use('/ng', (req, res, next) => {
+                if (req.path.startsWith('/socket.io')) {
                     next()
                     return
                 }
