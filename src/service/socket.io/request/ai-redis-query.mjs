@@ -271,9 +271,16 @@ export default async (options) => {
         })
     } catch (e) {
         console.error('ai-redis-query error', e)
+        // Extract Groq API error code if present (e.g. "403 blocked_api_access")
+        let errorMsg = e.message || String(e)
+        if (e.status === 403 || errorMsg.includes('blocked_api_access')) {
+            errorMsg = 'blocked_api_access'
+        } else if (e.status === 429 || errorMsg.includes('rate_limit')) {
+            errorMsg = 'rate_limit'
+        }
         socket.emit(options.responseEvent, {
             status: 'error',
-            error: e.message,
+            error: errorMsg,
         })
     }
 }
