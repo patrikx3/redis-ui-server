@@ -112,13 +112,27 @@ const httpService = function () {
 
         // Pre-read index.html files so SPA fallback works inside .asar archives
         // (res.sendFile uses the `send` library which breaks inside .asar)
+        // For non-asar (server) deployments, re-read from disk each time so
+        // deploys that update files after server start don't serve stale HTML.
+        const isAsar = (p) => p.includes('.asar')
         let ngIndexHtml
+        const ngIndexPath = hasNg ? path.resolve(ngPath, 'index.html') : null
         if (hasNg) {
-            ngIndexHtml = await fs.promises.readFile(path.resolve(ngPath, 'index.html'), 'utf8')
+            ngIndexHtml = await fs.promises.readFile(ngIndexPath, 'utf8')
         }
         let reactIndexHtml
+        const reactIndexPath = hasReact ? path.resolve(reactPath, 'index.html') : null
         if (hasReact) {
-            reactIndexHtml = await fs.promises.readFile(path.resolve(reactPath, 'index.html'), 'utf8')
+            reactIndexHtml = await fs.promises.readFile(reactIndexPath, 'utf8')
+        }
+
+        const getNgIndexHtml = async () => {
+            if (isAsar(ngIndexPath)) return ngIndexHtml
+            return fs.promises.readFile(ngIndexPath, 'utf8')
+        }
+        const getReactIndexHtml = async () => {
+            if (isAsar(reactIndexPath)) return reactIndexHtml
+            return fs.promises.readFile(reactIndexPath, 'utf8')
         }
 
         const noCacheHeaders = (res) => res.set('Cache-Control', 'no-cache')
@@ -136,25 +150,25 @@ location.replace(pref==='react'&&${hasReact}?'/react/':'/ng/')
 
         // SPA fallback for /ng/* routes
         if (hasNg) {
-            app.use('/ng', (req, res, next) => {
+            app.use('/ng', async (req, res, next) => {
                 if (req.path.startsWith('/socket.io')) {
                     next()
                     return
                 }
                 noCacheHeaders(res)
-                res.type('html').send(ngIndexHtml)
+                res.type('html').send(await getNgIndexHtml())
             })
         }
 
         // SPA fallback for /react/* routes
         if (hasReact) {
-            app.use('/react', (req, res, next) => {
+            app.use('/react', async (req, res, next) => {
                 if (req.path.startsWith('/socket.io')) {
                     next()
                     return
                 }
                 noCacheHeaders(res)
-                res.type('html').send(reactIndexHtml)
+                res.type('html').send(await getReactIndexHtml())
             })
         }
 

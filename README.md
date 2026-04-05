@@ -12,7 +12,7 @@ https://corifeus.com/redis-ui
 
 
 ---
-# 🏍️ The p3x-redis-ui-server package motor that is connected to the p3x-redis-ui-material web user interface v2026.4.334
+# 🏍️ P3X Redis UI server — Socket.IO backend for the dual Angular + React frontend with AI queries, 54 languages, and auto data decompression v2026.4.337
 
 
   
@@ -41,9 +41,26 @@ v24.14.1
 [//]: #@corifeus-header:end
 
 
-This version require minimum NodeJs v22. This is part of a composable  `p3x-redis-ui` package. This is the server based on Socket.IO (no rest at all).  
-The server will be using the `p3x-redis-ui-material` web client package based on built with Webpack, Socket.IO and AngularJs Material.  
-This package is named as `p3x-redis-ui-server`.
+This version requires minimum Node.js v22. This is part of the composable `p3x-redis-ui` package — the backend server built entirely on Socket.IO (no REST).
+
+The server connects to the `p3x-redis-ui-material` dual frontend:
+
+- **Angular** frontend (`/ng/`) — Angular + Angular Material + Webpack
+- **React** frontend (`/react/`) — React + MUI + Vite + Zustand
+
+Both frontends share the same Socket.IO protocol, **54 languages**, **7 themes** (4 dark + 3 light with auto system preference), and all features at full parity. Users can switch between Angular and React live in Settings.
+
+### Key Capabilities
+
+- **Socket.IO real-time communication** — all Redis operations via WebSocket events
+- **ioredis client** — standalone, cluster, and sentinel support with optional SSH tunneling
+- **HTTP Basic authentication** — protects both HTTP routes and Socket.IO connections
+- **AI query translation** — natural language to Redis commands via Groq API
+- **Auto data decompression** — GZIP, ZIP, zlib, Zstandard, LZ4, Snappy, Brotli
+- **Desktop notifications** — Electron native + Web Notification API for disconnect/reconnect events
+- **Auto language detection** — matches browser/system locale to one of 54 supported languages
+- **Health check endpoint** — `GET /health` for Docker/Kubernetes probes
+- **Graceful shutdown** — handles SIGTERM/SIGINT, closes all connections cleanly
 
 
 ## Configuration
@@ -115,7 +132,6 @@ Notes:
 ### Verbose CLI help
 
 ```text
-patrikx3@workstation:~/Projects/patrikx3/redis-ui-workspace/redis-ui-server$ p3xrs.js --help
 Usage: p3xrs [options]
 
 Options:
@@ -129,7 +145,9 @@ Options:
   --http-auth-password [password]         HTTP Basic auth plain password
   --http-auth-password-hash [hash]        HTTP Basic auth bcrypt password hash
   --http-auth-password-hash-file [file]   Read HTTP Basic auth bcrypt password hash from file
-  -h, --help                              output usage information
+  --groq-api-key [key]                    Groq API key for AI-powered Redis query translation (get a free key at console.groq.com)
+  --groq-api-key-readonly                 Prevent users from changing the Groq API key via the UI
+  -h, --help                              display help for command
 ```
 
 
@@ -142,8 +160,8 @@ Copy from `./artifacts/boot/p3xrs.json` to the root folder (`./p3xrs.json`).
 
 
 ```bash
-npm install
-npm run dev
+yarn install
+yarn run dev
 ```
 
 It uses `nodemon` and when any file is changed, it will re-load it.
@@ -196,7 +214,7 @@ All my domains, including [patrikx3.com](https://patrikx3.com), [corifeus.eu](ht
 ---
 
 
-[**P3X-REDIS-UI-SERVER**](https://corifeus.com/redis-ui-server) Build v2026.4.334
+[**P3X-REDIS-UI-SERVER**](https://corifeus.com/redis-ui-server) Build v2026.4.337
 
  [![NPM](https://img.shields.io/npm/v/p3x-redis-ui-server.svg)](https://www.npmjs.com/package/p3x-redis-ui-server)  [![Donate for PatrikX3 / P3X](https://img.shields.io/badge/Donate-PatrikX3-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software)
 
