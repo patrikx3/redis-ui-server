@@ -1,4 +1,7 @@
 import Groq from 'groq-sdk'
+import * as sharedIoRedis from '../shared.mjs'
+
+const parser = sharedIoRedis.argumentParser
 
 const AI_NETWORK_URL_PROD = 'https://network.corifeus.com'
 const AI_NETWORK_URL_DEV = 'http://localhost:8003'
@@ -133,7 +136,27 @@ return 'done'
 - NEVER fabricate index names — if indexes are provided in context, use those exact names
 - When the user mentions "rejson", "json keys", or "JSON type", they mean keys stored with the RedisJSON module
 - Prefer simple commands — KEYS over SCAN for readability in a GUI console
-- If the user asks something that needs multiple steps, output multiple commands (one per line)`
+- If the user asks something that needs multiple steps, output multiple commands (one per line)
+
+## Bash Pipe Integration via EVAL Lua
+If the user's input contains bash-style pipe operators (e.g. \`| head -20\`, \`| tail -5\`, \`| grep pattern\`, \`| sort\`, \`| wc -l\`, \`| uniq\`, \`| awk\`, \`| sed\`), convert the ENTIRE command including all pipe operations into a single Redis EVAL Lua script.
+- Use only valid Redis Lua API: redis.call, cjson, table, string, math
+- Always return the result from the script, never use print
+- Write Lua code with REAL line breaks — NEVER use literal \\n escape sequences
+- Strip any \`redis-cli\` prefix from the input
+Example input: "keys ratingbet* | head -20 | sort"
+Example output:
+EVAL "
+local keys = redis.call('KEYS', 'ratingbet*')
+table.sort(keys)
+local result = {}
+for i = 1, math.min(20, #keys) do
+  result[#result+1] = keys[i]
+end
+return result
+" 0
+---
+Retrieves keys matching ratingbet*, sorts them alphabetically and returns the first 20`
 
 function buildSystemPrompt(context) {
     let prompt = SYSTEM_PROMPT
@@ -185,6 +208,20 @@ function parseAiResponse(responseText) {
     }
 }
 
+const disabledCommands = ['subscribe', 'monitor', 'quit', 'psubscribe']
+
+async function executeRedisCommand(redis, commandStr) {
+    const tokens = parser(commandStr)
+    if (tokens.length === 0) throw new Error('Empty command')
+    const mainCommand = tokens.shift().toLowerCase()
+
+    if (disabledCommands.includes(mainCommand)) {
+        throw new Error(`Command '${mainCommand}' is not allowed`)
+    }
+
+    return await redis.call(mainCommand, tokens)
+}
+
 async function callGroqDirect(prompt, context, apiKey) {
     const client = new Groq({ apiKey })
     const systemPrompt = buildSystemPrompt(context)
@@ -196,7 +233,7 @@ async function callGroqDirect(prompt, context, apiKey) {
         ],
         model: 'openai/gpt-oss-120b',
         max_tokens: p3xrs.cfg.groqMaxTokens || 16384,
-        temperature: 0.1,
+        temperature: 0,
     })
 
     const responseText = chatCompletion.choices?.[0]?.message?.content?.trim() || ''
@@ -240,7 +277,7 @@ export default async (options) => {
     const { socket, payload } = options
 
     try {
-        const { prompt, context } = payload
+        const { prompt, context, execute } = payload
 
         if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
             throw new Error('AI_PROMPT_REQUIRED')
@@ -255,23 +292,46 @@ export default async (options) => {
         let result
 
         if (useOwnKey && apiKey) {
-            // Direct Groq call - no network dependency
             console.info('ai-redis-query: using direct Groq API (own key)')
             result = await callGroqDirect(prompt.trim(), context, apiKey)
         } else {
-            // Proxy through network.corifeus.com (default)
             console.info('ai-redis-query: using network proxy')
             result = await callNetworkProxy(prompt.trim(), context, apiKey || undefined)
         }
 
-        socket.emit(options.responseEvent, {
+        const response = {
             status: 'ok',
             command: result.command,
             explanation: result.explanation,
-        })
+        }
+
+        // Execute commands if requested and Redis client is available
+        if (execute && socket.p3xrs.ioredis) {
+            if (socket.p3xrs.readonly === true) {
+                response.executed = false
+                response.executionError = 'readonly-connection-mode'
+            } else {
+                const redis = socket.p3xrs.ioredis
+                const commandLines = result.command.split('\n').filter(line => line.trim().length > 0)
+                const executionResults = []
+
+                for (const cmd of commandLines) {
+                    try {
+                        const cmdResult = await executeRedisCommand(redis, cmd)
+                        executionResults.push({ command: cmd, result: cmdResult })
+                    } catch (execError) {
+                        executionResults.push({ command: cmd, error: execError.message })
+                    }
+                }
+
+                response.executed = true
+                response.results = executionResults
+            }
+        }
+
+        socket.emit(options.responseEvent, response)
     } catch (e) {
         console.error('ai-redis-query error', e)
-        // Extract Groq API error code if present (e.g. "403 blocked_api_access")
         let errorMsg = e.message || String(e)
         if (e.status === 403 || errorMsg.includes('blocked_api_access')) {
             errorMsg = 'blocked_api_access'
