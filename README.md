@@ -12,7 +12,7 @@ https://corifeus.com/redis-ui
 
 
 ---
-# 🏍️ P3X Redis UI server — Socket.IO backend for the dual Angular + React frontend with AI queries, 54 languages, and auto data decompression v2026.4.345
+# 🏍️ P3X Redis UI server — Socket.IO backend for the dual Angular + React frontend with AI queries, 54 languages, and auto data decompression v2026.4.346
 
 
   
@@ -54,8 +54,8 @@ Both frontends share the same Socket.IO protocol, **54 languages**, **7 themes**
 
 - **Socket.IO real-time communication** — all Redis operations via WebSocket events
 - **ioredis client** — standalone, cluster, and sentinel support with optional SSH tunneling
-- **HTTP Basic authentication** — protects both HTTP routes and Socket.IO connections
-- **AI query translation** — natural language to Redis commands via Groq API
+- **Built-in login page** — custom JWT-based authentication with themed login dialog (replaces browser HTTP Basic Auth)
+- **AI query translation** — natural language to Redis commands via Groq API, with bash pipe to EVAL Lua conversion
 - **Auto data decompression** — GZIP, ZIP, zlib, Zstandard, LZ4, Snappy, Brotli
 - **Desktop notifications** — Electron native + Web Notification API for disconnect/reconnect events
 - **Auto language detection** — matches browser/system locale to one of 54 supported languages
@@ -82,9 +82,11 @@ You may also set connections file name which overrides default .p3xrs-conns.json
 p3xrs --connections-file-name .p3xrs-conns.json
 ```
 
-## Optional HTTP Basic Authentication
+## Authentication (Login Page)
 
-The server can protect both HTTP routes and Socket.IO with HTTP Basic authentication.
+Instead of relying on the browser's native HTTP Basic Auth dialog, P3X Redis UI has its own built-in login page. When authentication is enabled, the app displays a themed login dialog that integrates seamlessly with the UI -- supporting all 54 languages, all 7 themes, and the Angular/React GUI switcher.
+
+The login flow uses JWT tokens (HS256, 24-hour expiry) with no external dependencies. The token is stored in the browser's localStorage and sent via Socket.IO handshake. A logout button appears in the top-right corner of the header toolbar when auth is active.
 
 Config (`p3xrs.json`):
 
@@ -103,7 +105,7 @@ Config (`p3xrs.json`):
 Generate BCrypt password hash:
 
 ```bash
-node ./bin/bcrypt-password.js -p myplainpass
+node ./bin/bcrypt-password.mjs -p myplainpass
 ```
 
 Environment variables:
@@ -126,7 +128,18 @@ CLI options:
 Notes:
 
 - `passwordHash` is preferred over plain `password`.
-- Use HTTPS/reverse proxy TLS when HTTP auth is enabled.
+- Use HTTPS/reverse proxy TLS when auth is enabled.
+- JWT tokens expire on server restart (secret is derived from the password hash).
+
+## AI-Powered Redis Query Translation
+
+The AI feature translates natural language or CLI-style input into valid Redis commands. It supports bash-style pipe operations (e.g. `keys session:* | head -20 | sort`) by converting them into Redis EVAL Lua scripts that run atomically on the server.
+
+- Powered by Groq API (model: `openai/gpt-oss-120b`)
+- Supports all human languages as input
+- Bash pipes (`head`, `tail`, `grep`, `sort`, `wc`, `uniq`) are translated to EVAL Lua
+- Network proxy mode (via `network.corifeus.com`) or direct API key mode
+- Configure via `--groq-api-key` CLI flag or the AI Settings panel in the UI
 
 
 ### Verbose CLI help
@@ -214,7 +227,7 @@ All my domains, including [patrikx3.com](https://patrikx3.com), [corifeus.eu](ht
 ---
 
 
-[**P3X-REDIS-UI-SERVER**](https://corifeus.com/redis-ui-server) Build v2026.4.345
+[**P3X-REDIS-UI-SERVER**](https://corifeus.com/redis-ui-server) Build v2026.4.346
 
  [![NPM](https://img.shields.io/npm/v/p3x-redis-ui-server.svg)](https://www.npmjs.com/package/p3x-redis-ui-server)  [![Donate for PatrikX3 / P3X](https://img.shields.io/badge/Donate-PatrikX3-003087.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QZVM4V6HVZJW6)  [![Contact Corifeus / P3X](https://img.shields.io/badge/Contact-P3X-ff9900.svg)](https://www.patrikx3.com/en/front/contact) [![Like Corifeus @ Facebook](https://img.shields.io/badge/LIKE-Corifeus-3b5998.svg)](https://www.facebook.com/corifeus.software)
 

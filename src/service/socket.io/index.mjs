@@ -1,5 +1,5 @@
 import { Server } from 'socket.io'
-import { resolveConfiguredHttpAuth, verifyAuthorizationHeader } from '../../lib/http-auth.mjs'
+import { resolveConfiguredHttpAuth, verifyAuthToken } from '../../lib/http-auth.mjs'
 import socketHandler from './socket.mjs'
 
 const socketIoService = function () {
@@ -20,12 +20,12 @@ const socketIoService = function () {
                 next()
                 return
             }
-            const authHeader = socket.handshake && socket.handshake.headers ? socket.handshake.headers.authorization : undefined
-            if (verifyAuthorizationHeader(authHeader)) {
+            const token = socket.handshake.auth?.token
+            if (token && verifyAuthToken(token)) {
                 next()
                 return
             }
-            const error = new Error('http_auth_required')
+            const error = new Error('auth_required')
             next(error)
         })
 

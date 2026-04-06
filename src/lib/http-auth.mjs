@@ -116,9 +116,60 @@ const readPasswordHashFromFile = (filename) => {
     }
 }
 
+// JWT token support (HS256, no external dependency)
+let _jwtSecret = null
+
+const getJwtSecret = () => {
+    if (_jwtSecret) return _jwtSecret
+    const settings = resolveConfiguredHttpAuth()
+    const source = settings.passwordHash || settings.password || crypto.randomBytes(32).toString('hex')
+    _jwtSecret = crypto.createHash('sha256').update('p3xrs-jwt-' + source).digest()
+    return _jwtSecret
+}
+
+const createAuthToken = (username) => {
+    const secret = getJwtSecret()
+    const payload = {
+        sub: username,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 86400, // 24 hours
+    }
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
+    const signature = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url')
+    return `${header}.${body}.${signature}`
+}
+
+const verifyAuthToken = (token) => {
+    if (typeof token !== 'string' || token.length === 0) return null
+    try {
+        const secret = getJwtSecret()
+        const parts = token.split('.')
+        if (parts.length !== 3) return null
+        const [header, body, signature] = parts
+        const expected = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url')
+        const sigBuf = Buffer.from(signature, 'utf8')
+        const expBuf = Buffer.from(expected, 'utf8')
+        if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return null
+        const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'))
+        if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null
+        return payload
+    } catch (e) {
+        return null
+    }
+}
+
+const resetJwtSecret = () => {
+    _jwtSecret = null
+}
+
 export {
     parseBoolean,
     resolveConfiguredHttpAuth,
+    verifyCredentials,
     verifyAuthorizationHeader,
     readPasswordHashFromFile,
+    createAuthToken,
+    verifyAuthToken,
+    resetJwtSecret,
 }

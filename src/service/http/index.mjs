@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import http from 'http'
 import { fileURLToPath } from 'url'
-import { resolveConfiguredHttpAuth, verifyAuthorizationHeader } from '../../lib/http-auth.mjs'
+import { resolveConfiguredHttpAuth, verifyCredentials, createAuthToken, verifyAuthToken } from '../../lib/http-auth.mjs'
 import { version } from '../../lib/resolve-version.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -30,21 +30,50 @@ const httpService = function () {
             })
         })
 
-        app.use((req, res, next) => {
+        // CORS for API endpoints (needed in dev when frontend runs on a different port)
+        app.use('/api', (req, res, next) => {
+            res.set('Access-Control-Allow-Origin', '*')
+            res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            res.set('Access-Control-Allow-Headers', 'Content-Type')
+            if (req.method === 'OPTIONS') return res.sendStatus(204)
+            next()
+        })
+
+        // Auth status — public, tells frontend if login is required
+        app.get('/api/auth-status', (req, res) => {
+            const httpAuth = resolveConfiguredHttpAuth()
+            res.json({ enabled: httpAuth.enabled })
+        })
+
+        // Login endpoint — validates credentials, returns JWT token
+        app.post('/api/login', express.json(), (req, res) => {
             const httpAuth = resolveConfiguredHttpAuth()
             if (!httpAuth.enabled) {
-                next()
-                return
+                return res.json({ status: 'ok', authRequired: false })
             }
-            const authHeader = req.get('authorization')
-            if (verifyAuthorizationHeader(authHeader)) {
-                next()
-                return
+
+            const { username, password } = req.body || {}
+            if (!username || !password) {
+                return res.status(400).json({ status: 'error', error: 'credentials_required' })
             }
-            res.set('WWW-Authenticate', 'Basic realm="P3X Redis UI"')
-            res.status(401).json({
-                error: 'http_auth_required',
-            })
+
+            if (!verifyCredentials({ username, password })) {
+                return res.status(401).json({ status: 'error', error: 'invalid_credentials' })
+            }
+
+            const token = createAuthToken(username)
+            res.json({ status: 'ok', token })
+        })
+
+        // Token verify — checks if a stored token is still valid
+        app.post('/api/verify-token', express.json(), (req, res) => {
+            const httpAuth = resolveConfiguredHttpAuth()
+            if (!httpAuth.enabled) {
+                return res.json({ valid: true, authRequired: false })
+            }
+            const { token } = req.body || {}
+            const payload = verifyAuthToken(token)
+            res.json({ valid: !!payload })
         })
 
         const findModulePath = (startPath, targetPath) => {

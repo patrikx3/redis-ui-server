@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2026.4.345",
+    "version": "2026.4.346",
     "description": "🏍️ P3X Redis UI server — Socket.IO backend for the dual Angular + React frontend with AI queries, 54 languages, and auto data decompression",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
@@ -23,7 +23,8 @@
         "build:compressed": "node ./scripts/build-compressed.mjs",
         "start": "node ./bin/p3xrs.mjs --config ./p3xrs.json",
         "dev": "NODE_ENV=development nodemon --watch src --watch package.json --watch bin ./bin/p3xrs.mjs --config ../p3xrs.json",
-        "dev-readonly-connections": "NODE_ENV=development nodemon --watch src --watch package.json --watch bin ./bin/p3xrs.mjs --config ../p3xrs.json --readonly-connections"
+        "dev-readonly-connections": "NODE_ENV=development nodemon --watch src --watch package.json --watch bin ./bin/p3xrs.mjs --config ../p3xrs.json --readonly-connections",
+        "dev-auth": "NODE_ENV=development nodemon --watch src --watch package.json --watch bin ./bin/p3xrs.mjs --config ../p3xrs.json --http-auth-enable --http-auth-username admin --http-auth-password admin"
     },
     "watch": {
         "run": "src/**/*.mjs"
