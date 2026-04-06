@@ -195,7 +195,7 @@ async function callGroqDirect(prompt, context, apiKey) {
             { role: 'user', content: prompt },
         ],
         model: 'openai/gpt-oss-120b',
-        max_tokens: 4096,
+        max_tokens: p3xrs.cfg.groqMaxTokens || 16384,
         temperature: 0.1,
     })
 

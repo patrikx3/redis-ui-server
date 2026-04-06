@@ -92,6 +92,7 @@ export default (io) => {
             groqApiKeyReadonly: p3xrs.cfg.groqApiKeyReadonly === true,
             aiEnabled: p3xrs.cfg.aiEnabled !== false,
             aiUseOwnKey: p3xrs.cfg.aiUseOwnKey === true,
+            groqMaxTokens: p3xrs.cfg.groqMaxTokens || 16384,
         })
 
         socketIoShared.sendStatus({
