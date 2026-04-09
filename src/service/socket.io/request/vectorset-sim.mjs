@@ -5,16 +5,20 @@ export default async (options) => {
 
     try {
         const redis = socket.p3xrs.ioredis
-        const { key, mode, element, values, count } = payload
+        const { key, mode, element, values, count, filter } = payload
         const n = parseInt(count) || 10
 
         let raw
         if (mode === 'element') {
-            raw = await redis.call('VSIM', key, 'ELE', element, 'COUNT', n, 'WITHSCORES')
+            const args = ['VSIM', key, 'ELE', element, 'COUNT', n, 'WITHSCORES']
+            if (filter) args.push('FILTER', filter)
+            raw = await redis.call(...args)
         } else {
             // mode === 'vector'
             const dim = values.length
-            raw = await redis.call('VSIM', key, 'VALUES', dim, ...values.map(Number), 'COUNT', n, 'WITHSCORES')
+            const args = ['VSIM', key, 'VALUES', dim, ...values.map(Number), 'COUNT', n, 'WITHSCORES']
+            if (filter) args.push('FILTER', filter)
+            raw = await redis.call(...args)
         }
 
         const results = []

@@ -24,6 +24,8 @@ export default {
     DECR: 'key',
     DECRBY: 'key decrement',
     MSETNX: 'key value [key value ...]',
+    // Redis 8.4
+    MSETEX: 'key value [key value ...] [EX seconds | PX ms | EXAT unix-sec | PXAT unix-ms]',
     LCS: 'key1 key2 [LEN] [IDX] [MINMATCHLEN min] [WITHMATCHLEN]',
     SUBSTR: 'key start end',
 
@@ -43,6 +45,19 @@ export default {
     HSETNX: 'key field value',
     HRANDFIELD: 'key [count [WITHVALUES]]',
     HSCAN: 'key cursor [MATCH pattern] [COUNT count]',
+    // Redis 8.0 — per-field hash TTL
+    HGETEX: 'key FIELDS count field [field ...] [EX seconds | PX ms | EXAT unix-sec | PXAT unix-ms | PERSIST]',
+    HSETEX: 'key FIELDS count field value [field value ...] [EX seconds | PX ms | EXAT unix-sec | PXAT unix-ms | KEEPTTL]',
+    HGETDEL: 'key FIELDS count field [field ...]',
+    HTTL: 'key FIELDS count field [field ...]',
+    HPTTL: 'key FIELDS count field [field ...]',
+    HEXPIRE: 'key seconds FIELDS count field [field ...]',
+    HPEXPIRE: 'key milliseconds FIELDS count field [field ...]',
+    HEXPIREAT: 'key unix-time-seconds FIELDS count field [field ...]',
+    HPEXPIREAT: 'key unix-time-ms FIELDS count field [field ...]',
+    HPERSIST: 'key FIELDS count field [field ...]',
+    HEXPIRETIME: 'key FIELDS count field [field ...]',
+    HPEXPIRETIME: 'key FIELDS count field [field ...]',
 
     // List
     LPUSH: 'key element [element ...]',
@@ -165,6 +180,10 @@ export default {
     XGROUP: 'CREATE|CREATECONSUMER|DELCONSUMER|DESTROY|SETID key group [id|$] [MKSTREAM] [ENTRIESREAD entries-read]',
     XPENDING: 'key group [[IDLE min-idle-time] start end count [consumer]]',
     XSETID: 'key last-id [ENTRIESREAD entries-read]',
+    // Redis 8.2
+    XDELEX: 'key id [id ...] [GROUP group] [IDLE min-idle-time]',
+    // Redis 8.6
+    XCFGSET: 'key parameter value',
 
     // Server
     INFO: '[section ...]',
@@ -194,7 +213,9 @@ export default {
     REPLICAOF: 'host port',
     SLAVEOF: 'host port',
     FAILOVER: '[TO host port [FORCE]] [ABORT] [TIMEOUT ms]',
-    CLUSTER: 'INFO|NODES|SLOTS|MYID|RESET|KEYSLOT|...',
+    CLUSTER: 'INFO|NODES|SLOTS|MYID|RESET|KEYSLOT|SLOT-STATS|MIGRATION|...',
+    // Redis 8.4
+    DIGEST: 'key',
 
     // Pub/Sub
     PUBLISH: 'channel message',
@@ -234,7 +255,7 @@ export default {
     GETBIT: 'key offset',
     BITCOUNT: 'key [start end [BYTE|BIT]]',
     BITPOS: 'key bit [start [end [BYTE|BIT]]]',
-    BITOP: 'AND|OR|XOR|NOT destkey key [key ...]',
+    BITOP: 'AND|OR|XOR|NOT|DIFF|DIFF1|ANDOR|ONE destkey key [key ...]',
     BITFIELD: 'key [GET encoding offset | SET encoding offset value | INCRBY encoding offset increment | OVERFLOW WRAP|SAT|FAIL] ...',
     BITFIELD_RO: 'key GET encoding offset [GET encoding offset ...]',
 
@@ -271,6 +292,8 @@ export default {
     'FT.ALIASUPDATE': 'alias index',
     'FT.TAGVALS': 'index field',
     'FT.EXPLAIN': 'index query',
+    // Redis 8.4
+    'FT.HYBRID': 'index query [SCORER scorer] [WEIGHT text_weight vector_weight] [LIMIT offset num] VECTOR field num value [EF_RUNTIME efrt] [EPSILON eps]',
 
     // TimeSeries
     'TS.CREATE': 'key [RETENTION retentionPeriod] [ENCODING UNCOMPRESSED|COMPRESSED] [CHUNK_SIZE size] [DUPLICATE_POLICY policy] [LABELS label value ...]',

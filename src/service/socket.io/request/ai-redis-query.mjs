@@ -168,6 +168,25 @@ return 'done'
 - Info: VINFO key
 - List elements: VLINKS key
 - "show all vector keys" → SCAN 0 MATCH * TYPE vectorset COUNT 10000
+- VSIM with filter (Redis 8.2+): VSIM key ELE element COUNT 10 FILTER "attr == 'value'"
+
+## Redis 8.0+ Hash Per-Field TTL
+- Get with expiry: HGETEX key FIELDS 1 field EX seconds
+- Set with expiry: HSETEX key FIELDS 1 field value EX seconds
+- Get and delete: HGETDEL key FIELDS 1 field
+- "set hash field with TTL" → HSETEX key FIELDS 1 myfield myvalue EX 3600
+- "get hash field and set expiry" → HGETEX key FIELDS 1 myfield EX 300
+
+## Redis 8.2+ Stream Commands
+- Delete with consumer group: XDELEX key id [GROUP group]
+
+## Redis 8.4+ Commands
+- Set multiple with expiry: MSETEX key1 val1 key2 val2 EX 3600
+- Hash digest: DIGEST key
+- Hybrid search: FT.HYBRID index "query" VECTOR field 10 vector_blob LIMIT 0 10
+
+## Redis 8.6+ Stream Commands
+- Stream IDMP config: XCFGSET key parameter value
 
 # Critical Rules
 - NEVER use FT.SEARCH or FT.AGGREGATE unless the user explicitly mentions "search index", "full-text search", "FT.", or "RediSearch"
@@ -217,8 +236,10 @@ function buildSystemPrompt(context) {
         if (context.schema) {
             prompt += `\n\nSchema information: ${JSON.stringify(context.schema)}`
         }
-        if (context.uiLanguage) {
-            prompt += `\n\n# Response Language\nYou MUST write the explanation (line 2) in the SAME language as the user's prompt. If they write in Hungarian, respond in Hungarian. If in English, respond in English. Always match the user's language.`
+        if (context.uiLanguage && context.uiLanguage !== 'en') {
+            prompt += `\n\n# Response Language\nThe user's GUI language is set to "${context.uiLanguage}". You MUST write the explanation (after the --- separator) in that language, regardless of what language the user types in.`
+        } else {
+            prompt += `\n\n# Response Language\nYou MUST write the explanation (after the --- separator) in the SAME language as the user's prompt. If they write in Hungarian, respond in Hungarian. If in English, respond in English. Always match the user's language.`
         }
     }
     return prompt
@@ -320,6 +341,10 @@ export default async (options) => {
 
         if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
             throw new Error('AI_PROMPT_REQUIRED')
+        }
+
+        if (prompt.length > 4096) {
+            throw new Error('AI prompt too long (max 4096 characters)')
         }
 
         if (p3xrs.cfg.aiEnabled === false) {
