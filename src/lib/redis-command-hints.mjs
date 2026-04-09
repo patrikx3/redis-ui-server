@@ -290,4 +290,69 @@ export default {
     'TS.QUERYINDEX': 'filter ...',
     'TS.CREATERULE': 'sourceKey destKey AGGREGATION aggregator bucketDuration [alignTimestamp]',
     'TS.DELETERULE': 'sourceKey destKey',
+
+    // Bloom Filter
+    'BF.RESERVE': 'key error_rate capacity [EXPANSION expansion] [NONSCALING]',
+    'BF.ADD': 'key item',
+    'BF.MADD': 'key item [item ...]',
+    'BF.EXISTS': 'key item',
+    'BF.MEXISTS': 'key item [item ...]',
+    'BF.INFO': 'key [CAPACITY|SIZE|FILTERS|ITEMS|EXPANSION]',
+    'BF.INSERT': 'key [CAPACITY cap] [ERROR error] [EXPANSION exp] [NOCREATE] [NONSCALING] ITEMS item [item ...]',
+
+    // Cuckoo Filter
+    'CF.RESERVE': 'key capacity [BUCKETSIZE bucketsize] [MAXITERATIONS maxiterations] [EXPANSION expansion]',
+    'CF.ADD': 'key item',
+    'CF.ADDNX': 'key item',
+    'CF.EXISTS': 'key item',
+    'CF.MEXISTS': 'key item [item ...]',
+    'CF.DEL': 'key item',
+    'CF.COUNT': 'key item',
+    'CF.INFO': 'key',
+
+    // Top-K
+    'TOPK.RESERVE': 'key topk [width] [depth] [decay]',
+    'TOPK.ADD': 'key item [item ...]',
+    'TOPK.INCRBY': 'key item increment [item increment ...]',
+    'TOPK.QUERY': 'key item [item ...]',
+    'TOPK.COUNT': 'key item [item ...]',
+    'TOPK.LIST': 'key [WITHCOUNT]',
+    'TOPK.INFO': 'key',
+
+    // Count-Min Sketch
+    'CMS.INITBYDIM': 'key width depth',
+    'CMS.INITBYPROB': 'key error probability',
+    'CMS.INCRBY': 'key item increment [item increment ...]',
+    'CMS.QUERY': 'key item [item ...]',
+    'CMS.MERGE': 'destination numkeys source [source ...] [WEIGHTS weight [weight ...]]',
+    'CMS.INFO': 'key',
+
+    // T-Digest
+    'TDIGEST.CREATE': 'key [COMPRESSION compression]',
+    'TDIGEST.ADD': 'key value [value ...]',
+    'TDIGEST.MERGE': 'destination-key numkeys source-key [source-key ...] [COMPRESSION compression] [OVERRIDE]',
+    'TDIGEST.CDF': 'key value [value ...]',
+    'TDIGEST.QUANTILE': 'key quantile [quantile ...]',
+    'TDIGEST.MIN': 'key',
+    'TDIGEST.MAX': 'key',
+    'TDIGEST.TRIMMED_MEAN': 'key low_cut_quantile high_cut_quantile',
+    'TDIGEST.RANK': 'key value [value ...]',
+    'TDIGEST.REVRANK': 'key value [value ...]',
+    'TDIGEST.BYRANK': 'key rank [rank ...]',
+    'TDIGEST.BYREVRANK': 'key rank [rank ...]',
+    'TDIGEST.INFO': 'key',
+    'TDIGEST.RESET': 'key',
+
+    // VectorSet (Redis 8)
+    'VADD': 'key [REDUCE dim] VALUES dim val [val ...] element [SETATTR "field\\nvalue\\n..."] [CAS]',
+    'VSIM': 'key {ELE element | VALUES dim val [val ...]} [COUNT count] [WITHSCORES] [FILTER expr]',
+    'VCARD': 'key',
+    'VDIM': 'key',
+    'VGETATTR': 'key element',
+    'VSETATTR': 'key element "field\\nvalue\\n..."',
+    'VREM': 'key element',
+    'VINFO': 'key',
+    'VLINKS': 'key element [WITHSCORES]',
+    'VRANDMEMBER': 'key [count]',
+    'VEMB': 'key element',
 }

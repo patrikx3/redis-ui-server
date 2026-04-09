@@ -272,6 +272,13 @@ const getKeysInfo = async (options) => {
         if (obj.type === 'TSDB-TYPE') {
             obj.type = 'timeseries'
         }
+        // Normalize RedisBloom module types
+        if (obj.type === 'MBbloom--') obj.type = 'bloom'
+        if (obj.type === 'MBbloomCF') obj.type = 'cuckoo'
+        if (obj.type === 'TopK-TYPE') obj.type = 'topk'
+        if (obj.type === 'CMSk-TYPE') obj.type = 'cms'
+        if (obj.type === 'TDIS-TYPE') obj.type = 'tdigest'
+
         switch (obj.type) {
             case 'stream':
                 complexLengthPipeline.xlen(key)
@@ -296,6 +303,30 @@ const getKeysInfo = async (options) => {
             case 'timeseries':
                 complexLengthPipeline.call('TS.INFO', key)
                 break;
+
+            case 'bloom':
+                complexLengthPipeline.call('BF.INFO', key)
+                break;
+
+            case 'cuckoo':
+                complexLengthPipeline.call('CF.INFO', key)
+                break;
+
+            case 'topk':
+                complexLengthPipeline.call('TOPK.INFO', key)
+                break;
+
+            case 'cms':
+                complexLengthPipeline.call('CMS.INFO', key)
+                break;
+
+            case 'tdigest':
+                complexLengthPipeline.call('TDIGEST.INFO', key)
+                break;
+
+            case 'vectorset':
+                complexLengthPipeline.call('VCARD', key)
+                break;
         }
         result[key] = obj
     }
@@ -304,7 +335,9 @@ const getKeysInfo = async (options) => {
     for (let keysIndex in keys) {
         const key = keys[keysIndex]
         const obj = result[key]
-        if (obj.type === 'string' || obj.type === 'none' || obj.type === 'json') {
+        // Only consume a pipeline result for types that added a command above
+        const typesWithPipeline = ['stream', 'hash', 'list', 'set', 'zset', 'timeseries', 'bloom', 'cuckoo', 'topk', 'cms', 'tdigest', 'vectorset']
+        if (!typesWithPipeline.includes(obj.type)) {
             continue
         }
         const lengthPipelineElement = lengthsPipeline.shift()
@@ -322,6 +355,53 @@ const getKeysInfo = async (options) => {
                     }
                 }
             }
+        } else if (obj.type === 'bloom' || obj.type === 'cuckoo') {
+            // BF.INFO / CF.INFO returns flat array; extract "Number of items inserted"
+            const info = lengthPipelineElement[1]
+            if (Array.isArray(info)) {
+                for (let i = 0; i < info.length; i += 2) {
+                    if (info[i] === 'Number of items inserted') {
+                        obj.length = info[i + 1]
+                        break
+                    }
+                }
+            }
+        } else if (obj.type === 'topk') {
+            // TOPK.INFO returns flat array; extract "k"
+            const info = lengthPipelineElement[1]
+            if (Array.isArray(info)) {
+                for (let i = 0; i < info.length; i += 2) {
+                    if (info[i] === 'k') {
+                        obj.length = info[i + 1]
+                        break
+                    }
+                }
+            }
+        } else if (obj.type === 'cms') {
+            // CMS.INFO returns flat array; extract "count"
+            const info = lengthPipelineElement[1]
+            if (Array.isArray(info)) {
+                for (let i = 0; i < info.length; i += 2) {
+                    if (info[i] === 'count') {
+                        obj.length = info[i + 1]
+                        break
+                    }
+                }
+            }
+        } else if (obj.type === 'tdigest') {
+            // TDIGEST.INFO returns flat array; extract "Merged nodes"
+            const info = lengthPipelineElement[1]
+            if (Array.isArray(info)) {
+                for (let i = 0; i < info.length; i += 2) {
+                    if (info[i] === 'Merged nodes') {
+                        obj.length = info[i + 1]
+                        break
+                    }
+                }
+            }
+        } else if (obj.type === 'vectorset') {
+            // VCARD returns integer directly
+            obj.length = lengthPipelineElement[1]
         } else {
             obj.length = lengthPipelineElement[1]
         }

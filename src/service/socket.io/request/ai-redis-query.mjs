@@ -128,7 +128,46 @@ return 'done'
 - WRONG: EVAL "for i=1,3 do\\nredis.call('SET','k'..i,i)\\nend" 0
 
 # Redis Type Names (for TYPE command responses)
-- string, list, set, zset, hash, stream, ReJSON-RL
+- string, list, set, zset, hash, stream, ReJSON-RL, TSDB-TYPE (TimeSeries)
+- MBbloom-- (Bloom filter), MBbloomCF (Cuckoo filter), TopK-TYPE (Top-K), CMSk-TYPE (Count-Min Sketch), TDIS-TYPE (T-Digest)
+
+## RedisBloom (Bloom filter, Cuckoo filter, Top-K, Count-Min Sketch, T-Digest)
+- Bloom filter info: BF.INFO key
+- Add to bloom: BF.ADD key item
+- Check bloom: BF.EXISTS key item
+- Create bloom: BF.RESERVE key error_rate capacity
+- Cuckoo filter info: CF.INFO key
+- Add to cuckoo: CF.ADD key item
+- Check cuckoo: CF.EXISTS key item
+- Delete from cuckoo: CF.DEL key item
+- Create cuckoo: CF.RESERVE key capacity
+- Top-K info: TOPK.INFO key
+- Add to top-k: TOPK.ADD key item [item ...]
+- List top-k: TOPK.LIST key WITHCOUNT
+- Create top-k: TOPK.RESERVE key topk [width] [depth] [decay]
+- Count-Min Sketch info: CMS.INFO key
+- Increment CMS: CMS.INCRBY key item increment
+- Query CMS: CMS.QUERY key item [item ...]
+- Create CMS: CMS.INITBYDIM key width depth
+- T-Digest info: TDIGEST.INFO key
+- Add to T-Digest: TDIGEST.ADD key value [value ...]
+- Query quantile: TDIGEST.QUANTILE key quantile [quantile ...]
+- Create T-Digest: TDIGEST.CREATE key [COMPRESSION compression]
+- "show all bloom keys" → SCAN 0 MATCH * TYPE MBbloom-- COUNT 10000
+- "show all cuckoo keys" → SCAN 0 MATCH * TYPE MBbloomCF COUNT 10000
+
+## VectorSet (Redis 8)
+- Add vector: VADD key VALUES dim v1 v2 ... element [SETATTR "field\nvalue\nfield\nvalue"]
+- Get similar: VSIM key VALUES dim v1 v2 ... [COUNT count]
+- Get similar by element: VSIM key ELE element [COUNT count]
+- Card: VCARD key
+- Dimensions: VDIM key
+- Get attributes: VGETATTR key element
+- Set attributes: VSETATTR key element "field\nvalue"
+- Remove element: VREM key element
+- Info: VINFO key
+- List elements: VLINKS key
+- "show all vector keys" → SCAN 0 MATCH * TYPE vectorset COUNT 10000
 
 # Critical Rules
 - NEVER use FT.SEARCH or FT.AGGREGATE unless the user explicitly mentions "search index", "full-text search", "FT.", or "RediSearch"

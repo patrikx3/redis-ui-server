@@ -1,7 +1,7 @@
 import zlib from 'node:zlib'
 import snappyjs from 'snappyjs'
 import lz4 from 'lz4js'
-import { decompress as fzstdDecompress } from 'fzstd'
+import { execFileSync } from 'node:child_process'
 
 /**
  * Detect compression format by magic bytes.
@@ -43,9 +43,14 @@ export async function tryDecompress(buffer) {
     // Zstandard: 28 B5 2F FD
     if (buffer.length >= 4 && b0 === 0x28 && b1 === 0xb5 && buffer[2] === 0x2f && buffer[3] === 0xfd) {
         try {
-            const result = Buffer.from(fzstdDecompress(buffer))
+            const result = execFileSync('zstd', ['-d'], { input: buffer, maxBuffer: 50 * 1024 * 1024, stdio: ['pipe', 'pipe', 'ignore'] })
             if (isLikelyUtf8(result)) return { algorithm: 'zstd', decompressed: result }
-        } catch {}
+        } catch (e) {
+            // zstd may exit non-zero but still produce output
+            if (e.stdout && e.stdout.length > 0 && isLikelyUtf8(e.stdout)) {
+                return { algorithm: 'zstd', decompressed: e.stdout }
+            }
+        }
         return null
     }
 

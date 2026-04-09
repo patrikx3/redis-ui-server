@@ -24,6 +24,12 @@ export default async (options) => {
         if (type === 'TSDB-TYPE') {
             type = 'timeseries'
         }
+        // Normalize RedisBloom module types
+        if (type === 'MBbloom--') type = 'bloom'
+        if (type === 'MBbloomCF') type = 'cuckoo'
+        if (type === 'TopK-TYPE') type = 'topk'
+        if (type === 'CMSk-TYPE') type = 'cms'
+        if (type === 'TDIS-TYPE') type = 'tdigest'
 
         //console.info(consolePrefix, payload, type, key)
 
@@ -67,11 +73,41 @@ export default async (options) => {
                 // TS.INFO via pipeline call
                 viewPipeline.call('TS.INFO', key)
                 break;
+
+            case 'bloom':
+                viewPipeline.call('BF.INFO', key)
+                break;
+
+            case 'cuckoo':
+                viewPipeline.call('CF.INFO', key)
+                break;
+
+            case 'topk':
+                viewPipeline.call('TOPK.INFO', key)
+                break;
+
+            case 'cms':
+                viewPipeline.call('CMS.INFO', key)
+                break;
+
+            case 'tdigest':
+                viewPipeline.call('TDIGEST.INFO', key)
+                break;
+
+            case 'vectorset':
+                viewPipeline.call('VINFO', key)
+                break;
+
+            default:
+                // Unknown type — send type name as placeholder value
+                viewPipeline.type(key)
+                break;
         }
         viewPipeline.ttl(key)
 
-        // JSON and timeseries keys don't support OBJECT ENCODING
-        if (type !== 'json' && type !== 'timeseries') {
+        // Only native collection types support OBJECT ENCODING
+        const encodingTypes = ['string', 'stream', 'hash', 'list', 'set', 'zset']
+        if (encodingTypes.includes(type)) {
             viewPipeline.object('encoding', key)
         }
 
@@ -107,6 +143,10 @@ export default async (options) => {
         let length
         let pipelineIndex = 2
 
+        const probabilisticTypes = ['bloom', 'cuckoo', 'topk', 'cms', 'tdigest']
+        // Types that have OBJECT ENCODING + length command in the pipeline
+        const collectionTypes = ['stream', 'hash', 'list', 'set', 'zset']
+
         if (type === 'timeseries') {
             encoding = 'timeseries'
             // TS.INFO returns flat array [field, value, ...]; parse to object
@@ -132,19 +172,37 @@ export default async (options) => {
             }
             valueBuffer = Buffer.from(JSON.stringify(tsInfo))
             length = tsInfo.totalSamples || 0
+        } else if (probabilisticTypes.includes(type) || type === 'vectorset') {
+            encoding = type
+            // All probabilistic/vectorset INFO commands return flat array [field, value, ...]
+            const info = {}
+            if (Array.isArray(valueBuffer)) {
+                for (let i = 0; i < valueBuffer.length; i += 2) {
+                    info[valueBuffer[i]] = valueBuffer[i + 1]
+                }
+            }
+            valueBuffer = Buffer.from(JSON.stringify(info))
+            length = info['Number of items inserted'] || info['count'] || info['k'] || info['Merged nodes'] || 0
         } else if (type === 'json') {
             encoding = 'json'
             // JSON.GET returns a JSON string; convert to Buffer for consistency
             if (typeof valueBuffer === 'string') {
                 valueBuffer = Buffer.from(valueBuffer)
             }
-        } else {
+        } else if (type === 'string') {
+            // String has OBJECT ENCODING but no length command
             encoding = viewPipelineResult[pipelineIndex][1]
             pipelineIndex++
-        }
-
-        if (type !== 'string' && type !== 'json' && type !== 'timeseries') {
+        } else if (collectionTypes.includes(type)) {
+            // Collections have OBJECT ENCODING + length command
+            encoding = viewPipelineResult[pipelineIndex][1]
+            pipelineIndex++
             length = viewPipelineResult[pipelineIndex][1]
+        } else {
+            // Unknown module type — no OBJECT ENCODING, no length command
+            encoding = type
+            valueBuffer = Buffer.from(JSON.stringify({ type: valueBuffer || type }))
+            length = 0
         }
 
         // Try to decompress the value (string type: single buffer, collections: each item)

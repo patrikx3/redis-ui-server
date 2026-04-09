@@ -180,6 +180,45 @@ export default async (options) => {
                 await redis.call('JSON.SET', model.key, '$', model.value)
                 break;
 
+            case 'bloom':
+                await redis.call('BF.RESERVE', model.key,
+                    parseFloat(model.bloomErrorRate) || 0.01,
+                    parseInt(model.bloomCapacity) || 100)
+                break;
+
+            case 'cuckoo':
+                await redis.call('CF.RESERVE', model.key,
+                    parseInt(model.cuckooCapacity) || 1024)
+                break;
+
+            case 'topk':
+                await redis.call('TOPK.RESERVE', model.key,
+                    parseInt(model.topkK) || 10,
+                    parseInt(model.topkWidth) || 2000,
+                    parseInt(model.topkDepth) || 7,
+                    parseFloat(model.topkDecay) || 0.9)
+                break;
+
+            case 'cms':
+                await redis.call('CMS.INITBYDIM', model.key,
+                    parseInt(model.cmsWidth) || 2000,
+                    parseInt(model.cmsDepth) || 7)
+                break;
+
+            case 'tdigest':
+                await redis.call('TDIGEST.CREATE', model.key,
+                    'COMPRESSION', parseInt(model.tdigestCompression) || 100)
+                break;
+
+            case 'vectorset': {
+                const values = (model.vectorValues || '').split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
+                if (!values.length) throw new Error('Vector values are required')
+                if (!model.vectorElement || !model.vectorElement.trim()) throw new Error('Element name is required')
+                const args = [model.key, 'VALUES', values.length, ...values, model.vectorElement.trim()]
+                await redis.call('VADD', ...args)
+                break;
+            }
+
         }
 
         socket.emit(options.responseEvent, {

@@ -107,6 +107,14 @@ export default async (options) => {
             })
         }
 
+        // Clean up stale ioredis connection if it exists but is no longer ready
+        if (socket.p3xrs.ioredis !== undefined && socket.p3xrs.ioredis.status !== 'ready') {
+            console.warn(consolePrefix, 'stale redis connection detected (status:', socket.p3xrs.ioredis.status + '), cleaning up before reconnect')
+            sharedIoRedis.disconnectRedis({
+                socket: socket,
+            })
+        }
+
         if (!p3xrs.redisConnections.hasOwnProperty(connection.id)) {
             p3xrs.redisConnections[connection.id] = {
                 connection: connection,
