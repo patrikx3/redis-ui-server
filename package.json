@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2026.4.353",
+    "version": "2026.4.354",
     "description": "🏍️ P3X Redis UI server — Socket.IO backend for the dual Angular + React frontend with AI queries, 54 languages, and auto data decompression",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
