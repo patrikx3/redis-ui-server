@@ -1,5 +1,22 @@
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import * as socketIoShared from './shared.mjs'
 import { isSnapshot, version } from '../../lib/resolve-version.mjs'
+
+// Auto-discover request handlers from request/$area/$function.mjs
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const requestDir = path.join(__dirname, 'request')
+const validActions = new Set()
+for (const entry of fs.readdirSync(requestDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    for (const file of fs.readdirSync(path.join(requestDir, entry.name), { withFileTypes: true })) {
+        if (!file.isFile() || !file.name.endsWith('.mjs')) continue
+        validActions.add(`${entry.name}/${file.name.slice(0, -4)}`)
+    }
+}
+console.info(`socket.io discovered ${validActions.size} request handlers:`, [...validActions].sort().join(', '))
+
 export default (io) => {
 
     io.on('connect', function (socket) {
@@ -59,7 +76,7 @@ export default (io) => {
         socket.on('p3xr-request', (options) => {
             options.socket = socket;
             options.responseEvent = `p3xr-response-${options.requestId}`
-            if (options && options.action && typeof options.action === 'string' && !options.action.includes('.')  && !options.action.includes('\\') && !options.action.includes('/')) {
+            if (options?.action && typeof options.action === 'string' && validActions.has(options.action)) {
                 import(`./request/${options.action}.mjs`).then(mod => mod.default(options)).catch(err => {
                     console.error('failed to load request handler', options.action, err)
                     socket.emit(options.responseEvent, {

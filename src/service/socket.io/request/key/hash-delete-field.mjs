@@ -1,0 +1,30 @@
+import * as sharedIoRedis from '../../shared.mjs'
+
+const consolePrefix = 'socket.io key hash delete key'
+
+export default async (options) => {
+    const {socket, payload} = options;
+
+    const redis = socket.p3xrs.ioredis
+
+    try {
+        sharedIoRedis.ensureReadonlyConnection({ socket })
+
+        const {hashKey, key} = payload;
+
+        await redis.hdel(key, hashKey)
+
+        socket.emit(options.responseEvent, {
+            status: 'ok',
+        })
+
+    } catch (e) {
+        console.error(e)
+        socket.emit(options.responseEvent, {
+            status: 'error',
+            error: e.message
+        })
+
+    }
+
+}
