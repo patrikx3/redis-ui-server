@@ -211,7 +211,7 @@ const httpService = function () {
         if (hasNg || hasReact || hasVue) {
             app.get('/', (req, res) => {
                 noCacheHeaders(res)
-                res.type('html').send(`<!DOCTYPE html><html><head><title>P3X Redis UI</title></head><body><script>
+                res.type('html').send(`<!DOCTYPE html><html><head><script>try{var t=localStorage.getItem('p3xr-theme');if(t==='auto'||!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'p3xrThemeDark':'p3xrThemeEnterprise';var m={p3xrThemeLight:'#cfd8dc',p3xrThemeEnterprise:'#e0e0e0',p3xrThemeRedis:'#ffcdd2',p3xrThemeDark:'#212121',p3xrThemeDarkNeu:'#263238',p3xrThemeDarkoBluo:'#283593',p3xrThemeMatrix:'#1b5e20'};var c=m[t]||'#212121';var l=t==='p3xrThemeLight'||t==='p3xrThemeEnterprise'||t==='p3xrThemeRedis';var s=document.createElement('meta');s.name='color-scheme';s.content=l?'light':'dark';document.head.appendChild(s);document.documentElement.style.backgroundColor=c}catch(e){var s=document.createElement('meta');s.name='color-scheme';s.content='dark';document.head.appendChild(s)}</script><title>P3X Redis UI</title></head><body><script>
 var pref='ng';try{pref=localStorage.getItem('p3xr-frontend')||'ng'}catch(e){}
 if(pref==='vue'&&${hasVue})location.replace('/vue/')
 else if(pref==='react'&&${hasReact})location.replace('/react/')
