@@ -105,6 +105,7 @@ Note: SCAN returns [cursor, [keys...]]. cursor=0 means scan complete.
 ## Cluster
 - Cluster info: CLUSTER INFO
 - Cluster nodes: CLUSTER NODES
+- CLUSTER SLOTS / CLUSTER SHARDS — slot distribution
 
 ## Multi-step operations — PREFER multiple commands over EVAL
 When the user needs multiple Redis operations, output them as separate commands (one per line):
@@ -126,6 +127,15 @@ end
 return 'done'
 " 0
 - WRONG: EVAL "for i=1,3 do\\nredis.call('SET','k'..i,i)\\nend" 0
+
+### EVAL in Cluster Mode — CRITICAL
+In Redis Cluster, ALL keys accessed inside a single EVAL script MUST hash to the SAME slot.
+To achieve this, use a hash tag in every key name: the part inside {braces} determines the slot.
+Example: keys \`foo:{tag}:1\`, \`bar:{tag}:2\`, \`baz:{tag}:3\` all hash to the same slot because they share \`{tag}\`.
+- ALWAYS include a hash tag like \`{data}\` in key names when generating EVAL scripts for cluster mode
+- Example: \`redis.call('SET', 'random-string:{data}:'..i, value)\` — all keys go to the same slot
+- Without a hash tag, the script WILL fail with "Script attempted to access a non local key"
+- This applies to ALL EVAL scripts in cluster mode, no exceptions
 
 # Redis Type Names (for TYPE command responses)
 - string, list, set, zset, hash, stream, ReJSON-RL, TSDB-TYPE (TimeSeries)
@@ -270,6 +280,14 @@ function parseAiResponse(responseText) {
 
 const disabledCommands = ['subscribe', 'monitor', 'quit', 'psubscribe']
 
+// Commands that have cluster-aware overrides on the Cluster class.
+// Using redis.call() bypasses these overrides, so we call the method directly.
+const clusterOverriddenCommands = {
+    flushdb: 'flushdb',
+    flushall: 'flushall',
+    dbsize: 'dbsize',
+}
+
 async function executeRedisCommand(redis, commandStr) {
     const tokens = parser(commandStr)
     if (tokens.length === 0) throw new Error('Empty command')
@@ -279,7 +297,14 @@ async function executeRedisCommand(redis, commandStr) {
         throw new Error(`Command '${mainCommand}' is not allowed`)
     }
 
-    return await redis.call(mainCommand, tokens)
+    // Use the instance method for cluster-overridden commands so the
+    // Cluster subclass can broadcast to all master nodes.
+    const overrideMethod = clusterOverriddenCommands[mainCommand]
+    if (overrideMethod && typeof redis[overrideMethod] === 'function') {
+        return await redis[overrideMethod](...tokens)
+    }
+
+    return await redis.call(mainCommand, ...tokens)
 }
 
 async function callGroqDirect(prompt, context, apiKey) {

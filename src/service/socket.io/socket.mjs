@@ -59,7 +59,9 @@ export default (io) => {
 
             // Stop MONITOR if active
             if (socket.p3xrs.ioredisMonitor) {
-                try { socket.p3xrs.ioredisMonitor.disconnect() } catch {}
+                for (const monitor of socket.p3xrs.ioredisMonitor) {
+                    try { monitor.disconnect() } catch {}
+                }
                 socket.p3xrs.ioredisMonitor = undefined
             }
 

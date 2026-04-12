@@ -6,15 +6,18 @@ export default async (options) => {
         const maxKeys = payload.maxKeys || 100
         const topN = payload.topN || 20
 
-        // Scan keys
-        let cursor = '0'
-        const keys = []
-        do {
-            const [nextCursor, batch] = await redis.scan(cursor, 'COUNT', 200)
-            cursor = nextCursor
-            keys.push(...batch)
-            if (keys.length >= maxKeys) break
-        } while (cursor !== '0')
+        // Scan keys (scanStream is cluster-aware, scans all masters)
+        const keys = await new Promise((resolve, reject) => {
+            const collected = []
+            const stream = redis.scanStream({ count: 200 })
+            stream.on('data', (batch) => {
+                if (collected.length < maxKeys) {
+                    collected.push(...batch)
+                }
+            })
+            stream.on('end', () => resolve(collected.slice(0, maxKeys)))
+            stream.on('error', reject)
+        })
 
         // Get memory usage for each key in pipeline batches
         const BATCH = 500

@@ -14,15 +14,18 @@ export default async (options) => {
         // Get total key count
         const dbSize = await redis.dbsize()
 
-        // Scan keys
-        let cursor = '0'
-        const keys = []
-        do {
-            const [nextCursor, batch] = await redis.scan(cursor, 'COUNT', 500)
-            cursor = nextCursor
-            keys.push(...batch)
-            if (keys.length >= maxScanKeys) break
-        } while (cursor !== '0')
+        // Scan keys (scanStream is cluster-aware, scans all masters)
+        const keys = await new Promise((resolve, reject) => {
+            const collected = []
+            const stream = redis.scanStream({ count: 500 })
+            stream.on('data', (batch) => {
+                if (collected.length < maxScanKeys) {
+                    collected.push(...batch)
+                }
+            })
+            stream.on('end', () => resolve(collected.slice(0, maxScanKeys)))
+            stream.on('error', reject)
+        })
 
         // Pipeline: TYPE + MEMORY USAGE + TTL for each key
         const typeDistribution = {}

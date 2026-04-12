@@ -76,6 +76,27 @@ export default class Cluster extends Redis.Cluster {
         return count
     }
 
+    async flushdb(...args) {
+        await Promise.all(this.nodes('master').map(node => node.flushdb(...args)))
+        return 'OK'
+    }
+
+    async flushall(...args) {
+        await Promise.all(this.nodes('master').map(node => node.flushall(...args)))
+        return 'OK'
+    }
+
+    // ACL commands must broadcast to all master nodes in cluster mode
+    async aclSetuser(...args) {
+        await Promise.all(this.nodes('master').map(node => node.call('ACL', 'SETUSER', ...args)))
+        return 'OK'
+    }
+
+    async aclDeluser(...args) {
+        await Promise.all(this.nodes('master').map(node => node.call('ACL', 'DELUSER', ...args)))
+        return 'OK'
+    }
+
     originalRename(...args) {
         return super.rename(...args)
     }

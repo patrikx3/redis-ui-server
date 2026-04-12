@@ -4,6 +4,10 @@ const parser = sharedIoRedis.argumentParser
 
 const disabledCommands = ['subscribe', 'monitor', 'quit', 'psubscribe']
 
+// Commands that have cluster-aware overrides on the Cluster class.
+// redis.call() bypasses these, so we invoke the instance method directly.
+const clusterOverriddenCommands = ['flushdb', 'flushall', 'dbsize']
+
 const consolePrefix = 'socket.io console call'
 export default async (options) => {
     const {socket, payload} = options;
@@ -26,12 +30,13 @@ export default async (options) => {
         }
 
         console.info(consolePrefix, mainCommand, commands)
-        /*
-        if (!socket.p3xrs.commands.includes(mainCommand)) {
-            throw new Error(`ERR Unknown command '${mainCommand}'.`)
+
+        let result
+        if (clusterOverriddenCommands.includes(mainCommand) && typeof redis[mainCommand] === 'function') {
+            result = await redis[mainCommand](...commands)
+        } else {
+            result = await redis.call(mainCommand, ...commands)
         }
-         */
-        let result = await redis.call(mainCommand, commands)
 
         const defaultEmit = {}
 
