@@ -8,13 +8,17 @@ export default async (options) => {
             throw new Error('GROQ_API_KEY_READONLY')
         }
 
-        const apiKey = (payload.apiKey || '').trim()
         const aiEnabled = payload.aiEnabled !== false
         const aiUseOwnKey = payload.aiUseOwnKey === true
         const groqMaxTokens = typeof payload.groqMaxTokens === 'number' && payload.groqMaxTokens > 0 ? payload.groqMaxTokens : (p3xrs.cfg.groqMaxTokens || 16384)
+        // Only update API key if explicitly provided in payload
+        const hasNewKey = payload.hasOwnProperty('apiKey')
+        const apiKey = hasNewKey ? (payload.apiKey || '').trim() : undefined
 
         // Update runtime config
-        p3xrs.cfg.groqApiKey = apiKey || undefined
+        if (hasNewKey) {
+            p3xrs.cfg.groqApiKey = apiKey || undefined
+        }
         p3xrs.cfg.aiEnabled = aiEnabled
         p3xrs.cfg.aiUseOwnKey = aiUseOwnKey
         p3xrs.cfg.groqMaxTokens = groqMaxTokens
@@ -27,10 +31,12 @@ export default async (options) => {
                 if (!config.p3xrs || typeof config.p3xrs !== 'object') {
                     config.p3xrs = {}
                 }
-                if (apiKey) {
-                    config.p3xrs.groqApiKey = apiKey
-                } else {
-                    delete config.p3xrs.groqApiKey
+                if (hasNewKey) {
+                    if (apiKey) {
+                        config.p3xrs.groqApiKey = apiKey
+                    } else {
+                        delete config.p3xrs.groqApiKey
+                    }
                 }
                 config.p3xrs.aiEnabled = aiEnabled
                 config.p3xrs.aiUseOwnKey = aiUseOwnKey

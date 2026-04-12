@@ -269,6 +269,7 @@ const cli = async () => {
     }
 
     // staticReact: no default — auto-detected from static path in http service
+    // staticVue: no default — auto-detected from static path in http service
 
     if (!p3xrs.cfg.hasOwnProperty('connections')) {
         p3xrs.cfg.connections = {}

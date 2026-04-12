@@ -19,6 +19,12 @@ const httpService = function () {
 
         app.disable('x-powered-by')
 
+        // Content Security Policy — covers Docker, direct server, and any deployment without a reverse proxy
+        app.use((req, res, next) => {
+            res.set('Content-Security-Policy', "default-src 'self'; script-src 'self' https://www.googletagmanager.com 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.googletagmanager.com https://www.google-analytics.com; font-src 'self' data:; connect-src 'self' ws: wss: http://localhost:* http://127.0.0.1:* https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com; object-src 'none'; base-uri 'self'; form-action 'self'")
+            next()
+        })
+
         // Health endpoint — before auth, always accessible
         const startedAt = new Date().toISOString()
         app.get('/health', (req, res) => {
@@ -139,6 +145,32 @@ const httpService = function () {
             }
         }
 
+        // Mount Vue at /vue/
+        let hasVue = false
+        let vuePath
+        let vueStatic = p3xrs.cfg.staticVue
+        if (!vueStatic && ngPath) {
+            const autoVuePath = ngPath + '-vue'
+            if (fs.existsSync(autoVuePath)) {
+                vueStatic = autoVuePath
+            }
+        }
+        if (!vueStatic) {
+            vueStatic = '~p3x-redis-ui-material/dist-vue'
+        }
+        if (typeof vueStatic === 'string') {
+            try {
+                vuePath = vueStatic.startsWith('~') ? resolvePath(vueStatic) : vueStatic
+                if (fs.existsSync(vuePath)) {
+                    app.use('/vue', express.static(vuePath, { etag: true, lastModified: true, setHeaders: (res, filePath) => { if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache') } }))
+                    hasVue = true
+                    console.info('Vue static mounted at /vue/ from', vuePath)
+                }
+            } catch (e) {
+                // Vue build may not exist yet — that's ok
+            }
+        }
+
         // Pre-read index.html files so SPA fallback works inside .asar archives
         // (res.sendFile uses the `send` library which breaks inside .asar)
         // For non-asar (server) deployments, re-read from disk each time so
@@ -154,6 +186,11 @@ const httpService = function () {
         if (hasReact) {
             reactIndexHtml = await fs.promises.readFile(reactIndexPath, 'utf8')
         }
+        let vueIndexHtml
+        const vueIndexPath = hasVue ? path.resolve(vuePath, 'index.html') : null
+        if (hasVue) {
+            vueIndexHtml = await fs.promises.readFile(vueIndexPath, 'utf8')
+        }
 
         const getNgIndexHtml = async () => {
             if (isAsar(ngIndexPath)) return ngIndexHtml
@@ -163,16 +200,22 @@ const httpService = function () {
             if (isAsar(reactIndexPath)) return reactIndexHtml
             return fs.promises.readFile(reactIndexPath, 'utf8')
         }
+        const getVueIndexHtml = async () => {
+            if (isAsar(vueIndexPath)) return vueIndexHtml
+            return fs.promises.readFile(vueIndexPath, 'utf8')
+        }
 
         const noCacheHeaders = (res) => res.set('Cache-Control', 'no-cache')
 
         // Root / → redirect based on localStorage preference (client-side)
-        if (hasNg || hasReact) {
+        if (hasNg || hasReact || hasVue) {
             app.get('/', (req, res) => {
                 noCacheHeaders(res)
                 res.type('html').send(`<!DOCTYPE html><html><head><title>P3X Redis UI</title></head><body><script>
 var pref='ng';try{pref=localStorage.getItem('p3xr-frontend')||'ng'}catch(e){}
-location.replace(pref==='react'&&${hasReact}?'/react/':'/ng/')
+if(pref==='vue'&&${hasVue})location.replace('/vue/')
+else if(pref==='react'&&${hasReact})location.replace('/react/')
+else location.replace('/ng/')
 </script></body></html>`)
             })
         }
@@ -201,8 +244,20 @@ location.replace(pref==='react'&&${hasReact}?'/react/':'/ng/')
             })
         }
 
+        // SPA fallback for /vue/* routes
+        if (hasVue) {
+            app.use('/vue', async (req, res, next) => {
+                if (req.path.startsWith('/socket.io')) {
+                    next()
+                    return
+                }
+                noCacheHeaders(res)
+                res.type('html').send(await getVueIndexHtml())
+            })
+        }
+
         // Fallback when no frontends are available
-        if (!hasNg && !hasReact) {
+        if (!hasNg && !hasReact && !hasVue) {
             app.use((req, res) => {
                 res.json({ status: 'operational' })
             })
