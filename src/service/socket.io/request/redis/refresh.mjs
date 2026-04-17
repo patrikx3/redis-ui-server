@@ -5,9 +5,12 @@ import * as sharedIoRedis from '../../shared.mjs'
 export default async (options) => {
     const {socket, payload} = options;
 
-    const redis = socket.p3xrs.ioredis
+    const redis = socket.p3xrs?.ioredis
 
     try {
+        if (!redis) {
+            throw new Error('not_connected')
+        }
 
         await sharedIoRedis.getFullInfoAndSendSocket({
             redis: redis,

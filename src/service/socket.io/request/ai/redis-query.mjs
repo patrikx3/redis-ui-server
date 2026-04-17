@@ -1,7 +1,19 @@
 import Groq from 'groq-sdk'
 import * as sharedIoRedis from '../../shared.mjs'
+import { TOOL_SCHEMAS, runTool } from './tools.mjs'
 
 const parser = sharedIoRedis.argumentParser
+
+// Max number of tool-call rounds per AI turn. Prevents runaway loops.
+const MAX_AGENTIC_ITERATIONS = 5
+// Hard cap on parallel tool calls within a single assistant turn.
+const MAX_TOOL_CALLS_PER_TURN = 10
+// Per-tool-result cap (~2K tokens at ~4 chars/token). A single SCAN can dump
+// thousands of keys; without this cap the messages[] balloons and Groq 413s.
+const MAX_TOOL_RESULT_CHARS = 8000
+// Total messages[] cap across one turn (~6K tokens). Groq free-tier TPM is 8K,
+// leave headroom for the assistant's completion and the system prompt drift.
+const MAX_TOTAL_MESSAGES_CHARS = 24000
 
 const AI_NETWORK_URL_PROD = 'https://network.corifeus.com'
 const AI_NETWORK_URL_DEV = 'http://localhost:8003'
@@ -226,8 +238,71 @@ return result
 ---
 Retrieves keys matching ratingbet*, sorts them alphabetically and returns the first 20`
 
+const LIMITED_AI_SYSTEM_PROMPT = `You are the p3x-redis-ui assistant in LIMITED MODE. The user is NOT currently connected to any Redis server — so you have no live state to inspect and no index, key, or module information to draw on.
+
+You CAN answer:
+- General Redis knowledge questions ("what is ZADD?", "how does cluster failover work?", "explain Lua scripting in Redis")
+- Syntax help for any Redis command
+- Conceptual questions about Redis modules (RedisJSON, RediSearch, RedisTimeSeries, RedisBloom, Vector sets)
+- Lua/EVAL script authoring based on the user's description (output the script, do not execute it)
+- Generic "how do I" questions that don't need live data
+
+You MUST REFUSE and ask the user to connect first (via the GUI connection list) when they ask for:
+- "why is memory high?", "show my slow queries", "which clients are connected?"
+- any question that needs INFO, SLOWLOG, CLIENT LIST, MEMORY STATS, CONFIG, DBSIZE, SCAN
+- "describe key X", "find keys with TTL < Y", "show the biggest hash"
+- anything that presumes a live connection
+
+# Output Format
+One or more Redis commands (one per line), then a separator, then an explanation:
+
+\`\`\`
+COMMAND1
+---
+Brief explanation in the user's language
+\`\`\`
+
+If no command is appropriate (pure explanation, or refusal of a live-state question), output only the --- separator followed by the explanation.`
+
 function buildSystemPrompt(context) {
+    // Limited-AI mode: user is not connected. Use the shorter prompt that refuses
+    // live-state questions and answers only general Redis knowledge.
+    if (context && (context.connectionState === 'none' || context.connectionState === 'connecting')) {
+        let prompt = LIMITED_AI_SYSTEM_PROMPT
+        if (context.uiLanguage && context.uiLanguage !== 'en') {
+            prompt += `\n\n# Response Language\nThe user's GUI language is set to "${context.uiLanguage}". You MUST write the explanation (after the --- separator) in that language, regardless of what language the user types in.`
+        } else {
+            prompt += `\n\n# Response Language\nYou MUST write the explanation (after the --- separator) in the SAME language as the user's prompt. If they write in Hungarian, respond in Hungarian. If in English, respond in English. Always match the user's language.`
+        }
+        return prompt
+    }
+
+    // Full connected mode: include all Redis context the client supplied.
     let prompt = SYSTEM_PROMPT
+
+    // Tool-use guidance (only when tools are available — i.e. connected + server-driven).
+    if (context?.connectionState === 'connected') {
+        prompt += `\n\n# Tool use — live state inspection
+You have tools (redis_info, redis_memory_stats, redis_slowlog_get, redis_client_list, redis_config_get, redis_dbsize, redis_latency_latest, redis_scan, redis_type, redis_ttl, redis_memory_usage, redis_cluster_info, redis_cluster_nodes, redis_acl_whoami, redis_module_list) that run read-only Redis commands against the user's connection and return live results.
+
+When to use tools:
+- "why is memory high?" → call redis_info(section="memory") and redis_memory_stats, then explain
+- "show slow queries" → call redis_slowlog_get, then summarise
+- "who is connected?" → call redis_client_list, then summarise
+- "what is maxmemory set to?" → call redis_config_get(pattern="maxmemory*"), then answer
+- "how many keys per database?" → call redis_info(section="keyspace") + redis_dbsize
+- Diagnostics, metrics, live state → tools first, answer second
+
+When NOT to use tools:
+- "what does ZADD do?" / "write a lua script to …" → answer from general knowledge, no tools
+- Command-generation requests ("delete key foo", "set key bar to 1") → just output the command, do NOT execute it
+- Anything the user can see or do themselves — don't burn tokens on redundant tool calls
+
+After tool calls, return the final answer in the normal Output Format
+(commands + "---" + explanation). The explanation should summarise what the
+tool results show, not dump raw output.`
+    }
+
     if (context) {
         const parts = []
         if (context.redisVersion) parts.push(`Redis version: ${context.redisVersion}`)
@@ -237,6 +312,9 @@ function buildSystemPrompt(context) {
         if (context.os) parts.push(`OS: ${context.os}`)
         if (context.modules) parts.push(`Loaded modules: ${JSON.stringify(context.modules)}`)
         if (context.databases && context.databases.length > 0) parts.push(`Databases: ${context.databases.join(', ')}`)
+        if (context.connectionName) parts.push(`Connection name: ${context.connectionName}`)
+        if (context.currentDatabase !== undefined) parts.push(`Current database: ${context.currentDatabase}`)
+        if (context.currentPage) parts.push(`Current GUI page: ${context.currentPage}`)
         if (parts.length > 0) {
             prompt += `\n\n# Connected Redis Server\n${parts.join('\n')}`
         }
@@ -263,18 +341,40 @@ function getNetworkUrl() {
     return isDev ? AI_NETWORK_URL_DEV : AI_NETWORK_URL_PROD
 }
 
+// Strip markdown the model sometimes emits so the console renders plain text
+// that matches regular command output styling:
+//   - leading/trailing --- separators
+//   - ```lang ... ``` fences
+//   - stray **bold** and `inline code` wrapping
+function cleanAiText(s) {
+    if (typeof s !== 'string') return ''
+    let out = s
+    // Strip leading/trailing --- markers and surrounding blank lines
+    out = out.replace(/^\s*-{3,}\s*/g, '').replace(/\s*-{3,}\s*$/g, '')
+    // Remove ```lang ... ``` code fences (keep inner content)
+    out = out.replace(/```[a-zA-Z0-9_-]*\n?([\s\S]*?)\n?```/g, '$1')
+    // Drop bare ``` leftovers
+    out = out.replace(/```/g, '')
+    // Unwrap **bold** and *italic* — plain text only
+    out = out.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '$1')
+    // Unwrap `inline code`
+    out = out.replace(/`([^`]+)`/g, '$1')
+    return out.trim()
+}
+
 function parseAiResponse(responseText) {
     const separatorIndex = responseText.indexOf('\n---')
     if (separatorIndex !== -1) {
-        const command = responseText.substring(0, separatorIndex).trim()
-        const explanation = responseText.substring(separatorIndex).replace(/^[\n\r]*---[\n\r]*/, '').trim()
+        const command = cleanAiText(responseText.substring(0, separatorIndex))
+        const explanation = cleanAiText(responseText.substring(separatorIndex).replace(/^[\n\r]*---[\n\r]*/, ''))
         return { command, explanation }
     }
     // Fallback: first line is command, rest is explanation
-    const lines = responseText.split('\n').filter(line => line.trim().length > 0)
+    const cleaned = cleanAiText(responseText)
+    const lines = cleaned.split('\n').filter(line => line.trim().length > 0)
     return {
         command: lines[0] || '',
-        explanation: lines.slice(1).join(' ') || '',
+        explanation: lines.slice(1).join('\n') || '',
     }
 }
 
@@ -307,25 +407,29 @@ async function executeRedisCommand(redis, commandStr) {
     return await redis.call(mainCommand, ...tokens)
 }
 
-async function callGroqDirect(prompt, context, apiKey) {
-    const client = new Groq({ apiKey })
-    const systemPrompt = buildSystemPrompt(context)
-
-    const chatCompletion = await client.chat.completions.create({
-        messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: prompt },
-        ],
+/**
+ * Single Groq chat completion — either direct (own key) or via network proxy.
+ * For tool-use, the server drives the loop locally (it has the Redis connection);
+ * this function just returns the raw assistant message from one round-trip.
+ */
+async function callGroqMessages({ messages, tools, apiKey, useOwnKey }) {
+    const payload = {
         model: 'openai/gpt-oss-120b',
-        max_tokens: p3xrs.cfg.groqMaxTokens || 16384,
+        messages,
+        max_tokens: p3xrs.cfg.groqMaxTokens || 65536,
         temperature: 0,
-    })
+    }
+    if (tools && tools.length > 0) {
+        payload.tools = tools
+        payload.tool_choice = 'auto'
+    }
 
-    const responseText = chatCompletion.choices?.[0]?.message?.content?.trim() || ''
-    return parseAiResponse(responseText)
-}
+    if (useOwnKey && apiKey) {
+        const client = new Groq({ apiKey })
+        const completion = await client.chat.completions.create(payload)
+        return completion.choices?.[0]?.message || {}
+    }
 
-async function callNetworkProxy(prompt, context, apiKey) {
     const networkUrl = getNetworkUrl()
     let response
     try {
@@ -333,12 +437,16 @@ async function callNetworkProxy(prompt, context, apiKey) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                prompt,
-                context: context || {},
+                // Tool-use / agentic path: the client drives the loop, the proxy
+                // forwards the full message history + tool schemas to Groq and
+                // returns the raw assistant message. Legacy fields stay for
+                // backward compatibility with older proxy versions.
+                messages,
+                tools: tools && tools.length > 0 ? tools : undefined,
                 apiKey: apiKey || undefined,
             }),
         })
-    } catch (fetchError) {
+    } catch {
         throw new Error('AI service is not reachable')
     }
 
@@ -351,10 +459,145 @@ async function callNetworkProxy(prompt, context, apiKey) {
     if (data.status !== 'ok') {
         throw new Error(data.message || 'AI query failed')
     }
+    // Tool-capable proxy response: data.data.message = full Groq message object.
+    // Legacy proxy response: data.data = { command, explanation } — wrap it.
+    if (data.data?.message) return data.data.message
+    if (data.data?.command !== undefined) {
+        return {
+            role: 'assistant',
+            content: (data.data.command || '') + (data.data.explanation ? '\n---\n' + data.data.explanation : ''),
+        }
+    }
+    return { role: 'assistant', content: '' }
+}
 
+function truncateToolContent(content) {
+    const str = typeof content === 'string' ? content : String(content ?? '')
+    if (str.length <= MAX_TOOL_RESULT_CHARS) return str
+    const kept = str.slice(0, MAX_TOOL_RESULT_CHARS)
+    return `${kept}\n... [truncated ${str.length - MAX_TOOL_RESULT_CHARS} chars — result too large for token budget]`
+}
+
+function messagesCharCount(messages) {
+    let n = 0
+    for (const m of messages) {
+        if (typeof m.content === 'string') n += m.content.length
+        if (m.tool_calls) n += JSON.stringify(m.tool_calls).length
+    }
+    return n
+}
+
+// Always compress older tool results before each Groq call, regardless of
+// total size. Only the most-recent batch (tool results that follow the last
+// assistant-with-tool_calls message) is kept in full — the AI needs that
+// detail to decide its next move. Everything earlier becomes a one-line
+// breadcrumb so the conversation can never balloon, even across many rounds.
+function compressOlderToolResults(messages) {
+    let lastAsstToolsIdx = -1
+    for (let i = messages.length - 1; i >= 0; i--) {
+        const m = messages[i]
+        if (m.role === 'assistant' && Array.isArray(m.tool_calls) && m.tool_calls.length > 0) {
+            lastAsstToolsIdx = i
+            break
+        }
+    }
+    for (let i = 0; i < lastAsstToolsIdx; i++) {
+        const m = messages[i]
+        if (m.role !== 'tool' || typeof m.content !== 'string') continue
+        if (m.content.startsWith('[prior tool result')) continue
+        const preview = m.content.slice(0, 150).replace(/\s+/g, ' ')
+        m.content = `[prior tool result summarized: ${preview}${m.content.length > 150 ? '...' : ''}]`
+    }
+}
+
+// Safety net: if compression left things still too large (e.g. a single huge
+// current tool result combined with a long system prompt), fall back to
+// summarizing everything older than the latest assistant message.
+function enforceMessagesBudget(messages) {
+    if (messagesCharCount(messages) <= MAX_TOTAL_MESSAGES_CHARS) return
+    for (let i = 0; i < messages.length; i++) {
+        if (messagesCharCount(messages) <= MAX_TOTAL_MESSAGES_CHARS) return
+        const m = messages[i]
+        if (m.role !== 'tool') continue
+        if (typeof m.content === 'string' && m.content.length > 200) {
+            m.content = `[earlier tool result — summarized: ${m.content.slice(0, 150)}...]`
+        }
+    }
+}
+
+/**
+ * Agentic loop — asks Groq, executes any tool calls locally against the user's
+ * Redis connection, feeds results back, repeats up to MAX_AGENTIC_ITERATIONS.
+ * Returns { command, explanation, toolTrail }.
+ *
+ * Tools are only offered when `redis` is available (connected) AND context
+ * indicates we are in connected mode. Limited/disconnected mode uses the
+ * existing shorter prompt with no tools.
+ */
+async function runAgenticLoop({ prompt, context, apiKey, useOwnKey, redis }) {
+    const systemPrompt = buildSystemPrompt(context)
+    const messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt },
+    ]
+
+    const toolsAvailable = redis && context?.connectionState === 'connected'
+    const tools = toolsAvailable ? TOOL_SCHEMAS : []
+    const toolTrail = []
+
+    for (let iter = 0; iter < MAX_AGENTIC_ITERATIONS; iter++) {
+        compressOlderToolResults(messages)
+        enforceMessagesBudget(messages)
+        const assistantMessage = await callGroqMessages({ messages, tools, apiKey, useOwnKey })
+        messages.push(assistantMessage)
+
+        const toolCalls = assistantMessage.tool_calls || []
+        if (toolCalls.length === 0) {
+            // Final answer — parse command + explanation from content
+            const content = (assistantMessage.content || '').trim()
+            const parsed = parseAiResponse(content)
+            return { ...parsed, toolTrail }
+        }
+
+        // Execute each tool call (capped), append tool results as tool-role messages.
+        // Hard guard: if there is no live Redis connection, refuse to run tools — this
+        // should be unreachable because we pass `tools: []` when toolsAvailable is
+        // false, but the model might still request tools on older proxies. Fail safe.
+        const callsToRun = toolCalls.slice(0, MAX_TOOL_CALLS_PER_TURN)
+        for (const call of callsToRun) {
+            let args = {}
+            try { args = JSON.parse(call.function?.arguments || '{}') } catch { args = {} }
+            const name = call.function?.name || ''
+            let exec
+            if (!toolsAvailable) {
+                exec = { ok: false, error: 'Not connected to Redis — tools are unavailable.', ms: 0 }
+            } else {
+                exec = await runTool(redis, name, args)
+            }
+            toolTrail.push({
+                name,
+                args,
+                ok: exec.ok,
+                result: exec.result,
+                error: exec.error,
+                ms: exec.ms,
+            })
+            messages.push({
+                role: 'tool',
+                tool_call_id: call.id,
+                content: exec.ok
+                    ? truncateToolContent(exec.result)
+                    : `ERROR: ${exec.error}`,
+            })
+        }
+        // Loop again so the model can react to the tool results.
+    }
+
+    // Hit the iteration cap without a final answer — synthesize a fallback.
     return {
-        command: data.data.command,
-        explanation: data.data.explanation,
+        command: '',
+        explanation: 'AI investigation exceeded the tool-call limit without reaching a conclusion. Partial tool trail below.',
+        toolTrail,
     }
 }
 
@@ -378,29 +621,44 @@ export default async (options) => {
 
         const apiKey = p3xrs.cfg.groqApiKey || ''
         const useOwnKey = p3xrs.cfg.aiUseOwnKey === true
-        let result
+        // Only pass a Redis client into the agentic loop when BOTH the client
+        // reports connected state AND the socket has a live ioredis. Stale
+        // ioredis (from a prior disconnected session) must not be used.
+        const redis = (context?.connectionState === 'connected' && socket.p3xrs?.ioredis)
+            ? socket.p3xrs.ioredis
+            : null
 
-        if (useOwnKey && apiKey) {
-            console.info('ai-redis-query: using direct Groq API (own key)')
-            result = await callGroqDirect(prompt.trim(), context, apiKey)
-        } else {
-            console.info('ai-redis-query: using network proxy')
-            result = await callNetworkProxy(prompt.trim(), context, apiKey || undefined)
-        }
+        console.info(
+            useOwnKey && apiKey
+                ? 'ai-redis-query: using direct Groq API (own key)'
+                : 'ai-redis-query: using network proxy',
+            '— tools',
+            redis ? 'enabled' : 'disabled',
+        )
+
+        const result = await runAgenticLoop({
+            prompt: prompt.trim(),
+            context,
+            apiKey: apiKey || undefined,
+            useOwnKey: useOwnKey && Boolean(apiKey),
+            redis,
+        })
 
         const response = {
             status: 'ok',
             command: result.command,
             explanation: result.explanation,
+            toolTrail: result.toolTrail,
         }
 
-        // Execute commands if requested and Redis client is available
-        if (execute && socket.p3xrs.ioredis) {
+        // Execute commands if requested AND we have a live Redis connection.
+        // The `redis` variable above is gated on connectionState==='connected';
+        // if absent, skip execution entirely — no stale client runs.
+        if (execute && redis) {
             if (socket.p3xrs.readonly === true) {
                 response.executed = false
                 response.executionError = 'readonly-connection-mode'
             } else {
-                const redis = socket.p3xrs.ioredis
                 const commandLines = result.command.split('\n').filter(line => line.trim().length > 0)
                 const executionResults = []
 

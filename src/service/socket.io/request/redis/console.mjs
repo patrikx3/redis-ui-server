@@ -15,7 +15,7 @@ export default async (options) => {
     const {command} = payload
 
     try {
-        let redis = socket.p3xrs.ioredis
+        let redis = socket.p3xrs?.ioredis
 
         const commands = parser( command);
         let mainCommand = commands.shift()
@@ -23,6 +23,12 @@ export default async (options) => {
 
         if (disabledCommands.includes(mainCommand)) {
             throw new Error('invalid_console_command')
+        }
+
+        // No live Redis client — console command cannot run. Throw a clean
+        // message instead of crashing on `undefined.call`.
+        if (!redis) {
+            throw new Error('not_connected')
         }
 
         if (mainCommand !== 'select') {
