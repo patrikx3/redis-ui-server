@@ -8,7 +8,7 @@ export default async (options) => {
     try {
         sharedIoRedis.ensureReadonlyConnection({ socket })
 
-        await redis.save()
+        await redis.bgsave()
 
         socket.emit(options.responseEvent, {
             status: 'ok',
