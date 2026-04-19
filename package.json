@@ -1,6 +1,6 @@
 {
     "name": "p3x-redis-ui-server",
-    "version": "2026.4.371",
+    "version": "2026.4.372",
     "description": "🏍️ P3X Redis UI server — Socket.IO backend for the dual Angular + React frontend with AI queries, 54 languages, and auto data decompression",
     "corifeus": {
         "icon": "fas fa-flag-checkered",
@@ -50,7 +50,7 @@
     "author": "Patrik Laszlo <alabard@gmail.com>",
     "license": "MIT",
     "devDependencies": {
-        "corifeus-builder": "^2026.4.139",
+        "corifeus-builder": "^2026.4.143",
         "nodemon": "^3.1.14",
         "terser": "^5.46.1"
     },
