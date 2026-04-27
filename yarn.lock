@@ -1091,12 +1091,12 @@ core-util-is@~1.0.0:
   resolved "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.3.tgz"
   integrity sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==
 
-corifeus-builder@^2026.4.147:
-  version "2026.4.147"
-  resolved "https://registry.yarnpkg.com/corifeus-builder/-/corifeus-builder-2026.4.147.tgz#b0dcf193c4440533414fd53b8768f2f0f91c36e3"
-  integrity sha512-xnEX08h8QtXtp0OgxQ7kUZnE53qjJQLi1WDqTOyarT9+JCP3pG3dkCLQKfliOPINpfZYoVLKbBXjEkUuoYgCMA==
+corifeus-builder@^2026.4.154:
+  version "2026.4.154"
+  resolved "https://registry.yarnpkg.com/corifeus-builder/-/corifeus-builder-2026.4.154.tgz#5d590babbef5644c32275e99a4e9b028ad91c842"
+  integrity sha512-bd0XGe5csRzfkrvh/cHKi2npG3M8m3WlmiHsJkW3DohrPwbLcui4q9ImfB/yc3mIfJ6OLyXckGQgFiis/1CjpQ==
   dependencies:
-    corifeus-utils "^2026.4.127"
+    corifeus-utils "^2026.4.132"
     download "^8.0.0"
     extract-zip "^2.0.1"
     fs-extra "^11.3.4"
@@ -1119,10 +1119,21 @@ corifeus-builder@^2026.4.147:
     time-grunt "^2.0.0"
     yaml "^2.8.3"
 
-corifeus-utils@^2026.4.127, corifeus-utils@^2026.4.128:
-  version "2026.4.128"
-  resolved "https://registry.yarnpkg.com/corifeus-utils/-/corifeus-utils-2026.4.128.tgz#e83bfd0bcdc62d0de60ad20dd27c23c669ec7dd7"
-  integrity sha512-8zVVxAsDUASKeFOZz7NqQvl05worgEKtz/yjvI6f0VcSth4nQZU+S7l07NiBBp31y/r+ZFT7DjjRx7hhzhX/7w==
+corifeus-utils@^2026.4.132:
+  version "2026.4.132"
+  resolved "https://registry.yarnpkg.com/corifeus-utils/-/corifeus-utils-2026.4.132.tgz#d97ad2fd88d7b0954c8efaceb27a974b93a5e12b"
+  integrity sha512-Qv/7uADw4LPsndGLmOGV66F8+p6Z4IWw9z+IFCIkJi5m6TjbG50S5l6jcMupJCXF2KqeEGJL+CbZ2qoZ3f4NKw==
+  dependencies:
+    fs-extra "^11.3.4"
+    ms "^2.1.3"
+    mz "^2.7.0"
+    timestring "^7.0.0"
+    uuid "^14.0.0"
+
+corifeus-utils@^2026.4.135:
+  version "2026.4.135"
+  resolved "https://registry.yarnpkg.com/corifeus-utils/-/corifeus-utils-2026.4.135.tgz#c5cb74ff44bb08c9d26d441d08e054131a3962af"
+  integrity sha512-QUvVZp2JarrKCIyZwtfNwTbf1vN76rOklp1hHChdcoK23dbh9+GoDW4/HK1RLg47vcCDfeSASYTfjKSEokp0mQ==
   dependencies:
     fs-extra "^11.3.4"
     ms "^2.1.3"
