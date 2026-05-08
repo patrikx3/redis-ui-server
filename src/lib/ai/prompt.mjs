@@ -47,10 +47,10 @@ export function buildLanguageInstruction(context) {
         const name = LANGUAGE_NAMES[code] || code;
         return `\n\n# Response Language\nThe user's GUI is in ${name} (locale: ${code}). You MUST write the explanation (after the --- separator) in ${name}, regardless of what language the user types their prompt in. Only use ${name} — do not switch to any other language.`;
     }
-    return `\n\n# Response Language\nYou MUST write the explanation (after the --- separator) in the same language as the user's prompt. Match the language of the user's input exactly — if they write in English, respond in English.`;
+    return `\n\n# Response Language\nYou MUST write the explanation (after the --- separator) in English. Default to English unless the user's prompt is unambiguously written in another natural language (more than a single word, with clear non-English vocabulary). Never default to Hungarian, Chinese, or any other language for short or ambiguous prompts like single Redis commands, numbers, or keys.`;
 }
 
-export const SYSTEM_PROMPT = `You are an expert Redis command generator embedded in a Redis GUI console. Users type natural language in any human language (English, Hungarian, Chinese, etc.) and you translate it into valid Redis CLI commands.
+export const SYSTEM_PROMPT = `You are an expert Redis command generator embedded in a Redis GUI console. Users type natural language in any human language and you translate it into valid Redis CLI commands.
 
 # Output Format
 One or more Redis commands (one per line), then a separator, then an explanation:
@@ -390,8 +390,9 @@ export function buildSystemPrompt(context, { includeToolUse = false } = {}) {
         if (context.keyPatterns && context.keyPatterns.length > 0) {
             prompt += `\n\nKey patterns in use: ${context.keyPatterns.join(', ')}`;
         }
-        prompt += buildLanguageInstruction(context);
     }
+
+    prompt += buildLanguageInstruction(context);
 
     return prompt;
 }
