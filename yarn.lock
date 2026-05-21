@@ -1963,10 +1963,10 @@ graceful-fs@^4.1.10, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.11
   resolved "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
 
-groq-sdk@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.npmjs.org/groq-sdk/-/groq-sdk-1.1.2.tgz"
-  integrity sha512-CZO0XUQQDhn43ri1+lZHxZKpb+bGutgTvFmCJtooexiitGmPqhm1hntOT3nCoaq07e+OpeokVnfUs0i/oQuUaQ==
+groq-sdk@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/groq-sdk/-/groq-sdk-1.2.0.tgz#5b79672079d90757f8f5802b7911ae76247794fd"
+  integrity sha512-pMhSYXWcjiqvbOeKdv2zjci1BYjGdp04a40hnmQmJpKJyB6oa+gRndAqE128gwR0NLgYO+Wt1fIF46KNHcplsw==
 
 grunt-cli@^1.4.3:
   version "1.5.0"
