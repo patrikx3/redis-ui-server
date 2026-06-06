@@ -91,6 +91,7 @@ When user asks for keys of a specific data type, use SCAN with TYPE filter:
 - "show all string keys" → SCAN 0 MATCH * TYPE string COUNT 10000
 - "show all stream keys" → SCAN 0 MATCH * TYPE stream COUNT 10000
 - "show all sorted set keys" → SCAN 0 MATCH * TYPE zset COUNT 10000
+- "show all array keys" → SCAN 0 MATCH * TYPE array COUNT 10000
 - For checking a single key's type → TYPE keyname
 Note: SCAN returns [cursor, [keys...]]. cursor=0 means scan complete.
 
@@ -145,6 +146,7 @@ Note: SCAN returns [cursor, [keys...]]. cursor=0 means scan complete.
 ## Pub/Sub
 - Publish: PUBLISH channel message
 - Subscribe: SUBSCRIBE channel
+- Hash field-level (subkey) notifications (Redis 8.8): SUBSCRIBE __subkeyspace@0__:<hashkey> after CONFIG SET notify-keyspace-events STIVh (see "Other Redis 8.8 commands" for flags and events)
 
 ## Cluster
 - Cluster info: CLUSTER INFO
@@ -185,6 +187,7 @@ Example: keys \`foo:{tag}:1\`, \`bar:{tag}:2\`, \`baz:{tag}:3\` all hash to the 
 - string, list, set, zset, hash, stream, ReJSON-RL, TSDB-TYPE (TimeSeries)
 - MBbloom-- (Bloom filter), MBbloomCF (Cuckoo filter), TopK-TYPE (Top-K), CMSk-TYPE (Count-Min Sketch), TDIS-TYPE (T-Digest)
 - vectorset (VectorSet)
+- array (Array, Redis 8.8)
 
 ## RedisBloom (Bloom filter, Cuckoo filter, Top-K, Count-Min Sketch, T-Digest)
 - Bloom filter info: BF.INFO key
@@ -224,6 +227,34 @@ Example: keys \`foo:{tag}:1\`, \`bar:{tag}:2\`, \`baz:{tag}:3\` all hash to the 
 - List elements: VLINKS key
 - "show all vector keys" → SCAN 0 MATCH * TYPE vectorset COUNT 10000
 - VSIM with filter (Redis 8.2+): VSIM key ELE element COUNT 10 FILTER "attr == 'value'"
+
+## Array (Redis 8.8)
+Native sparse, index-addressable array (integer index → string value). No module required. TYPE returns "array". Indices can have gaps.
+- Set value(s) from an index: ARSET key index value [value ...]
+- Set multiple index/value pairs: ARMSET key index value [index value ...]
+- Get value at an index: ARGET key index
+- Get multiple indices: ARMGET key index [index ...]
+- Get a contiguous range (nil for empty slots): ARGETRANGE key start end
+- Iterate present elements (sparse, returns index/value pairs): ARSCAN key start end [LIMIT count]
+- Delete index(es): ARDEL key index [index ...]
+- Delete range(s): ARDELRANGE key start end [start end ...]
+- Length (max index + 1): ARLEN key
+- Count of present (non-empty) elements: ARCOUNT key
+- Append at the internal insert cursor: ARINSERT key value [value ...]
+- Ring-buffer insert: ARRING key size value [value ...]
+- Info / metadata: ARINFO key [FULL]
+- "show all array keys" → SCAN 0 MATCH * TYPE array COUNT 10000
+- To append AFTER the last element, use ARSET key <ARLEN> value — ARINSERT writes at an internal cursor, not necessarily the end
+
+## Other Redis 8.8 commands
+- Window-counter rate limit: INCREX key [BYINT increment | BYFLOAT increment] [LBOUND min] [UBOUND max] [SATURATE] [EX seconds | PX ms | EXAT ts | PXAT ts | PERSIST] [ENX]
+  - Returns both the new counter value and the increment actually applied. UBOUND caps the counter (token bucket); SATURATE clamps to the bound instead of rejecting; ENX sets the expiry only when the key is first created.
+- Stream negative-ack (release a pending entry back to the group): XNACK key group SILENT|FAIL|FATAL IDS numids id [id ...] [RETRYCOUNT count] [FORCE]
+  - SILENT decrements the delivery counter by 1 (transient failure / shutdown); FAIL leaves it unchanged (this consumer can't process it); FATAL sets it to the max so it is easy to route to a dead-letter (poison message). numids is the count of ids that follow.
+- Sorted-set COUNT aggregator: ZUNION / ZINTER / ZUNIONSTORE / ZINTERSTORE ... AGGREGATE COUNT — without WEIGHTS each member's score is the number of input sets that contain it; with WEIGHTS it is the sum of the weights of the sets that contain it (popularity / voting / membership scoring).
+- JSON float-array precision: JSON.SET key path value [NX|XX] [FPHA BF16|FP16|FP32|FP64] — pins the floating-point type of a homogeneous numeric array (BF16/FP16 roughly halve memory for embeddings; FP64 is the default/full precision).
+- Time series multiple aggregators in one call: TS.RANGE / TS.REVRANGE / TS.MRANGE / TS.MREVRANGE ... AGGREGATION agg1,agg2,... bucketDuration — comma-separated, NO spaces between aggregators (e.g. AGGREGATION min,max,first,last 60000 for OHLC/candlestick buckets in a single request).
+- Hash field-level (subkey) keyspace notifications: enable with CONFIG SET notify-keyspace-events with the subkey flags S (__subkeyspace@db__), T (__subkeyevent@db__), I (__subkeyspaceitem@db__), V (__subkeyspaceevent@db__) plus h (hash class), e.g. "STIVh". Then SUBSCRIBE __subkeyspace@0__:myhash. Hash events: hset, hdel, hexpire, hexpired, hpersist, hincrby, hincrbyfloat.
 
 ## Redis 8.0+ Hash Per-Field TTL
 - Get with expiry: HGETEX key FIELDS 1 field EX seconds

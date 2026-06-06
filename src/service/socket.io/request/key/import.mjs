@@ -136,6 +136,21 @@ export default async (options) => {
                                     }
                                 }
                                 break
+                            case 'array':
+                                if (entry.value && typeof entry.value === 'object') {
+                                    // { index: base64value } -> ARMSET key index value [index value ...]
+                                    const args = []
+                                    for (const [index, val] of Object.entries(entry.value)) {
+                                        args.push(parseInt(index), Buffer.from(val, 'base64'))
+                                    }
+                                    if (args.length > 0) {
+                                        writePipeline.call('ARMSET', entry.key, ...args)
+                                        pipelineEntries.push(entry)
+                                    } else {
+                                        created++
+                                    }
+                                }
+                                break
                             default:
                                 errors++
                         }

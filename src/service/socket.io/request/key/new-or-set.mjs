@@ -219,6 +219,26 @@ export default async (options) => {
                 break;
             }
 
+            case 'array': {
+                // Empty/blank index (undefined, null, '' from any of the 3 frontends) = append at next index
+                const hasIndex = model.index !== undefined && model.index !== null && `${model.index}`.trim() !== ''
+                // On edit, if the index was changed, remove the element at the original index (move, not duplicate)
+                const originalIndex = payload.originalIndex
+                if (originalIndex !== undefined && originalIndex !== null && `${originalIndex}`.trim() !== '' && `${originalIndex}` !== `${model.index}`) {
+                    await redis.call('ARDEL', model.key, parseInt(originalIndex))
+                }
+                if (!hasIndex) {
+                    // Append after the current highest index (ARLEN = maxIndex + 1, and 0 for a new key).
+                    // ARINSERT is avoided: it writes at the array's internal cursor, not after the last element.
+                    const nextIndex = parseInt(await redis.call('ARLEN', model.key)) || 0
+                    await redis.call('ARSET', model.key, nextIndex, model.value)
+                } else {
+                    // Set (or overwrite) the value at the explicit index
+                    await redis.call('ARSET', model.key, parseInt(model.index), model.value)
+                }
+                break;
+            }
+
         }
 
         socket.emit(options.responseEvent, {

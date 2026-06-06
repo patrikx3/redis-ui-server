@@ -98,6 +98,11 @@ export default async (options) => {
                 viewPipeline.call('VINFO', key)
                 break;
 
+            case 'array':
+                // ARSCAN returns sparse [index, value, ...] pairs for every present element (O(present), skips gaps)
+                viewPipeline.callBuffer('ARSCAN', key, 0, 4294967295)
+                break;
+
             default:
                 // Unknown type — send type name as placeholder value
                 viewPipeline.type(key)
@@ -106,7 +111,7 @@ export default async (options) => {
         viewPipeline.ttl(key)
 
         // Only native collection types support OBJECT ENCODING
-        const encodingTypes = ['string', 'stream', 'hash', 'list', 'set', 'zset']
+        const encodingTypes = ['string', 'stream', 'hash', 'list', 'set', 'zset', 'array']
         if (encodingTypes.includes(type)) {
             viewPipeline.object('encoding', key)
         }
@@ -193,6 +198,30 @@ export default async (options) => {
             // String has OBJECT ENCODING but no length command
             encoding = viewPipelineResult[pipelineIndex][1]
             pipelineIndex++
+        } else if (type === 'array') {
+            // OBJECT ENCODING present (encodingTypes includes 'array'); ARSCAN returned sparse [index, value, ...]
+            encoding = viewPipelineResult[pipelineIndex][1]
+            pipelineIndex++
+            // Convert to an { index: value } map so the client renders it like a hash (index -> value).
+            // ARSCAN replies as nested pairs [[index, value], ...]; older/flat replies are [index, value, ...].
+            const arrayObject = {}
+            if (Array.isArray(valueBuffer)) {
+                if (valueBuffer.length > 0 && Array.isArray(valueBuffer[0])) {
+                    for (const pair of valueBuffer) {
+                        if (!Array.isArray(pair) || pair.length < 2) continue
+                        const index = Buffer.isBuffer(pair[0]) ? pair[0].toString() : String(pair[0])
+                        arrayObject[index] = pair[1]
+                    }
+                } else {
+                    for (let i = 0; i < valueBuffer.length; i += 2) {
+                        const indexRaw = valueBuffer[i]
+                        const index = Buffer.isBuffer(indexRaw) ? indexRaw.toString() : String(indexRaw)
+                        arrayObject[index] = valueBuffer[i + 1]
+                    }
+                }
+            }
+            valueBuffer = arrayObject
+            length = Object.keys(arrayObject).length
         } else if (collectionTypes.includes(type)) {
             // Collections have OBJECT ENCODING + length command
             encoding = viewPipelineResult[pipelineIndex][1]
@@ -236,7 +265,7 @@ export default async (options) => {
             if (compression) {
                 compression.ratio = +((1 - compression.originalSize / compression.decompressedSize) * 100).toFixed(1)
             }
-        } else if (type === 'hash' && valueBuffer && typeof valueBuffer === 'object' && !Array.isArray(valueBuffer)) {
+        } else if ((type === 'hash' || type === 'array') && valueBuffer && typeof valueBuffer === 'object' && !Array.isArray(valueBuffer)) {
             for (const field of Object.keys(valueBuffer)) {
                 if (Buffer.isBuffer(valueBuffer[field])) {
                     const result = await tryDecompress(valueBuffer[field])

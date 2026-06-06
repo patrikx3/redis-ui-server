@@ -327,6 +327,10 @@ const getKeysInfo = async (options) => {
             case 'vectorset':
                 complexLengthPipeline.call('VCARD', key)
                 break;
+
+            case 'array':
+                complexLengthPipeline.call('ARCOUNT', key)
+                break;
         }
         result[key] = obj
     }
@@ -336,7 +340,7 @@ const getKeysInfo = async (options) => {
         const key = keys[keysIndex]
         const obj = result[key]
         // Only consume a pipeline result for types that added a command above
-        const typesWithPipeline = ['stream', 'hash', 'list', 'set', 'zset', 'timeseries', 'bloom', 'cuckoo', 'topk', 'cms', 'tdigest', 'vectorset']
+        const typesWithPipeline = ['stream', 'hash', 'list', 'set', 'zset', 'timeseries', 'bloom', 'cuckoo', 'topk', 'cms', 'tdigest', 'vectorset', 'array']
         if (!typesWithPipeline.includes(obj.type)) {
             continue
         }

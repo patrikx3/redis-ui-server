@@ -87,6 +87,27 @@ export default async (options) => {
                         value = entries
                         break
                     }
+                    case 'array': {
+                        // Sparse index -> value map (ARSCAN replies as nested [index, value] pairs)
+                        const raw = await redis.callBuffer('ARSCAN', key, 0, 4294967295)
+                        const entries = {}
+                        if (Array.isArray(raw)) {
+                            if (raw.length > 0 && Array.isArray(raw[0])) {
+                                for (const pair of raw) {
+                                    if (!Array.isArray(pair) || pair.length < 2) continue
+                                    const idx = Buffer.isBuffer(pair[0]) ? pair[0].toString() : String(pair[0])
+                                    entries[idx] = pair[1].toString('base64')
+                                }
+                            } else {
+                                for (let j = 0; j < raw.length; j += 2) {
+                                    const idx = Buffer.isBuffer(raw[j]) ? raw[j].toString() : String(raw[j])
+                                    entries[idx] = raw[j + 1].toString('base64')
+                                }
+                            }
+                        }
+                        value = entries
+                        break
+                    }
                     case 'stream': {
                         const entries = await redis.xrange(key, '-', '+')
                         value = entries.map(([id, fields]) => {
