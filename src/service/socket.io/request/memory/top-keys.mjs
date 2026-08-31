@@ -13,6 +13,10 @@ export default async (options) => {
             stream.on('data', (batch) => {
                 if (collected.length < maxKeys) {
                     collected.push(...batch)
+
+                    if (collected.length >= maxKeys) {
+                        stream.destroy()
+                    }
                 }
             })
             stream.on('end', () => resolve(collected.slice(0, maxKeys)))

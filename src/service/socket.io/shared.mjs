@@ -174,6 +174,7 @@ const getStreamKeys = (options) => {
                     if (keys.length >= maxKeys) {
                         ended = true
                         resolve(keys)
+                        stream.destroy()
                         //stream.emit('end')
                     }
                 } else if (!ended) {
