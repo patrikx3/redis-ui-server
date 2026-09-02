@@ -1,4 +1,5 @@
 import Redis from 'ioredis'
+import withResp2 from './resp2.mjs'
 
 export default async function getClusterNodes(servers, options = {}) {
 
@@ -13,7 +14,7 @@ export default async function getClusterNodes(servers, options = {}) {
         let redis
         try {
 
-            redis = new Redis({...server, retryStrategy: () => false})
+            redis = new Redis({...withResp2(server), retryStrategy: () => false})
 
             const rawNodes = await new Promise((resolve, reject) => {
                 redis.sendCommand(

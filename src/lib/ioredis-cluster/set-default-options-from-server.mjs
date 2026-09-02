@@ -1,3 +1,5 @@
+import { RESP_PROTOCOL } from './resp2.mjs'
+
 function getDefaultOptionsFromServer(server) {
     const server1 = Array.isArray(server) ? server[0] : server
     if (typeof server1 === 'object' && server1 !== null) {
@@ -12,6 +14,9 @@ export default function(options, server) {
     if (redisOptions === undefined) {
         redisOptions = {}
         options.redisOptions = redisOptions
+    }
+    if (redisOptions.protocol === undefined) {
+        redisOptions.protocol = RESP_PROTOCOL
     }
     if (redisOptions.password === undefined) {
         redisOptions.password = serverOptions.password

@@ -2,12 +2,14 @@ import IORedis from 'ioredis'
 import redisInfo from './redis-info.mjs'
 import Cluster from './cluster.mjs'
 import createWithClusterAutoDetect from './create-with-cluster-auto-detect.mjs'
+import withResp2 from './resp2.mjs'
 import getInfo from './get-info.mjs'
 import getClusterNodes from './get-cluster-nodes.mjs'
 import isClusterEnabled from './is-cluster-enabled.mjs'
 
 class Redis extends IORedis {
     constructor(server, {autoDetectCluster, ...options} = {}) {
+        server = withResp2(server)
         if (autoDetectCluster && !Array.isArray(server)) {
             return createWithClusterAutoDetect(server, options)
         }
